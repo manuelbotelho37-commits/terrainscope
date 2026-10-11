@@ -59,6 +59,7 @@
     @media(max-width:520px){.terrain-counter{align-items:flex-start;flex-direction:column;gap:8px;padding:16px}.counter-primary{min-width:0}.counter-number{font-size:30px}}
 
   /* Écran client : uniquement la sélection explicitement validée. */
+  #google-results .gsc-webResult.gsc-result[data-listing-duplicate="true"]{display:none!important}
   .approved-cards{display:flex;flex-direction:column;gap:12px;margin-top:12px}
   .approved-card{background:white;border:1px solid #d7e5d9;border-radius:14px;padding:17px;box-shadow:0 4px 12px #12342108}
   .approved-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;font-size:16px;line-height:1.45}
@@ -115,8 +116,9 @@
       </div>
     </section>
     <div class="results-toolbar">
-      <span class="customer-mode">✓ Sélection client · terrains validés</span>
-      <span class="price-order">↗ Prix du moins cher au plus cher (sur la page)</span>
+      <span class="customer-mode">✓ Terrains validés · sans publicité ni constructeurs</span>
+      <span class="price-order">↗ Prix croissant sur les annonces trouvées</span>
+      <span class="price-order" title="Les analyses locales ne consomment aucun crédit d’hébergement.">Recherche gratuite · analyse sur ce téléphone</span>
       <details id="professionalArea" class="professional-area">
         <summary>🔒 Espace professionnel · annonces à contrôler</summary>
         <div class="professional-buttons">
@@ -138,7 +140,7 @@
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V10 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <footer class="foot">TerrainScope V11 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -274,8 +276,12 @@
       // Le titre sert à identifier une commune extérieure, sans pouvoir certifier la localisation.
       const elsewhere=CITIES.filter(city=>!requested.some(s=>normalize(s)===normalize(city))&&containsPlace(title,city));
       if(elsewhere.length)return {status:'nearby',reason:'Autre commune détectée dans le titre : '+elsewhere.slice(0,3).join(', ')+'.'};
-      const stated=requested.some(city=>containsPlace(title,city)||containsPlace(description,city));
-      return stated?{status:'match',reason:PLACE_REASONS.match}:{status:'unknown',reason:PLACE_REASONS.unknown};
+      // Les extraits Google peuvent mentionner des communes proches : le texte seul ne prouve pas l’adresse.
+      const inTitle=requested.some(city=>containsPlace(title,city));
+      const inSnippet=requested.some(city=>containsPlace(description,city));
+      if(inTitle)return {status:'match',reason:PLACE_REASONS.match};
+      if(inSnippet)return {status:'unknown',reason:'Commune citée uniquement dans le descriptif : l’adresse de l’annonce reste à confirmer.'};
+      return {status:'unknown',reason:PLACE_REASONS.unknown};
     }
     function classifyResult(node){
       const title=node.querySelector('a.gs-title')?.textContent||'';
@@ -328,7 +334,7 @@
       const root=el('approvedCards');root.replaceChildren();
       const arr=Array.from(approved.values()).sort((a,b)=>(a.price??Infinity)-(b.price??Infinity)||a.title.localeCompare(b.title,'fr'));
       el('terrainCount').textContent=String(arr.length);
-      el('countDescription').textContent=arr.length===0?'Aucun terrain validé. Consulte d’abord les annonces dans l’espace professionnel.':
+      el('countDescription').textContent=arr.length===0?'Aucun terrain validé. Pour trouver les annonces, ouvre l’espace professionnel. Analyse gratuite sur ton téléphone, sans abonnement supplémentaire.':
         arr.length===1?'1 terrain sélectionné après ton contrôle.':arr.length+' terrains sélectionnés après ton contrôle.';
       for(const d of arr){
         const card=document.createElement('article');card.className='approved-card';
@@ -384,11 +390,32 @@
         card.append(title,info,snippet,reason,actions);root.append(card);
       }
     }
+    function canonicalListingUrl(href){
+      try {
+        const u=new URL(href);
+        if(!['https:','http:'].includes(u.protocol))return '';
+        u.hash='';
+        for(const key of [...u.searchParams.keys()]){
+          if(/^utm_|^(?:gclid|fbclid|msclkid|yclid|ref|source|campaign|tracking)$/i.test(key))u.searchParams.delete(key);
+        }
+        u.searchParams.sort();
+        const path=u.pathname.endsWith('/')?u.pathname.slice(0,-1):u.pathname;
+        return u.origin.toLowerCase()+path+(u.search?'?'+u.searchParams.toString():'');
+      }catch(e){return ''}
+    }
     function analyzeAndSortResults(){
       if(!lastSearch)return;
       const nodes=Array.from(el('google-results').querySelectorAll('.gsc-webResult.gsc-result'));
+      const seen=new Set(),uniqueNodes=[];
       const counts={terrains:0,constructeurs:0,incertains:0};
-      for(const node of nodes){counts[classifyResult(node)]++}
+      for(const node of nodes){
+        const target=canonicalListingUrl(node.querySelector('a.gs-title')?.href||'');
+        if(!target||seen.has(target)){node.dataset.listingDuplicate='true';continue}
+        seen.add(target);
+        node.dataset.listingDuplicate='false';
+        uniqueNodes.push(node);
+        counts[classifyResult(node)]++;
+      }
       const byParent=new Map();
       for(const node of nodes){const parent=node.parentElement;if(!parent)continue;if(!byParent.has(parent))byParent.set(parent,[]);byParent.get(parent).push(node)}
       for(const [parent,entries] of byParent){
@@ -404,9 +431,9 @@
       el('statusBadge').textContent=active+' piste(s) — '+(resultMode==='terrains'?'terrains':resultMode==='constructeurs'?'constructeurs':'vendeur inconnu');
       el('resultSummary').textContent=counts.terrains+' pistes terrains · '+counts.constructeurs+' constructeurs suspectés · '+counts.incertains+' à vérifier (page Google affichée)';
       el('countBreakdown').hidden=false;
-      el('countBreakdown').textContent=countTotal+' résultats Google analysés : '+counts.terrains+' pistes terrains, '+counts.constructeurs+' constructeurs, '+counts.incertains+' à vérifier.';
+      el('countBreakdown').textContent=countTotal+' annonces distinctes repérées : '+counts.terrains+' pistes terrains, '+counts.constructeurs+' constructeurs, '+counts.incertains+' à vérifier. Les doublons sont ignorés.';
       el('uncertainCount').textContent=counts.incertains?'('+counts.incertains+')':'';
-      renderReviewCards(nodes);renderApprovedCards();
+      renderReviewCards(uniqueNodes);renderApprovedCards();
     }
     function scheduleResultReview(){
       if(reviewSchedule)return;reviewSchedule=true;
