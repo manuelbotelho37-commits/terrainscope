@@ -1,6 +1,9 @@
 name: TerrainScope · audit foncier horaire
 
 on:
+  push:
+    paths:
+      - 'scripts/sync_lotisseurs.py'
   schedule:
     - cron: '17 * * * *'
   workflow_dispatch:
