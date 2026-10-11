@@ -52,6 +52,7 @@
     @media(max-width:520px){.quick-source-links{grid-template-columns:1fr}}
     /* Multi-communes, affichage client et espace professionnel */
     .city-small{font-size:11px;font-weight:400;color:#708587}.city-add{align-self:flex-start;border:1px solid #bfdccb;border-radius:9px;background:#f0faf0;color:#245c45;font-size:12px;font-weight:750;padding:8px 12px;margin-top:2px}
+    .city-search{align-self:stretch;width:100%;margin-top:4px;font-size:15px;display:flex;align-items:center;justify-content:center}
     .city-chips{display:flex;flex-wrap:wrap;gap:7px}.city-chip{display:inline-flex;align-items:center;gap:7px;color:#164632;background:#dcf3e3;border:1px solid #aed6b9;border-radius:30px;padding:4px 6px 4px 11px;font-size:12px;font-weight:750}.city-chip button{border:0;background:#ffffff9c;border-radius:30px;width:25px;height:25px;color:#23543e;font-size:17px;line-height:1}
     .city-help{font-size:11px;color:#788a85;line-height:1.4}.results-toolbar{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:0 2px 15px}.customer-mode{font-size:12px;font-weight:800;border-radius:9px;padding:10px 11px;background:#e4f6e5;color:#215e3e}.price-order{font-size:11px;color:#607c70;background:#fff;border:1px solid #e0e9df;border-radius:9px;padding:10px}
     .professional-area{margin-left:auto;position:relative}.professional-area summary{cursor:pointer;list-style:none;color:#3c6255;background:#fff;border:1px solid #d9e6de;border-radius:9px;padding:10px 12px;font-size:12px;font-weight:800}.professional-area summary::-webkit-details-marker{display:none}.professional-area[open]{width:100%;margin-top:4px;padding:10px 12px 14px;background:#fff;border:1px solid #d9e6de;border-radius:12px}.professional-area[open] summary{border:0;padding:3px 0 10px}
@@ -249,11 +250,11 @@
       <div class="section-top"><h2>Recherche de terrains</h2><span class="note">Sans historique de recherche</span></div>
       <form id="form">
         <div class="form">
-          <div class="field"><label for="city">Communes * <span class="city-small">— plusieurs communes possibles</span></label><div class="inwrap"><input id="city" autocomplete="off" type="text" placeholder="Commune d’Indre-et-Loire (ex. Monnaie)" aria-autocomplete="list" aria-expanded="false" aria-controls="citySuggestions" spellcheck="false"><div id="citySuggestions" class="city-list" role="listbox" hidden></div></div><button type="button" id="addCity" class="city-add">+ Ajouter cette commune</button><div id="selectedCities" class="city-chips" aria-live="polite"></div><small class="city-help">Ajoute plusieurs communes avant de lancer la recherche. Appuie sur × pour en retirer une.</small></div>
+          <div class="field"><label for="city">Communes * <span class="city-small">— plusieurs communes possibles</span></label><div class="inwrap"><input id="city" autocomplete="off" type="text" placeholder="Commune d’Indre-et-Loire (ex. Monnaie)" aria-autocomplete="list" aria-expanded="false" aria-controls="citySuggestions" spellcheck="false"><div id="citySuggestions" class="city-list" role="listbox" hidden></div></div><button type="button" id="addCity" class="city-add">+ Ajouter cette commune</button><div id="selectedCities" class="city-chips" aria-live="polite"></div><button id="citySearchBtn" class="search city-search" type="submit">⌕ &nbsp;Voir les terrains</button><small class="city-help">Ajoute plusieurs communes avant de lancer la recherche. Appuie sur × pour en retirer une.</small></div>
           <div class="field"><label for="surface">Surface mini (m²)</label><input id="surface" type="number" inputmode="numeric" min="0" step="1" placeholder="Ex. 500"></div>
           <div class="field"><label for="budget">Budget maxi (€)</label><input id="budget" type="number" inputmode="numeric" min="0" step="1000" placeholder="Ex. 120000"></div>
         </div>
-        <div class="actions"><button class="search" type="submit">⌕ &nbsp;Voir les terrains</button><button id="lotisseursTop" type="button">🏘 Lotisseurs · programmes et terrains</button><button class="light" id="resetBtn" type="button">Effacer</button><span class="mini-note">Recherche ponctuelle : les résultats précédents sont remplacés à chaque demande.</span></div>
+        <div class="actions"><button id="lotisseursTop" type="button">🏘 Lotisseurs · programmes et terrains</button><button class="light" id="resetBtn" type="button">Effacer</button><span class="mini-note">Recherche ponctuelle : les résultats précédents sont remplacés à chaque demande.</span></div>
       </form>
     </section>
     <div class="status-row"><h2 id="sectionTitle">Résultats</h2><span id="statusBadge" class="status-pill" role="status">Prêt à rechercher</span></div>
@@ -291,7 +292,7 @@
     <button id="terrainUp" type="button" title="Retour en haut" aria-label="Retour aux critères de recherche">↑</button>
     <button id="terrainDown" type="button" title="Descendre" aria-label="Descendre dans les résultats">↓</button>
   </nav>
-  <footer class="foot">TerrainScope V36 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+  <footer class="foot">TerrainScope V37 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
