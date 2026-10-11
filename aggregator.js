@@ -65,6 +65,13 @@
       const u=new URL(url),path=u.pathname.toLowerCase();
       if(/\/(?:conseiller|conseillere|agents?|mandataires?|agences?|recherche|search|nos-biens)(?:\/|$)/.test(path))return false;
       if(/\/(?:maison|appartement|immeuble|propriete)[-_](?:vente|achat)/.test(path))return false;
+      // Le Bon Coin : /cl/ ou /l/ correspondent à des listes mixtes,
+      // parfois indexées par Google comme s'il s'agissait d'un terrain individuel.
+      if(host==='leboncoin.fr'||host.endsWith('.leboncoin.fr')){
+        const direct=/^\/ad\/ventes_immobilieres\/\d+(?:\/|$)/.test(path)
+          ||/^\/ventes_immobilieres\/\d+\.htm$/.test(path);
+        if(!direct)return false;
+      }
       // IAD : les annonces réelles ont un lien /annonce/terrain-vente-.../rNNN
       // Les pages /annonces/ ou de conseiller ne sont pas des fiches de parcelle.
       if(host==='iadfrance.fr'||host.endsWith('.iadfrance.fr')){
