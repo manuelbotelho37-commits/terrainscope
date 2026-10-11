@@ -331,7 +331,11 @@
       const root=el('developers');root.replaceChildren();
       const cityKey=s=>normalize(s).replace(/[’'\-–—]/g,' ').replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
       const matches=p=>names.some(x=>cityKey(x)===cityKey(p.city));
-      const sourceKey=url=>{try{const u=new URL(url);return u.hostname.replace(/^www\./,'')+u.pathname.replace(/\/$/,'').toLowerCase()}catch(e){return ''}};
+      const sourceKey=url=>{try{
+        const u=new URL(url);
+        return u.hostname.replace(/^www\./,'')+
+          decodeURIComponent(u.pathname).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\/$/,'').toLowerCase();
+      }catch(e){return ''}};
       function scanFor(name){
         const a=live[name];
         if(!a||a.status!=='verified'||!a.checkedAt||!Array.isArray(a.programs))return null;
@@ -348,8 +352,13 @@
         if(checked)checkedDevelopers.push(dev.name);
         const legacy=catalog.programs.filter(p=>p.developer===dev.name);
         const rows=checked ? checked.programs.map(p=>{
-          const old=legacy.find(x=>sourceKey(x.url)===sourceKey(p.url));
-          return old?{...old,city:p.city||old.city,url:p.url,sourceVerified:true}:
+          // Un lotisseur peut changer le slug d'une fiche sans changer le programme.
+          // Rapprocher d'abord l'URL puis, seulement si la commune ne contient
+          // qu'un unique programme du lotisseur, rapprocher sur la commune.
+          const byCity=legacy.filter(x=>cityKey(x.city)===cityKey(p.city));
+          const old=legacy.find(x=>sourceKey(x.url)===sourceKey(p.url))||
+            (byCity.length===1?byCity[0]:null);
+          return old?{...old,city:old.city,url:p.url,sourceVerified:true}:
             {name:p.label||'Opération à consulter',city:p.city||'Commune à vérifier',
              developer:dev.name,url:p.url,sourceVerified:true};
         }) : legacy.map(p=>({...p,sourceVerified:false}));
