@@ -753,6 +753,11 @@
       settingsStore.setItem('terrainScopeCx',cx);location.reload();
     };
     el('removeCx').onclick=()=>{settingsStore.removeItem('terrainScopeCx');location.reload()};
+    el('lotisseursTop').addEventListener('click',()=>{
+      const panel=el('developerAccordion');
+      panel.open=true;
+      panel.scrollIntoView({behavior:'smooth',block:'start'});
+    });
     el('form').addEventListener('submit',handleSearch);
     el('resetBtn').addEventListener('click',()=>{location.reload()});
     const cityInput=el('city');
