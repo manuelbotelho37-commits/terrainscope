@@ -362,6 +362,15 @@
             {name:p.label||'Opération à consulter',city:p.city||'Commune à vérifier',
              developer:dev.name,url:p.url,sourceVerified:true};
         }) : legacy.map(p=>({...p,sourceVerified:false}));
+        // Recenser les nouvelles offres même sans preuve d'exhaustivité.
+        // Elles restent étiquetées comme repérées et jamais comme stock certifié.
+        if(!checked&&live[dev.name]?.status==='observed'&&Array.isArray(live[dev.name]?.programs)){
+          for(const p of live[dev.name].programs){
+            if(rows.some(x=>sourceKey(x.url)===sourceKey(p.url)))continue;
+            rows.push({name:p.label||'Offre repérée',city:p.city||'Commune à vérifier',
+              url:p.url,developer:dev.name,sourceVerified:false,sourceObserved:true});
+          }
+        }
         entries.set(dev.name,{checked,scan:live[dev.name],rows});
       }
       const matched=[];
@@ -401,7 +410,9 @@
         const count=document.createElement('span');count.className='dev-subcount';
         count.textContent=checked
           ?checked.expected+' programmes · catalogue contrôlé'
-          :'Inventaire non certifié';
+          :scan?.status==='observed'&&Number.isInteger(scan.found)
+            ?scan.found+' offre(s) repérée(s) · total non garanti'
+            :'Inventaire non certifié';
         caption.append(label,count);group.append(caption);
         const body=document.createElement('div');body.className='dev-group-content';
         const diagnosis=document.createElement('p');diagnosis.className='dev-empty';
@@ -409,8 +420,10 @@
           ?'Catalogue complet rapproché du site officiel le '+
               new Date(checked.checkedAt).toLocaleString('fr-FR')+
               '. Les lots libres, vendus ou optionnés ne sont pas vérifiés par cette étape.'
-          :scan?.status==='incomplete'
-              ?'ATTENTION : le site officiel et le collecteur ne donnent pas le même nombre de programmes. Inventaire incomplet, ne pas utiliser les compteurs.'
+          :scan?.status==='observed'
+              ?'Des offres ont été repérées automatiquement, mais le site ne permet pas encore de certifier leur nombre total.'
+              :scan?.status==='incomplete'
+              ?'ATTENTION : inventaire incomplet ou non vérifiable. Ne pas utiliser ces compteurs comme un total.'
               :scan?.status==='unavailable'
                 ?'Contrôle officiel impossible lors du dernier passage. Informations historiques uniquement.'
                 :'Inventaire de référence non exhaustif : vérification automatique complète indisponible ou non encore effectuée.';
