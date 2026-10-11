@@ -303,6 +303,6 @@
     const serial=state.serial;
     setTimeout(()=>capture(serial),320);
   }
-  window.TerrainAggregator={search,onRendered,resume:()=>{if(state.active)startStage()}};
+  window.TerrainAggregator={search,onRendered,resume:()=>{if(state.active)startStage()},isIndividualLandListing};
   draw();
 })();
