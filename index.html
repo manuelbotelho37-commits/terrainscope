@@ -79,7 +79,11 @@
   .professional-area #professionalSources .box{margin-bottom:11px}
   .professional-area #csePanel{margin-top:16px}
   @media(max-width:620px){.approved-head{flex-direction:column;gap:4px}}
-</style>
+
+    .tab-count{display:inline-block;font-variant-numeric:tabular-nums;font-weight:800}
+    .review-reason{padding:9px 10px;border-left:3px solid #bc814b;background:#fff8ed;color:#764f2b;font-size:12px;line-height:1.45;border-radius:4px}
+    #showUncertain.active{background:#f5e3cc;border-color:#e5c6a8;color:#79502b}
+    </style>
 </head>
 <body>
   <header class="top"><div class="wrap">
@@ -118,7 +122,7 @@
         <div class="professional-buttons">
           <button type="button" id="showTerrains" class="view-btn active" aria-pressed="true">Pistes terrains</button>
           <button type="button" id="showBuilders" class="view-btn" aria-pressed="false">Annonces constructeurs</button>
-          <button type="button" id="showUncertain" class="view-btn" aria-pressed="false">Vendeur à identifier</button>
+          <button type="button" id="showUncertain" class="view-btn" aria-pressed="false">À vérifier <span id="uncertainCount" class="tab-count"></span></button>
         </div>
         <p id="proNotice" class="pro-note">Annonces non vérifiées : ouvre chaque fiche, vérifie le vendeur, puis valide uniquement les terrains vraiment indépendants.</p><div id="reviewCards" class="review-cards" aria-live="polite"></div>
       </details>
@@ -134,7 +138,7 @@
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V9 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <footer class="foot">TerrainScope V10 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -253,6 +257,26 @@
     ];
     const BUILDER_WORDS=/\b(?:constructeur(?:s)?\s+(?:de\s+)?maison|constructeur\s+de\s+maisons|constructeur\s+de\s+maisons\s+individuelles|maison\s*(?:\+|et|avec|sur)\s*(?:son\s+)?terrain|terrain\s*(?:\+|et|avec)\s*(?:une\s+)?maison|maison\s+(?:neuve|\u00e0\s+construire)|projet\s+de\s+construction|construction\s+de\s+(?:votre|ma|une)\s+maison|offre\s+maison\s+terrain|maisons\s+(?:pierre|ericlor|concept|france confort|st\u00e9phanie|cpr)|maisons\s+individuelles|mod\u00e8le\s+de\s+maison|terrain\s+avec\s+projet\s+de\s+maison|maisons\s+primea|prim\u00e9a|villad\u00e9ale|mikit|natilia)\b/i;
     const TERRAIN_WORDS=/\b(?:terrain(?:s)?|parcelle(?:s)?|lot(?:s)?\s+\u00e0\s+b\u00e2tir|foncier)\b/i;
+    const PLACE_REASONS={
+      unknown:'La commune exacte n’est pas confirmée dans le résultat Google.',
+      nearby:'Le résultat mentionne une commune non demandée. Vérification obligatoire.',
+      match:'La commune semble correspondre, mais elle doit être vérifiée sur l’annonce.'
+    };
+    function locationKey(value){
+      return ' '+normalize(value).replace(/[’']/g,' ').replace(/[-–—]/g,' ').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim()+' ';
+    }
+    function containsPlace(text,city){
+      return locationKey(text).includes(locationKey(city));
+    }
+    function checkLocation(title,description){
+      const requested=lastSearch?.cities||[];
+      if(!requested.length)return {status:'unknown',reason:PLACE_REASONS.unknown};
+      // Le titre sert à identifier une commune extérieure, sans pouvoir certifier la localisation.
+      const elsewhere=CITIES.filter(city=>!requested.some(s=>normalize(s)===normalize(city))&&containsPlace(title,city));
+      if(elsewhere.length)return {status:'nearby',reason:'Autre commune détectée dans le titre : '+elsewhere.slice(0,3).join(', ')+'.'};
+      const stated=requested.some(city=>containsPlace(title,city)||containsPlace(description,city));
+      return stated?{status:'match',reason:PLACE_REASONS.match}:{status:'unknown',reason:PLACE_REASONS.unknown};
+    }
     function classifyResult(node){
       const title=node.querySelector('a.gs-title')?.textContent||'';
       const snippet=node.querySelector('.gs-snippet')?.textContent||'';
@@ -262,8 +286,14 @@
       const builders=BUILDER_DOMAINS.some(d=>hostname===d||hostname.endsWith('.'+d))
         || ['nos-terrains.com','terrain-construction.com'].some(d=>hostname===d||hostname.endsWith('.'+d))
         || /constructions?\s+id[eé]ale\s+demeure|id[eé]ale\s+demeure|constructeur\s+partenaire/i.test(textContent);
-      let kind=builders||BUILDER_WORDS.test(textContent)?'constructeurs':(TERRAIN_WORDS.test(textContent)?'terrains':'incertains');
-      // Une annonce ne contenant pas de véritable mention de terrain reste à vérifier.
+      const place=checkLocation(title,snippet);
+      let kind=builders||BUILDER_WORDS.test(textContent)?'constructeurs':
+        place.status!=='match'?'incertains':
+        TERRAIN_WORDS.test(textContent)?'terrains':'incertains';
+      node.dataset.reviewReason=place.reason;
+      node.dataset.locationStatus=place.status;
+      if(kind==='incertains'&&place.status==='match')node.dataset.reviewReason='Le texte ne suffit pas à confirmer qu’il s’agit d’un terrain seul et qui le commercialise.';
+      // Le moteur de recherche ne sait pas ouvrir ni certifier la fiche tierce.
       node.dataset.terrainKind=kind;
       node.dataset.terrainPrice=String(getPrice(textContent)??'');
       if(!node.querySelector('.terrain-meta'))enhanceResult(node);
@@ -277,7 +307,7 @@
       el('proNotice').textContent=resultMode==='terrains'
         ?'Pistes NON vérifiées. Ouvre la fiche originale et vérifie qui propose le terrain avant validation.'
         :resultMode==='constructeurs'?'Annonces de constructeurs : isolées de la sélection client.'
-        :'Origine du vendeur inconnue : contrôle obligatoire avant validation.';
+        :'Ces annonces présentent une incertitude sur la commune, le vendeur ou la nature du bien. Elles ne sont jamais publiées dans la sélection client sans contrôle.';
     }
 
     // Contrôle volontairement humain : aucune annonce tierce n'est certifiée automatiquement.
@@ -286,7 +316,10 @@
       let host='';try{const u=new URL(href);if(!['https:','http:'].includes(u.protocol))return null;host=u.hostname.replace(/^www\./,'')}catch(e){return null}
       const title=(a.textContent||'Annonce de terrain').trim().slice(0,200);
       const description=(node.querySelector('.gs-snippet')?.textContent||'').trim().slice(0,500);
-      return {url:href,title,description,host,kind:node.dataset.terrainKind||'incertains',price:getPrice(title+' '+description),area:getArea(title+' '+description)};
+      return {url:href,title,description,host,kind:node.dataset.terrainKind||'incertains',
+        reason:node.dataset.reviewReason||'Vendeur et localisation à contrôler sur la fiche d’origine.',
+        locationStatus:node.dataset.locationStatus||'unknown',
+        price:getPrice(title+' '+description),area:getArea(title+' '+description)};
     }
     function reviewButton(label,kind='light'){
       const b=document.createElement('button');b.type='button';b.className='review-action '+kind;b.textContent=label;return b;
@@ -303,7 +336,7 @@
         const title=document.createElement('strong');title.textContent=d.title;
         const price=document.createElement('strong');price.textContent=d.price?fmt(d.price)+' €':'Prix à vérifier';
         head.append(title,price);
-        const line=document.createElement('p');line.textContent=(d.area?fmt(d.area)+' m² · ':'')+'Annonce originale : '+d.host+' · Vendeur contrôlé manuellement.';
+        const line=document.createElement('p');line.textContent=(d.area?fmt(d.area)+' m² · ':'')+'Commune contrôlée : '+(d.confirmedCity||'non confirmée')+' · '+d.host+' · Vérification manuelle.';
         const actions=document.createElement('div');actions.className='approved-actions';
         const link=document.createElement('a');link.href=d.url;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Voir l’annonce originale ↗';link.className='review-link';
         const remove=reviewButton('Retirer de la sélection');remove.onclick=()=>{approved.delete(d.url);renderApprovedCards();if(el('professionalArea').open)analyzeAndSortResults()};
@@ -321,9 +354,12 @@
         const info=document.createElement('div');info.className='review-info';
         info.textContent=(d.price?fmt(d.price)+' € · ':'Prix inconnu · ')+(d.area?fmt(d.area)+' m² · ':'')+d.host;
         const snippet=document.createElement('p');snippet.className='review-summary';snippet.textContent=d.description;
+        const reason=document.createElement('p');reason.className='review-reason';
+        reason.textContent='Contrôle : '+(d.kind==='constructeurs'?'Offre de constructeur détectée.':d.reason)+' Vendeur, disponibilité et commune à vérifier sur l’annonce originale.';
         const actions=document.createElement('div');actions.className='review-actions';
         const open=document.createElement('a');open.className='review-link';open.href=d.url;open.target='_blank';open.rel='noopener noreferrer';
-        open.textContent='1. Vérifier la fiche et le vendeur ↗';open.onclick=()=>{openedForReview.add(d.url);approve.disabled=false};
+        open.textContent='1. Vérifier la fiche, le vendeur et la commune ↗';
+        open.onclick=()=>{openedForReview.add(d.url);if(approve)approve.disabled=false};
         actions.append(open);
         let approve;
         if(d.kind!=='constructeurs'){
@@ -331,14 +367,21 @@
           approve.disabled=!openedForReview.has(d.url)||approved.has(d.url);
           approve.onclick=()=>{
             if(!openedForReview.has(d.url))return;
-            if(!confirm('As-tu personnellement vérifié sur la fiche originale que le vendeur n’est PAS un constructeur, que le terrain peut être acheté sans contrat de construction imposé, que la commune correspond et que l’annonce est toujours disponible ?'))return;
-            approved.set(d.url,d);renderApprovedCards();approve.disabled=true;approve.textContent='✓ Validé pour le client';
+            const requested=lastSearch?.cities||[];
+            const location=prompt('Sur la fiche originale, quelle est la COMMUNE EXACTE du terrain ? Tape-la ici :','');
+            if(!location)return;
+            if(!requested.some(c=>normalize(c)===normalize(location))){
+              alert('Refusé : « '+location+' » ne fait pas partie des communes demandées. Cette annonce reste dans l’espace professionnel.');return;
+            }
+            if(!confirm('Confirme uniquement après vérification : terrain SITUÉ À '+location+', vendeur non constructeur, terrain vendu indépendamment de la construction, annonce disponible, prix et surface corrects. Tout est vérifié sur la fiche originale ?'))return;
+            approved.set(d.url,{...d,confirmedCity:location,validatedManually:true});renderApprovedCards();
+            approve.disabled=true;approve.textContent='✓ Validé pour le client';
           };
           actions.append(approve);
         }else{
           const warning=document.createElement('span');warning.className='builder-warning';warning.textContent='Classé constructeur : interdit en présentation client.';actions.append(warning);
         }
-        card.append(title,info,snippet,actions);root.append(card);
+        card.append(title,info,snippet,reason,actions);root.append(card);
       }
     }
     function analyzeAndSortResults(){
@@ -361,7 +404,8 @@
       el('statusBadge').textContent=active+' piste(s) — '+(resultMode==='terrains'?'terrains':resultMode==='constructeurs'?'constructeurs':'vendeur inconnu');
       el('resultSummary').textContent=counts.terrains+' pistes terrains · '+counts.constructeurs+' constructeurs suspectés · '+counts.incertains+' à vérifier (page Google affichée)';
       el('countBreakdown').hidden=false;
-      el('countBreakdown').textContent=countTotal+' résultats Google analysés : '+counts.terrains+' pistes terrains, '+counts.constructeurs+' constructeurs, '+counts.incertains+' inconnus.';
+      el('countBreakdown').textContent=countTotal+' résultats Google analysés : '+counts.terrains+' pistes terrains, '+counts.constructeurs+' constructeurs, '+counts.incertains+' à vérifier.';
+      el('uncertainCount').textContent=counts.incertains?'('+counts.incertains+')':'';
       renderReviewCards(nodes);renderApprovedCards();
     }
     function scheduleResultReview(){
@@ -408,6 +452,7 @@
       el('criteriaText').hidden=false;
       el('criteriaText').textContent='Communes : '+cities.join(' · ')+' · Surface minimale : '+(surface?fmt(surface)+' m²':'non précisée')+' · Budget maximal : '+(budget?fmt(budget)+' €':'non précisé')+' — critères indicatifs selon les extraits.';
       approved.clear();openedForReview.clear();renderApprovedCards();el('reviewCards').replaceChildren();
+      el('uncertainCount').textContent='';
       el('resultSummary').textContent='';
       el('terrainCount').textContent='0';
       el('countDescription').textContent='Aucune fiche encore contrôlée. Ouvre l’espace professionnel pour rechercher et valider des terrains.';
