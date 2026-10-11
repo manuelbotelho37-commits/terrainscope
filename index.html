@@ -136,6 +136,37 @@
     #csePanel[data-mirror-pager="true"] #google-results .gsc-cursor-box{position:absolute!important;left:-10000px!important;height:1px!important;width:1px!important;overflow:hidden!important}
     @media(max-width:800px) and (min-width:701px){.content-grid{grid-template-columns:minmax(0,1fr) 240px}}
     @media(max-width:620px){.quick-source-links{grid-template-columns:1fr}.panel{padding:17px}.status-row h2{font-size:19px}}
+/* V18 : une seule liste de terrains, toutes sources confondues. */
+    #csePanel{position:absolute!important;left:-15000px!important;top:0!important;
+      width:850px!important;height:1px!important;overflow:hidden!important;
+      visibility:hidden!important;pointer-events:none!important;opacity:0!important}
+    .unique-panel{border:1px solid #cfdfd3;background:#f9fcf8;border-radius:17px;padding:17px;margin:0 0 16px}
+    .unique-panel[hidden]{display:none!important}
+    .unique-panel h3{font-size:20px;margin:0 0 6px;color:#204d38}
+    .unique-intro{font-size:12px;color:#557061;line-height:1.45;margin:0 0 10px}
+    .unique-summary{padding:10px 12px;background:#e9f5e5;border-radius:10px;font-weight:800;font-size:12px;color:#315c3f;line-height:1.5;margin-bottom:13px}
+    .unique-results{display:flex;flex-direction:column;gap:10px}
+    .unique-card{padding:15px;background:#fff;border:1px solid #d5e3d8;border-radius:13px;box-shadow:0 2px 8px #1d493408}
+    .unique-card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+    .unique-source{font-size:11px;letter-spacing:.2px;color:#3c6d54}
+    .unique-price{font-size:17px;color:#19603f;white-space:nowrap}
+    .unique-card h4{font-size:15px;line-height:1.4;margin:8px 0 5px;color:#213a2d}
+    .unique-details{font-size:12px;color:#62796d;margin:0 0 11px}
+    .unique-actions{display:flex;flex-direction:column;align-items:flex-start;gap:7px}
+    .unique-open{display:inline-block;padding:11px 14px;background:#d3f3a3;color:#1b4a32;border:1px solid #abd58d;border-radius:9px;text-decoration:none;font-size:13px;font-weight:800}
+    .unique-shared{font-size:11px;color:#64806f}
+    .unique-empty{color:#66796f;font-size:13px;line-height:1.5;margin:10px 0}
+    .unique-pages{margin-top:15px;padding:12px;text-align:center;background:#edf5ec;border-radius:12px}
+    .unique-pages[hidden]{display:none!important}
+    .unique-page-label{font-size:12px;color:#46644f;margin-bottom:9px;font-weight:750}
+    .unique-page-buttons{display:flex;flex-wrap:wrap;gap:7px;justify-content:center}
+    .unique-page-buttons button{min-width:42px;min-height:43px;padding:8px 11px;border-radius:10px;
+      border:1px solid #c9ddc9;background:white;color:#28503e;font-size:13px;font-weight:800}
+    .unique-page-buttons button.active{background:#d3f3a3;border-color:#abd58d}
+    .unique-page-buttons button:disabled{cursor:default}
+    .unique-disclaimer{font-size:11px;line-height:1.5;color:#667e70;margin:13px 0 0}
+    .quick-sources{margin-top:8px}
+    @media(max-width:520px){.unique-panel{padding:12px}.unique-card{padding:13px}}
     </style>
 </head>
 <body>
@@ -173,7 +204,7 @@
       <span class="price-order" title="Les analyses locales ne consomment aucun crédit d’hébergement.">Recherche gratuite · analyse sur ce téléphone</span>
     </div>
     <p id="criteriaText" class="criteria-text" hidden></p><div class="content-grid">
-      <section class="results" id="mainResults" aria-live="polite"><section id="quickSources" class="quick-sources" hidden><h3>Voir les annonces sur les sites</h3><p>Accès direct aux recherches, dans l’ordre demandé.</p><div id="quickSourceLinks" class="quick-source-links"></div></section>
+      <section class="results" id="mainResults" aria-live="polite"><section id="uniquePanel" class="unique-panel" hidden><h3>Les terrains trouvés</h3><p class="unique-intro">Une seule liste : Le Bon Coin, SeLoger, Bien’ici, IAD et autres sources. Les doublons reconnaissables sont regroupés automatiquement.</p><div id="uniqueSummary" class="unique-summary" role="status"></div><div id="uniqueResults" class="unique-results"></div><nav id="uniquePages" class="unique-pages" hidden aria-label="Pages des terrains distincts"></nav><p class="unique-disclaimer">Annonces repérées dans Google, pas l’intégralité des sites. Prix, surface, commune et vendeur à confirmer sur la fiche originale. Deux terrains distincts ne sont pas fusionnés sans indices suffisants.</p></section><section id="quickSources" class="quick-sources" hidden><h3>Consulter les sites d'origine</h3><p>Recherche externe complémentaire. Les doublons ne peuvent pas être masqués à l’intérieur des sites tiers.</p><div id="quickSourceLinks" class="quick-source-links"></div></section>
         <div class="box placeholder" id="placeholder"><div class="bigicon" aria-hidden="true">✓</div><h3>Les annonces directement ici</h3><p>Choisis une ou plusieurs communes et lance la recherche. Touche une annonce pour ouvrir le site d’origine. Les constructeurs identifiés sont écartés.</p><button id="setupMain" class="search" type="button">Paramètres du moteur</button></div>
         <div id="csePanel" class="box cse-holder" hidden><h3>Autres terrains repérés</h3><div id="cseHint" class="cse-hint">Résultats Google non exhaustifs. Vérifie chaque annonce sur son site d’origine.</div><p id="resultSummary" class="result-summary" aria-live="polite"></p><div id="google-results"></div><nav id="pageNavigator" class="pagination-box" aria-label="Pages de résultats" hidden><strong id="pagePosition"></strong><div id="pageButtons" class="pagination-controls"></div><p>Le nombre de pistes correspond uniquement à cette page.</p></nav></div>
       </section>
@@ -183,7 +214,7 @@
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V17 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <footer class="foot">TerrainScope V18 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -479,11 +510,10 @@
       requestAnimationFrame(()=>{reviewSchedule=false;analyzeAndSortResults()});
     }
     function onGoogleResults(name,q,promotions,nodes){
+      if(window.TerrainAggregator){window.TerrainAggregator.onRendered();return}
       (nodes||[]).forEach(enhanceResult);
-      scheduleResultReview();
     }
-    const resultObserver=new MutationObserver(scheduleResultReview);
-    resultObserver.observe(el('google-results'),{childList:true,subtree:true});
+    // Le collecteur gere le rendu : pas d'observateur modifiant les resultats Google.
     refreshResultMode();
     function loadGoogleEngine(){
       const cx=settingsStore.getItem('terrainScopeCx')||DEFAULT_CX;if(!cx)return;
@@ -494,7 +524,10 @@
       div.dataset.gname='terrains';div.dataset.autoSearchOnLoad='false';div.dataset.linktarget='_blank';
       root.appendChild(div);
       const s=document.createElement('script');s.async=true;s.src='https://cse.google.com/cse.js?cx='+encodeURIComponent(cx);
-      s.onload=()=>{engineLoaded=true;if(lastSearch)performGoogleSearch(lastSearch.cities)};
+      s.onload=()=>{engineLoaded=true;if(lastSearch){
+        if(window.TerrainAggregator)window.TerrainAggregator.resume();
+        else performGoogleSearch(lastSearch.cities);
+      }};
       s.onerror=()=>{el('statusBadge').textContent='Moteur Google indisponible';el('terrainCount').textContent='—';el('countDescription').textContent='Impossible de compter : moteur Google indisponible.';el('csePanel').hidden=false;el('cseHint').textContent='Chargement du moteur impossible. Utilisez les recherches par site à droite.'};
       document.head.appendChild(s);
     }
@@ -567,8 +600,11 @@
         addSource('Google · '+name,linkFor(cities,domain));
       }
       const all=el('allSites');all.hidden=false;all.href=googleUrl(query(cities));
-      if(googleConfigured)performGoogleSearch(cities);
-      else el('csePanel').hidden=true;
+      if(googleConfigured){
+        el('csePanel').hidden=false;
+        if(window.TerrainAggregator)window.TerrainAggregator.search(cities);
+        else performGoogleSearch(cities);
+      }else el('csePanel').hidden=true;
       el('mainResults').querySelector('.fallback')?.remove();
       if(!googleConfigured){const box=document.createElement('div');box.className='box placeholder fallback';box.innerHTML='<h3>Le moteur doit être activé pour afficher les annonces</h3><p>La recherche par site reste accessible à droite.</p><button type="button" class="search" id="activateResults">Configurer le moteur</button>';el('mainResults').appendChild(box);el('activateResults').onclick=openModal}
       el('mainResults').scrollIntoView({behavior:'smooth',block:'start'});
@@ -630,5 +666,6 @@
     if(googleConfigured)loadGoogleEngine();
     if('serviceWorker' in navigator && location.protocol==='https:')navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
   </script>
+  <script src="./aggregator.js"></script>
 </body>
 </html>
