@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#123c35">
+<title>TerrainScope — Diagnostic d’installation</title>
+<link rel="manifest" href="./manifest.webmanifest?diagnostic=5">
+<link rel="icon" type="image/png" href="./icon-192.png">
+<script>
+window.terrainInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); window.terrainInstallPrompt = e;
+  window.dispatchEvent(new Event('terrain-install-ready'));
+});
+window.addEventListener('appinstalled', () => window.dispatchEvent(new Event('terrain-app-installed')));
+</script>
+<style>
+:root{color-scheme:light;font:16px system-ui,-apple-system,sans-serif;color:#18352e;background:#f2f6f2}
+body{margin:0;padding:20px 15px 45px}
+main{max-width:650px;margin:auto}
+h1{font-size:1.7rem;margin:10px 0 8px}
+p{line-height:1.45}
+.card{border:1px solid #dbe6de;border-radius:15px;background:white;padding:17px;margin:14px 0}
+button{background:#ccef9d;border:0;border-radius:10px;padding:14px 18px;font-size:17px;font-weight:750;color:#183c2e;cursor:pointer;width:100%}
+button:disabled{background:#e3e7e3;color:#68756d}
+.result{margin:10px 0;display:flex;align-items:baseline;gap:10px;justify-content:space-between;border-bottom:1px solid #edf2ed;padding:9px 0}
+.result strong{text-align:right;max-width:65%;font-size:.9rem;overflow-wrap:anywhere}
+.ok{color:#146d41}.bad{color:#b42e28}.maybe{color:#8c6500}
+small{color:#637467}#details{white-space:pre-wrap;word-break:break-word;background:#eff4ef;padding:12px;border-radius:8px;font-size:.8rem}
+a{color:#145c43}
+</style>
+</head>
+<body>
+<main>
+<h1>TerrainScope — Diagnostic d’installation</h1>
+<p>Cette page vérifie la vraie configuration de l’application, sans effacer ni modifier les données de Chrome ou de tes autres applications.</p>
+<div class="card"><div id="lines" aria-live="polite">Tests en cours…</div></div>
+<div class="card">
+<button id="install" disabled>Recherche de l’installation native…</button>
+<p id="status"><small>Chrome doit reconnaître TerrainScope comme application installable pour activer ce bouton.</small></p>
+</div>
+<div class="card"><strong>Détails techniques</strong><pre id="details">Initialisation…</pre><button id="copy" type="button">Copier le diagnostic</button></div>
+<p><a href="./index.html">← Retour à TerrainScope</a></p>
+</main>
+<script>
+const lines=document.getElementById('lines');const details=document.getElementById('details');const state=[];
+function log(label,status,value){state.push({label,status,value:String(value)});render()}
+function render(){lines.replaceChildren();for(const x of state){let div=document.createElement('div');div.className='result';const l=document.createElement('span');l.textContent=x.label;const v=document.createElement('strong');v.className=x.status;v.textContent=x.value;div.append(l,v);lines.append(div)}details.textContent=state.map(x=>x.label+': '+x.value).join('\n')+'\nPage: '+location.href+'\nUser agent: '+navigator.userAgent}
+async function responseInfo(path){const url=new URL(path,location.href);const r=await fetch(url,{cache:'no-store'});return {status:r.status,type:r.headers.get('content-type')||'inconnu',text:r.ok?await r.text():''}}
+const install=document.getElementById('install');const status=document.getElementById('status');
+function updateInstall(){if(window.terrainInstallPrompt){install.disabled=false;install.textContent='Installer réellement TerrainScope';status.textContent='Chrome a déclaré cette application installable.'}}
+window.addEventListener('terrain-install-ready',updateInstall);
+window.addEventListener('terrain-app-installed',()=>{install.disabled=true;install.textContent='Installation confirmée';status.textContent='Chrome a confirmé l’installation.'});
+install.addEventListener('click',async()=>{const p=window.terrainInstallPrompt;if(!p)return;install.disabled=true;try{await p.prompt();const choice=await p.userChoice;status.textContent='Choix : '+choice.outcome;log('Invitation installation','maybe',choice.outcome)}catch(e){log('Erreur invitation','bad',e.message||String(e));status.textContent='Erreur : '+e.message}finally{window.terrainInstallPrompt=null}});
+document.getElementById('copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(details.textContent);document.getElementById('copy').textContent='Copié'}catch(e){const sel=window.getSelection();const range=document.createRange();range.selectNodeContents(details);sel.removeAllRanges();sel.addRange(range)}});
+(async()=>{
+log('Connexion sécurisée',location.protocol==='https:'?'ok':'bad',location.protocol);
+try{const r=await responseInfo('./manifest.webmanifest?diagnostic=5');const m=JSON.parse(r.text);log('Manifeste HTTP',r.status===200?'ok':'bad',r.status+' · '+r.type);log('Identifiant','ok',m.id||'(absent)');log('URL de départ','ok',m.start_url||'(absente)');log('Périmètre','ok',m.scope||'(absent)');}catch(e){log('Manifeste','bad',e.message||String(e))}
+for(const icon of ['icon-192.png','icon-512.png']){try{const url=new URL(icon,location.href);const r=await fetch(url,{cache:'no-store'});const b=await r.blob();const bm=await createImageBitmap(b);log(icon,r.ok?'ok':'bad',r.status+' · '+bm.width+'×'+bm.height+' · '+r.headers.get('content-type'));bm.close()}catch(e){log(icon,'bad',e.message||String(e))}}
+try{const r=await responseInfo('./service-worker.js?diagnostic=5');log('Service worker HTTP',r.status===200?'ok':'bad',r.status+' · '+r.type)}catch(e){log('Service worker HTTP','bad',e.message||String(e))}
+if(!('serviceWorker' in navigator)){log('Service worker API','bad','Indisponible')}else{
+try{const reg=await navigator.serviceWorker.register('./service-worker.js');log('Enregistrement service worker','ok',reg.scope);const sw=reg.active||reg.waiting||reg.installing;log('Service worker en cours','maybe',sw?sw.state:'aucun');try{const ready=await Promise.race([navigator.serviceWorker.ready,new Promise((_,reject)=>setTimeout(()=>reject(new Error('délai > 7 s')),7000))]);log('Service worker prêt','ok',ready.active?.state||'actif')}catch(e){log('Service worker prêt','bad',e.message||String(e))}}
+catch(e){log('Enregistrement service worker','bad',e.message||String(e))}}
+updateInstall();setTimeout(()=>{if(!window.terrainInstallPrompt && install.disabled){install.textContent='Invitation native non disponible';status.textContent='Chrome ne fournit pas actuellement d’invitation d’installation à cette page. Cela peut aussi arriver si Chrome la considère déjà installée. Les résultats du diagnostic ci-dessus aideront à distinguer les causes.'}log('Invitation avantinstallprompt',window.terrainInstallPrompt?'ok':'maybe',window.terrainInstallPrompt?'reçue':'non reçue en 7 s')},7000);
+})();
+</script>
+</body>
+</html>
