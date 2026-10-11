@@ -1,0 +1,24 @@
+name: TerrainScope · vérification des annonces
+
+on:
+  push:
+    paths:
+      - 'aggregator.js'
+      - 'index.html'
+      - 'scripts/test_terrain_filter.js'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  valider-annonces-terrain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Vérifier les annonces de terrain et les faux résultats
+        run: node scripts/test_terrain_filter.js
