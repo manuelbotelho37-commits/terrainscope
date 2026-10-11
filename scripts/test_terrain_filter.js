@@ -68,8 +68,8 @@ assert.ok(html.indexOf('<section id="quickSources"') < html.indexOf('<details id
   'Les recherches directes officielles doivent apparaître avant les pistes Google');
 assert.match(html, /el\('googleLeads'\)\.open=false;/,
   'Les liens Google non vérifiés doivent être repliés à chaque recherche');
-assert.match(html, /TerrainScope V35/,
-  'Version cohérente V35');
+assert.match(html, /TerrainScope V36/,
+  'Version cohérente V36');
 assert.match(source, /Annonces NON vérifiées sur les sites vendeurs/, 'Le statut doit rester incertain');
 
 // Tester les URL TERRAIN de IAD construites depuis les codes postaux officiels.
