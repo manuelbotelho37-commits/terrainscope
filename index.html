@@ -214,7 +214,8 @@
     .unique-source{font-size:11px;letter-spacing:.2px;color:#3c6d54}
     .unique-price{font-size:17px;color:#19603f;white-space:nowrap}
     .unique-card h4{font-size:15px;line-height:1.4;margin:8px 0 5px;color:#213a2d}
-    .unique-details{font-size:12px;color:#62796d;margin:0 0 11px}
+    .unique-details{font-size:12px;color:#62796d;margin:0 0 5px}
+    .unique-freshness{font-size:11px;line-height:1.45;color:#865d26;margin:2px 0 12px}
     .unique-actions{display:flex;flex-direction:column;align-items:flex-start;gap:7px}
     .unique-open{display:inline-block;padding:11px 14px;background:#d3f3a3;color:#1b4a32;border:1px solid #abd58d;border-radius:9px;text-decoration:none;font-size:13px;font-weight:800}
     .unique-shared{font-size:11px;color:#64806f}
@@ -267,7 +268,7 @@
       <span class="price-order" title="Les analyses locales ne consomment aucun crédit d’hébergement.">Recherche gratuite · analyse sur ce téléphone</span>
     </div>
     <p id="developerMatchNotice" role="status" hidden></p><p id="criteriaText" class="criteria-text" hidden></p><div class="content-grid">
-      <section class="results" id="mainResults" aria-live="polite"><section id="uniquePanel" class="unique-panel" hidden><h3>Les terrains trouvés</h3><p class="unique-intro">Une seule liste : Le Bon Coin, SeLoger, Bien’ici, IAD et autres sources. Les doublons reconnaissables sont regroupés automatiquement.</p><div id="uniqueSummary" class="unique-summary" role="status"></div><div id="uniqueResults" class="unique-results"></div><nav id="uniquePages" class="unique-pages" hidden aria-label="Pages des terrains distincts"></nav><p class="unique-disclaimer">Annonces repérées dans Google, pas l’intégralité des sites. Prix, surface, commune et vendeur à confirmer sur la fiche originale. Deux terrains distincts ne sont pas fusionnés sans indices suffisants.</p></section><section id="quickSources" class="quick-sources" hidden><h3>Consulter les sites d'origine</h3><p>Recherche externe complémentaire. Les doublons ne peuvent pas être masqués à l’intérieur des sites tiers.</p><div id="quickSourceLinks" class="quick-source-links"></div></section>
+      <section class="results" id="mainResults" aria-live="polite"><section id="uniquePanel" class="unique-panel" hidden><h3>Liens de terrains à vérifier</h3><p class="unique-intro">Résultats indexés par Google : certains liens peuvent mener à des annonces supprimées ou vendues. L’application ne peut pas confirmer leur disponibilité en temps réel. Les doublons reconnaissables sont regroupés automatiquement.</p><div id="uniqueSummary" class="unique-summary" role="status"></div><div id="uniqueResults" class="unique-results"></div><nav id="uniquePages" class="unique-pages" hidden aria-label="Pages des terrains distincts"></nav><p class="unique-disclaimer">Annonces repérées dans Google, pas l’intégralité des sites. Prix, surface, commune et vendeur à confirmer sur la fiche originale. Deux terrains distincts ne sont pas fusionnés sans indices suffisants.</p></section><section id="quickSources" class="quick-sources" hidden><h3>Consulter les sites d'origine</h3><p>Recherche externe complémentaire. Les doublons ne peuvent pas être masqués à l’intérieur des sites tiers.</p><div id="quickSourceLinks" class="quick-source-links"></div></section>
         <div class="box placeholder" id="placeholder"><div class="bigicon" aria-hidden="true">✓</div><h3>Les annonces directement ici</h3><p>Choisis une ou plusieurs communes et lance la recherche. Touche une annonce pour ouvrir le site d’origine. Les constructeurs identifiés sont écartés.</p><button id="setupMain" class="search" type="button">Paramètres du moteur</button></div>
         <div id="csePanel" class="box cse-holder" hidden><h3>Autres terrains repérés</h3><div id="cseHint" class="cse-hint">Résultats Google non exhaustifs. Vérifie chaque annonce sur son site d’origine.</div><p id="resultSummary" class="result-summary" aria-live="polite"></p><div id="google-results"></div><nav id="pageNavigator" class="pagination-box" aria-label="Pages de résultats" hidden><strong id="pagePosition"></strong><div id="pageButtons" class="pagination-controls"></div><p>Le nombre de pistes correspond uniquement à cette page.</p></nav></div>
       </section>
@@ -281,7 +282,7 @@
     <button id="terrainUp" type="button" title="Retour en haut" aria-label="Retour aux critères de recherche">↑</button>
     <button id="terrainDown" type="button" title="Descendre" aria-label="Descendre dans les résultats">↓</button>
   </nav>
-  <footer class="foot">TerrainScope V33 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+  <footer class="foot">TerrainScope V34 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
