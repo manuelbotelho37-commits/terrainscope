@@ -68,14 +68,21 @@ assert.ok(html.indexOf('<section id="quickSources"') < html.indexOf('<details id
   'Les recherches directes officielles doivent apparaître avant les pistes Google');
 assert.match(html, /el\('googleLeads'\)\.open=false;/,
   'Les liens Google non vérifiés doivent être repliés à chaque recherche');
-assert.match(html, /TerrainScope V37/,
-  'Version cohérente V37');
-assert.match(html, /id="selectedCities"[^>]*><\/div><button id="citySearchBtn"[^>]*type="submit">/,
-  'Le bouton de recherche doit être juste sous les communes sélectionnées');
+assert.match(html, /TerrainScope V38/,
+  'Version cohérente V38');
+assert.match(html, /id="selectedCities"[^>]*><\/div><button id="lotisseursTop"[^>]*type="button">/,
+  'Lotisseurs doit être juste sous les communes sélectionnées');
+assert.match(html, /id="lotisseursTop"[^>]*><\/button><button id="citySearchBtn"[^>]*type="submit">/,
+  'Voir les terrains doit rester directement à côté dans les commandes des communes');
+assert.equal((html.match(/id="lotisseursTop"/g)||[]).length,1,
+  'Un seul bouton Lotisseurs');
 assert.equal((html.match(/type="submit"/g)||[]).length,1,
   'Un seul bouton de recherche pour éviter les doublons en bas du formulaire');
-assert.ok(html.indexOf('id="citySearchBtn"') < html.indexOf('id="lotisseursTop"'),
-  'Recherche accessible sans descendre jusqu’aux autres commandes');
+assert.ok(html.indexOf('id="addCity"') < html.indexOf('id="lotisseursTop"') &&
+  html.indexOf('id="lotisseursTop"') < html.indexOf('id="citySearchBtn"'),
+  'Les boutons doivent être regroupés directement sous Ajouter cette commune');
+assert.match(html, /el\('lotisseursTop'\)\.addEventListener\('click'/,
+  'Le bouton Lotisseurs conserve son fonctionnement');
 assert.match(source, /Annonces NON vérifiées sur les sites vendeurs/, 'Le statut doit rester incertain');
 
 // Tester les URL TERRAIN de IAD construites depuis les codes postaux officiels.
