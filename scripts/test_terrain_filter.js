@@ -60,5 +60,15 @@ assert.match(source, /node\.dataset\.locationStatus!=='match'/, 'La commune doit
 assert.doesNotMatch(source, /return cities\.length===1\?cities\[0\]/, 'Interdire attribution automatique de commune');
 assert.match(html, /!isLandCard\|\|place\.status!==\x27match\x27/, 'Les pages Google non confirmées restent masquées');
 assert.match(source, /previewSaysInactive\(title,description\)/, 'Les annonces explicitement désactivées sont exclues');
+assert.doesNotMatch(source, /\{name:'Le Bon Coin',domain:'leboncoin.fr'\}/,
+  'Aucun passage de collecte de fiches Google Le Bon Coin potentiellement périmées');
+assert.match(source, /if\(host==='leboncoin.fr'\|\|host.endsWith\('\.leboncoin.fr'\)\)return null;/,
+  'Exclure même les annonces LBC découvertes via les autres recherches Google');
+assert.ok(html.indexOf('<section id="quickSources"') < html.indexOf('<details id="googleLeads"'),
+  'Les recherches directes officielles doivent apparaître avant les pistes Google');
+assert.match(html, /el\('googleLeads'\)\.open=false;/,
+  'Les liens Google non vérifiés doivent être repliés à chaque recherche');
+assert.match(html, /TerrainScope V35/,
+  'Version cohérente V35');
 assert.match(source, /Annonces NON vérifiées sur les sites vendeurs/, 'Le statut doit rester incertain');
-console.log('TerrainScope : '+scenarios.length+' contrôles de type + '+inactiveExamples.length+' contrôles de statut explicite VALIDÉS.');
+console.log('TerrainScope : '+scenarios.length+' contrôles de type + '+inactiveExamples.length+' contrôles de statut et 5 tests de protection contre les liens périmés VALIDÉS.');
