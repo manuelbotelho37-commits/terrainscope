@@ -68,8 +68,8 @@ assert.ok(html.indexOf('<section id="quickSources"') < html.indexOf('<details id
   'Les recherches directes officielles doivent apparaître avant les pistes Google');
 assert.match(html, /el\('googleLeads'\)\.open=false;/,
   'Les liens Google non vérifiés doivent être repliés à chaque recherche');
-assert.match(html, /TerrainScope V39/,
-  'Version cohérente V39');
+assert.match(html, /TerrainScope V40/,
+  'Version cohérente V40');
 assert.match(html, /id="selectedCities"[^>]*><\/div><button id="lotisseursTop"[^>]*type="button">/,
   'Lotisseurs doit être juste sous les communes sélectionnées');
 assert.match(html, /id="lotisseursTop"[^>]*>[^<]*<\/button><button id="citySearchBtn"[^>]*type="submit">/,
@@ -82,6 +82,10 @@ assert.match(html, /class="status-row" id="statusRow" hidden/,
   'Le titre Résultats ne doit pas créer d’espace inutile avant la recherche');
 assert.match(html, /el\('statusRow'\)\.hidden=false;/,
   'Le titre Résultats réapparaît quand on recherche une commune');
+assert.match(html, /DEVELOPERS\.length\+' lotisseurs référencés · '\+checkedDevelopers\.length\+' catalogues vérifiés'/,
+  'L’en-tête Lotisseurs doit distinguer tous les professionnels des catalogues vérifiés');
+assert.match(html, /id="lotisseursTop"/,
+  'Le bouton Lotisseurs reste accessible sous la commune');
 assert.match(html, /el\('settingsBtn'\)\.onclick=openModal/,
   'Les réglages du moteur restent accessibles en haut');
 assert.equal((html.match(/type="submit"/g)||[]).length,1,
