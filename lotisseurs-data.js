@@ -1,7 +1,7 @@
-/* Relevé public daté, non exhaustif. Aucune disponibilité en temps réel. */
+/* Relevé public daté, non exhaustif. Jamais de disponibilité certifiée en temps réel. */
 window.TERRAIN_LOTISSEURS_DATA = {
   "date": "2026-10-11",
-  "scope": "Sélection de programmes repérés dans les pages officielles ; non exhaustive. Les quantités affichées sont celles annoncées par les sites au relevé, pas des disponibilités certifiées en temps réel.",
+  "scope": "Sélection NON EXHAUSTIVE de programmes consultés sur les sites officiels. Les quantités LIBRE sont les statuts visibles lors du relevé, non une garantie de disponibilité actuelle.",
   "programs": [
     {
       "developer": "Villadim",
@@ -481,6 +481,106 @@ window.TERRAIN_LOTISSEURS_DATA = {
       "surfaceMax": 500,
       "priceFrom": 65000,
       "countLabel": "annonce individuelle – quantité restante non vérifiée"
+    },
+    {
+      "developer": "Lelièvre Immobilier",
+      "city": "Sainte-Maure-de-Touraine",
+      "name": "Villa Touraine",
+      "url": "https://www.lelievre-immobilier.com/vente/terrain-a-vendre-ste-maure-de-touraine-ref-pfontenell",
+      "remaining": 6,
+      "countLabel": "lots affichés « LIBRE » sur le site officiel (relevé daté)",
+      "surfaceMin": 522,
+      "surfaceMax": 593,
+      "priceFrom": 46000,
+      "note": "6 lots marqués LIBRE dans la grille consultée ; disponibilité à confirmer directement chez Lelièvre. L'annonce du programme mentionne d'autres surfaces qui ne sont pas nécessairement encore libres.",
+      "lots": [
+        {
+          "number": "00004",
+          "surface": 532,
+          "price": 47000,
+          "status": "libre"
+        },
+        {
+          "number": "00033",
+          "surface": 536,
+          "price": 47000,
+          "status": "libre"
+        },
+        {
+          "number": "00013",
+          "surface": 530,
+          "price": 47000,
+          "status": "libre"
+        },
+        {
+          "number": "00014",
+          "surface": 522,
+          "price": 46000,
+          "status": "libre"
+        },
+        {
+          "number": "00015",
+          "surface": 593,
+          "price": 50000,
+          "status": "libre"
+        },
+        {
+          "number": "00028",
+          "surface": 527,
+          "price": 46000,
+          "status": "libre"
+        }
+      ]
+    },
+    {
+      "developer": "Lelièvre Immobilier",
+      "city": "Montbazon",
+      "name": "Cristal",
+      "url": "https://www.lelievre-immobilier.com/vente/terrain-a-vendre-montbazon-ref",
+      "remaining": 6,
+      "countLabel": "lots affichés « LIBRE » sur le site officiel (relevé daté)",
+      "surfaceMin": 548,
+      "surfaceMax": 666,
+      "priceFrom": 98000,
+      "note": "Le descriptif annonce 10 parcelles ; seuls 6 lots sont marqués LIBRE dans la grille consultée. Le nombre de lots encore disponibles doit être confirmé chez Lelièvre.",
+      "lots": [
+        {
+          "number": "00002",
+          "surface": 653,
+          "price": 115000,
+          "status": "libre"
+        },
+        {
+          "number": "00003",
+          "surface": 601,
+          "price": 108000,
+          "status": "libre"
+        },
+        {
+          "number": "00004",
+          "surface": 548,
+          "price": 98000,
+          "status": "libre"
+        },
+        {
+          "number": "00006",
+          "surface": 603,
+          "price": 108000,
+          "status": "libre"
+        },
+        {
+          "number": "00008",
+          "surface": 553,
+          "price": 98000,
+          "status": "libre"
+        },
+        {
+          "number": "00010",
+          "surface": 666,
+          "price": 116000,
+          "status": "libre"
+        }
+      ]
     }
   ]
 };
