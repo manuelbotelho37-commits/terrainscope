@@ -261,7 +261,7 @@
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V22 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <footer class="foot">TerrainScope V23 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -336,7 +336,7 @@
         info.hidden=false;
         info.textContent=matched.length
           ?matchedDevelopers.length+' lotisseur(s) avec '+matched.length+' programme(s) repéré(s) sur '+names.join(', ')+'. Ouvre « Lotisseurs » pour voir les détails. Quantités à reconfirmer.'
-          :'Aucun programme de lotisseur repéré dans notre sélection sur '+names.join(', ')+'. Cela ne signifie pas qu’aucun terrain n’y est disponible.';
+          :'Inventaire incomplet pour '+names.join(', ')+'. Aucun programme encore référencé pour cette recherche : ouvre les sites officiels des lotisseurs pour vérifier les offres.';
       }else info.hidden=true;
       const meta=document.createElement('p');meta.className='dev-catalog-top';
       meta.textContent=catalog.programs.length+' programmes fonciers référencés auprès de '+DEVELOPERS.length+' lotisseurs. Relevé du '+(catalog.date||'date inconnue')+'. Inventaire non exhaustif : vérifie les disponibilités chez le vendeur.';
@@ -358,18 +358,18 @@
         const label=document.createElement('span');label.textContent=dev.name;
         const count=document.createElement('span');count.className='dev-subcount';
         count.textContent=names.length
-          ?selected.length+' ici · '+items.length+' référencés'
-          :items.length+' programmes';
+          ?(selected.length?selected.length+' repéré(s) ici':'À vérifier ici')+' · '+(items.length?items.length+' programme(s) dans notre relevé':'inventaire incomplet')
+          :(items.length?items.length+' programme(s) référencé(s)':'inventaire incomplet');
         caption.append(label,count);group.append(caption);
         const body=document.createElement('div');body.className='dev-group-content';
         if(names.length&&selected.length===0){
           const empty=document.createElement('div');empty.className='dev-empty';
-          empty.textContent='Pas de programme repéré dans les communes recherchées. Les autres programmes du lotisseur restent consultables ci-dessous.';
+          empty.textContent='Aucune opération recensée pour cette commune dans notre relevé incomplet. Consulte le site officiel du lotisseur pour vérifier ses offres.';
           body.append(empty);
         }
         if(!items.length){
           const p=document.createElement('p');p.className='dev-empty';
-          p.textContent='Programmes détaillés non encore récupérés automatiquement. Consulter les annonces du lotisseur.';
+          p.textContent='Inventaire incomplet : programmes détaillés non encore référencés. Ouvre le site du lotisseur pour consulter son offre réelle.';
           body.append(p);
         }
         for(const program of items){
@@ -418,7 +418,9 @@
         group.append(body);root.append(group);
       }
       const active=el('developerAccordion');
-      if(active)active.querySelector('summary span:first-child').textContent='🏘 Lotisseurs · '+matchedDevelopers.length+(names.length?' ici':' sur 5');
+      if(active)active.querySelector('summary span:first-child').textContent=names.length
+        ?(matchedDevelopers.length?'🏘 Lotisseurs · '+matchedDevelopers.length+' repéré(s) ici':'🏘 Lotisseurs · inventaire incomplet')
+        :'🏘 Lotisseurs · '+DEVELOPERS.length+' partenaires';
     }
     function getPrice(s){
       // Prix suivi du symbole €, à l'exclusion des prix par m².
