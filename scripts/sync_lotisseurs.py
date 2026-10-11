@@ -23,6 +23,9 @@ ROOT = Path(__file__).resolve().parent.parent
 OUTPUT = ROOT / "lotisseurs-live.json"
 AFEDIM = "https://www.afedim.fr/fr/achat-immobilier/annonces/Terrain/Indre-et-Loire-France/surface-0-800-m2/budget-0-2000000-euros/rayon-0-km/Resultats"
 VILLADIM = "https://www.villadim.fr/programmes/indre-et-loire"
+SET = "https://set.fr/nos-offres/pour-les-particuliers/terrains-a-vendre/"
+VTH = "https://www.valtourainehabitat-vente.fr/lotissement/"
+LELIEVRE = "https://www.lelievre-immobilier.com/terrains-a-vendre-indre-et-loire"
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; TerrainScopeCatalogAudit/1.0; +https://manuelbotelho37-commits.github.io/terrainscope/)"}
 MAX_COUNT = 200
 
@@ -129,12 +132,125 @@ def fetch_villadim() -> dict:
             browser.close()
 
 
+
+def observed(programs: list[dict], method: str) -> dict:
+    # Repérage automatique utile, mais sans compteur officiel réconcilié.
+    # Ne jamais afficher le nombre repéré comme total garanti.
+    links = {p["url"]: p for p in programs if p.get("url")}
+    return {"status": "observed" if links else "incomplete",
+            "expected": None, "found": len(links) if links else None,
+            "programs": list(links.values()),
+            "lotsVerified": False,
+            "method": method,
+            "message": ("Fiches repérées, exhaustivité du catalogue non attestée."
+                        if links else "Aucune fiche identifiée : résultat non exploitable, pas zéro disponible.")}
+
+
+def extract_set(html: str) -> dict:
+    soup = BeautifulSoup(html, "html.parser")
+    programs = []
+    for a in soup.find_all("a", href=True):
+        if "en savoir plus" not in a.get_text(" ", strip=True).lower():
+            continue
+        link = normalized_link(a["href"], SET)
+        netloc = urlparse(link).netloc
+        if not link or netloc in ("set.fr", "fr.linkedin.com"):
+            continue
+        # Les cartes individuelles SET pointent vers le site dédié du programme.
+        title = a.find_previous(["h3", "h4"])
+        if not title:
+            continue
+        name = title.get_text(" ", strip=True)
+        if not name or len(name) > 95:
+            continue
+        programs.append({"url": link, "label": name, "city": "Commune à vérifier"})
+    return observed(programs, "Programmes repérés sur la page officielle SET ; pas de compteur total certifiable.")
+
+
+def fetch_set() -> dict:
+    r = requests.get(SET, timeout=30, headers=HEADERS)
+    r.raise_for_status()
+    return extract_set(r.text)
+
+
+def extract_vth(html: str, base: str) -> tuple[list[dict], list[str]]:
+    soup = BeautifulSoup(html, "html.parser")
+    found, pagination = {}, []
+    for a in soup.find_all("a", href=True):
+        url = normalized_link(a["href"], base)
+        if urlparse(url).netloc != "valtourainehabitat-vente.fr":
+            continue
+        m = re.search(r"/lotissement/([^/]+)$", url)
+        if m:
+            # Les autres liens WordPress n'ont pas ce chemin de fiche.
+            slug = m.group(1)
+            found[url] = {"url": url, "label": slug.replace("-", " ").title(),
+                          "city": "Commune à vérifier"}
+        if re.search(r"/lotissement/page/\d+$", url):
+            pagination.append(url)
+    return list(found.values()), pagination
+
+
+def fetch_vth() -> dict:
+    visited, pending, all_programs = set(), [VTH], {}
+    while pending and len(visited) < 12:
+        url = pending.pop(0)
+        if url in visited:
+            continue
+        visited.add(url)
+        r = requests.get(url, timeout=30, headers=HEADERS)
+        r.raise_for_status()
+        pages, next_pages = extract_vth(r.text, url)
+        for program in pages:
+            all_programs[program["url"]] = program
+        pending.extend(url for url in next_pages if url not in visited)
+    result = observed(list(all_programs.values()),
+                      "Fiches parcourues dans la pagination officielle VTH, sans compteur total indépendant.")
+    result["pagesVisited"] = len(visited)
+    if pending:
+        result["status"] = "incomplete"
+        result["message"] = "Pagination VTH trop longue ou incomplète. Vérification exhaustive impossible."
+    return result
+
+
+def fetch_lelievre() -> dict:
+    # Ce catalogue est injecté en JavaScript et peut présenter un bouton 'Voir plus'.
+    # Les opérations trouvées ne sont JAMAIS annoncées comme total officiel.
+    from playwright.sync_api import sync_playwright
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
+        try:
+            page = browser.new_page(viewport={"width": 1400, "height": 1100}, locale="fr-FR")
+            page.goto(LELIEVRE, wait_until="domcontentloaded", timeout=45000)
+            page.wait_for_timeout(3000)
+            for _ in range(4):
+                page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                page.wait_for_timeout(650)
+            soup = BeautifulSoup(page.content(), "html.parser")
+            programs = []
+            for a in soup.find_all("a", href=True):
+                link = normalized_link(a["href"], LELIEVRE)
+                if not re.search(r"lelievre-immobilier\.com/.+(?:terrain-a-vendre|lotissement)", link, re.I):
+                    continue
+                slug = urlparse(link).path.rstrip("/").split("/")[-1]
+                if slug in ("terrains-a-vendre-indre-et-loire", "terrain-a-vendre"):
+                    continue
+                programs.append({"url": link, "label": slug.replace("-", " ").title(),
+                                 "city": "Commune à vérifier"})
+            return observed(programs, "Offres de terrain repérées dans la page Lelièvre (pagination non garantie).")
+        finally:
+            browser.close()
+
+
 def main() -> int:
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     results = {}
     for name, url, fn in [
         ("Villadim", VILLADIM, fetch_villadim),
         ("CM-CIC · AFEDIM", AFEDIM, fetch_afedim),
+        ("Groupe SET", SET, fetch_set),
+        ("Val Touraine Habitat", VTH, fetch_vth),
+        ("Lelièvre Immobilier", LELIEVRE, fetch_lelievre),
     ]:
         try:
             result = fn()
@@ -147,12 +263,6 @@ def main() -> int:
         results[name] = result
         print(f"{name}: {result['status']} - total officiel={result['expected']} "
               f"liens={result['found']}", flush=True)
-    # Les autres lotisseurs restent explicitement hors périmètre automatique.
-    for name in ["Groupe SET", "Val Touraine Habitat", "Lelièvre Immobilier"]:
-        results[name] = {"status": "not_configured", "expected": None, "found": None,
-                         "programs": [], "lotsVerified": False, "checkedAt": None,
-                         "source": None,
-                         "message": "Synchronisation automatique non encore implémentée pour ce site."}
     report = {"schema": 1, "generatedAt": now,
               "notice": "Contrôle des catalogues, PAS des stocks de lots. Aucun lot libre, vendu ou optionné n'est certifié par ce fichier.",
               "developers": results}
@@ -178,7 +288,12 @@ def test():
     assert extract_villadim(villadim + '<a href="/terrains/monnaie/les-terrasses-de-bel-r">doublon (37)</a>')["found"] == 2
     assert extract_afedim(afedim + '<a href="/fr/achat-immobilier/annonces/programme/terrain/azay-sur-cher-37/015753/Fiche">doublon</a>')["found"] == 2
     assert all("lotsVerified" in extract_afedim(afedim) for _ in range(1))
-    print("8 contrôles du moteur d'audit : OK")
+    set_mock = '<h3>L Orée du Bois</h3><a href="https://loreedubois-veigne.fr/">En savoir plus</a>'
+    assert extract_set(set_mock)["status"] == "observed"
+    assert extract_set("<p>Erreur temporaire</p>")["status"] == "incomplete"
+    vth_mock = '<a href="/lotissement/bellevue/">Voir le lotissement</a>'
+    assert len(extract_vth(vth_mock, VTH)[0]) == 1
+    print("11 contrôles du moteur d'audit : OK")
 
 
 if __name__ == "__main__":
