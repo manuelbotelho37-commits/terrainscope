@@ -168,8 +168,11 @@ def test():
     assert extract_villadim(villadim)["status"] == "verified"
     assert extract_villadim(villadim.replace("2 programmes", "11 programmes"))["status"] == "incomplete"
     assert extract_villadim("<p>Chargement des programmes…</p>")["status"] == "incomplete"
+    # Une source dupliquant des liens ne doit jamais faire monter le compteur.
+    assert extract_villadim(villadim + '<a href="/terrains/monnaie/les-terrasses-de-bel-r">doublon</a>')["found"] == 2
+    assert extract_afedim(afedim + '<a href="/fr/achat-immobilier/annonces/programme/terrain/azay-sur-cher-37/015753/Fiche">doublon</a>')["found"] == 2
     assert all("lotsVerified" in extract_afedim(afedim) for _ in range(1))
-    print("6 contrôles du moteur d'audit : OK")
+    print("8 contrôles du moteur d'audit : OK")
 
 
 if __name__ == "__main__":
