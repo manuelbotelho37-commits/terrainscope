@@ -139,8 +139,10 @@
 /* Commune : suggestions visibles sur le Galaxy Z Fold, au-dessus du formulaire. */
     #form .field:first-child{position:relative;z-index:30}
     #form .inwrap{position:relative;z-index:40}
+    /* Pas de zone défilante imbriquée : Android peut piéger le geste de défilement. */
     #citySuggestions{position:relative!important;top:auto!important;left:auto!important;right:auto!important;
-      z-index:5000;max-height:min(340px,44vh);overflow-y:auto;overscroll-behavior:contain;
+      z-index:20;height:auto;max-height:none!important;overflow:visible!important;
+      overscroll-behavior:auto!important;touch-action:pan-y!important;
       margin-top:6px;background:#fff;box-shadow:0 7px 19px #112f3224;border:2px solid #9ccbb3;
       border-radius:12px;width:100%}
     #citySuggestions[hidden]{display:none!important}
@@ -150,6 +152,9 @@
     #citySuggestions .city-placeholder{padding:12px;color:#49645a;font-size:12px;line-height:1.5}
     #citySuggestions .city-item{border-bottom:1px solid #edf3ef}
     #citySuggestions .city-item:last-child{border-bottom:0}
+    #citySuggestions .city-close{width:100%;display:block;text-align:center;background:#eef6ed;
+      border:0;border-top:1px solid #dce7dc;border-radius:0 0 10px 10px;
+      padding:12px;color:#365747;font-size:13px;font-weight:800;min-height:44px}
     /* Un accès direct aux lotisseurs, dès l'accueil. */
     #lotisseursTop{background:#e8f5da;color:#214e35;border:1px solid #a9d39d;border-radius:10px;
       min-height:42px;padding:10px 13px;font-weight:850;font-size:13px;white-space:nowrap}
@@ -265,7 +270,7 @@
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V30 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <footer class="foot">TerrainScope V31 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -850,6 +855,7 @@
       e?.preventDefault();
       // Un nom encore saisi dans le champ est ajouté avant la recherche.
       if(clean(el('city').value))addCity(clean(el('city').value));
+      el('city').blur();
       if(!selectedCities.length){el('city').focus();el('statusBadge').textContent='Ajoute au moins une commune';return}
       const cities=[...selectedCities];
       googleCurrentPage=1;el('pageNavigator').hidden=true;el('csePanel').dataset.mirrorPager='false';
@@ -926,7 +932,8 @@
       const city=clean(raw);
       if(!city)return;
       if(!selectedCities.some(s=>normalize(s)===normalize(city)))selectedCities.push(city);
-      cityInput.value='';el('citySuggestions').hidden=true;
+      cityInput.value='';
+      closeCitySuggestions();
       renderCities();return true;
     }
     // Recherche tolérante aux accents, tirets, apostrophes et espaces.
@@ -942,7 +949,7 @@
         const aa=citySearchKey(a),bb=citySearchKey(b);
         const pa=aa.startsWith(search)?0:1,pb=bb.startsWith(search)?0:1;
         return pa-pb||aa.localeCompare(bb,'fr');
-      }).slice(0,12);
+      }).slice(0,5);
     }
     function drawSuggestions(){
       const box=el('citySuggestions');
@@ -959,7 +966,10 @@
           const btn=document.createElement('button');
           btn.type='button';btn.className='city-item';btn.role='option';
           btn.textContent=city;
-          btn.addEventListener('click',()=>{addCity(city);cityInput.focus()});
+          btn.addEventListener('click',()=>{
+            addCity(city);
+            cityInput.blur(); // Referme le clavier Samsung après la sélection.
+          });
           box.append(btn);
         }
       }else{
@@ -969,8 +979,20 @@
             'Répertoire des communes indisponible. Tu peux ajouter le nom saisi.';
         box.append(info);
       }
+      const close=document.createElement('button');
+      close.type='button';close.className='city-close';
+      close.textContent='Fermer les propositions ×';
+      close.addEventListener('click',()=>{
+        closeCitySuggestions();
+        cityInput.blur();
+      });
+      box.append(close);
       box.hidden=false;
       cityInput.setAttribute('aria-expanded','true');
+    }
+    function closeCitySuggestions(){
+      el('citySuggestions').hidden=true;
+      cityInput.setAttribute('aria-expanded','false');
     }
     cityInput.addEventListener('input',drawSuggestions);
     cityInput.addEventListener('compositionend',drawSuggestions);
@@ -985,17 +1007,20 @@
         if(clean(cityInput.value))addCity(first||cityInput.value);
         else if(selectedCities.length)handleSearch();
       }
-      if(e.key==='Escape'){el('citySuggestions').hidden=true;cityInput.setAttribute('aria-expanded','false')}
+      if(e.key==='Escape'){closeCitySuggestions();cityInput.blur()}
     });
     el('addCity').onclick=()=>{
       const typed=cityInput.value;
       if(clean(typed))addCity(matchingCities(typed)[0]||typed);
-      cityInput.focus();drawSuggestions();
+      closeCitySuggestions();
+      cityInput.blur();
     };
-    document.addEventListener('click',e=>{
-      if(!cityInput.parentElement.parentElement.contains(e.target)){
-        el('citySuggestions').hidden=true;cityInput.setAttribute('aria-expanded','false');
-      }
+    document.addEventListener('pointerdown',e=>{
+      if(!cityInput.parentElement.contains(e.target))closeCitySuggestions();
+    });
+    cityInput.addEventListener('blur',()=>{
+      // Laisser les boutons de la liste traiter leur clic avant sa fermeture.
+      setTimeout(()=>{if(document.activeElement!==cityInput)closeCitySuggestions()},180);
     });
     renderCities();
     loadCompleteCityIndex();
