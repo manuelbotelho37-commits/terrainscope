@@ -146,6 +146,43 @@
     #citySuggestions .city-item{display:block;min-height:43px;line-height:1.45;padding:11px 12px;
       font-size:14px;font-weight:700;color:#1c4b37}
     #citySuggestions .city-item:focus,#citySuggestions .city-item:hover{background:#e4f4e2}
+    /* Un accès direct aux lotisseurs, dès l'accueil. */
+    #lotisseursTop{background:#e8f5da;color:#214e35;border:1px solid #a9d39d;border-radius:10px;
+      min-height:42px;padding:10px 13px;font-weight:850;font-size:13px;white-space:nowrap}
+    #developerAccordion{padding:0;overflow:hidden;border:1px solid #d7e7da;border-radius:15px;background:white}
+    #developerAccordion>summary{list-style:none;display:flex;align-items:center;gap:8px;cursor:pointer;
+      color:#194b30;background:#e3f4d6;padding:14px;min-height:58px;font-size:16px;font-weight:850}
+    #developerAccordion>summary::-webkit-details-marker{display:none}
+    #developerAccordion>summary:focus-visible{outline:3px solid #3b7a4f;outline-offset:-4px}
+    #developerAccordion .lotisseur-chevron{margin-left:auto;font-size:20px}
+    #developerAccordion .developer-body{padding:10px 12px 13px}
+    #developerAccordion .developer-body>.caption{font-size:11px;line-height:1.45;margin:5px 0 8px}
+    #developerAccordion[open] .developer-body{max-height:74vh;overflow-y:auto;overscroll-behavior:contain}
+    #developerMatchNotice{margin:10px 1px;padding:12px 13px;background:#e8f6e4;color:#2b563b;
+      border:1px solid #cfebc9;border-radius:11px;font-size:13px;font-weight:800;line-height:1.45}
+    #developerMatchNotice[hidden]{display:none}
+    .dev-catalog-top{font-size:11px;color:#536d61;line-height:1.5;margin-bottom:9px}
+    .dev-group{margin:8px 0;border:1px solid #d9e5d8;border-radius:11px;overflow:hidden;background:#fff}
+    .dev-group>summary{list-style:none;cursor:pointer;background:#f0f7ed;padding:12px 11px;
+      display:flex;align-items:center;gap:9px;justify-content:space-between;
+      font-size:13px;line-height:1.35;color:#254b35;font-weight:850}
+    .dev-group>summary::-webkit-details-marker,.dev-program>summary::-webkit-details-marker{display:none}
+    .dev-group>summary .dev-subcount{font-size:11px;color:#577663;font-weight:700}
+    .dev-group-content{padding:7px 10px 11px}
+    .dev-program{margin:8px 0;padding:0;border:1px solid #dfebe0;background:white;border-radius:9px;overflow:hidden}
+    .dev-program>summary{list-style:none;cursor:pointer;font-size:12px;line-height:1.45;color:#254c37;font-weight:800;padding:11px 10px}
+    .dev-program>summary .program-city{color:#6b7e70;display:block;font-size:11px;font-weight:650;margin-top:3px}
+    .dev-program>summary .program-count{display:block;color:#2d6643;font-weight:800;font-size:11px;margin-top:5px}
+    .dev-program .program-body{border-top:1px solid #e7eee5;background:#fcfdfb;padding:10px}
+    .dev-program .program-body p{margin:4px 0;font-size:11px;color:#4c6656;line-height:1.5}
+    .dev-program .program-body a{display:inline-block;padding:9px 10px;border-radius:8px;background:#dcf1d3;color:#255a3b;
+      text-decoration:none;font-size:12px;font-weight:850;margin:9px 0 3px}
+    .dev-program .lot-row{border-bottom:1px solid #e9efea;padding:8px 0;font-size:11px;line-height:1.5;color:#364f40}
+    .dev-program .lot-row:last-child{border-bottom:none}
+    .dev-program .lot-row span{display:block}
+    .dev-empty{font-size:11px;line-height:1.5;color:#6b7e71;padding:8px 0}
+    @media(min-width:701px){#professionalSources{position:sticky;top:10px;align-self:start}}
+    @media(max-width:700px){#lotisseursTop{width:100%}}
     /* V18 : une seule liste de terrains, toutes sources confondues. */
     #csePanel{position:absolute!important;left:-15000px!important;top:0!important;
       width:850px!important;height:1px!important;overflow:hidden!important;
@@ -193,7 +230,7 @@
           <div class="field"><label for="surface">Surface mini (m²)</label><input id="surface" type="number" inputmode="numeric" min="0" step="1" placeholder="Ex. 500"></div>
           <div class="field"><label for="budget">Budget maxi (€)</label><input id="budget" type="number" inputmode="numeric" min="0" step="1000" placeholder="Ex. 120000"></div>
         </div>
-        <div class="actions"><button class="search" type="submit">⌕ &nbsp;Voir les terrains</button><button class="light" id="resetBtn" type="button">Effacer</button><span class="mini-note">Recherche ponctuelle : les résultats précédents sont remplacés à chaque demande.</span></div>
+        <div class="actions"><button class="search" type="submit">⌕ &nbsp;Voir les terrains</button><button id="lotisseursTop" type="button">🏘 Lotisseurs · programmes et terrains</button><button class="light" id="resetBtn" type="button">Effacer</button><span class="mini-note">Recherche ponctuelle : les résultats précédents sont remplacés à chaque demande.</span></div>
       </form>
     </section>
     <div class="status-row"><h2 id="sectionTitle">Résultats</h2><span id="statusBadge" class="status-pill" role="status">Prêt à rechercher</span></div>
@@ -213,18 +250,18 @@
       <span class="price-order">Sources prioritaires, puis prix croissant</span>
       <span class="price-order" title="Les analyses locales ne consomment aucun crédit d’hébergement.">Recherche gratuite · analyse sur ce téléphone</span>
     </div>
-    <p id="criteriaText" class="criteria-text" hidden></p><div class="content-grid">
+    <p id="developerMatchNotice" role="status" hidden></p><p id="criteriaText" class="criteria-text" hidden></p><div class="content-grid">
       <section class="results" id="mainResults" aria-live="polite"><section id="uniquePanel" class="unique-panel" hidden><h3>Les terrains trouvés</h3><p class="unique-intro">Une seule liste : Le Bon Coin, SeLoger, Bien’ici, IAD et autres sources. Les doublons reconnaissables sont regroupés automatiquement.</p><div id="uniqueSummary" class="unique-summary" role="status"></div><div id="uniqueResults" class="unique-results"></div><nav id="uniquePages" class="unique-pages" hidden aria-label="Pages des terrains distincts"></nav><p class="unique-disclaimer">Annonces repérées dans Google, pas l’intégralité des sites. Prix, surface, commune et vendeur à confirmer sur la fiche originale. Deux terrains distincts ne sont pas fusionnés sans indices suffisants.</p></section><section id="quickSources" class="quick-sources" hidden><h3>Consulter les sites d'origine</h3><p>Recherche externe complémentaire. Les doublons ne peuvent pas être masqués à l’intérieur des sites tiers.</p><div id="quickSourceLinks" class="quick-source-links"></div></section>
         <div class="box placeholder" id="placeholder"><div class="bigicon" aria-hidden="true">✓</div><h3>Les annonces directement ici</h3><p>Choisis une ou plusieurs communes et lance la recherche. Touche une annonce pour ouvrir le site d’origine. Les constructeurs identifiés sont écartés.</p><button id="setupMain" class="search" type="button">Paramètres du moteur</button></div>
         <div id="csePanel" class="box cse-holder" hidden><h3>Autres terrains repérés</h3><div id="cseHint" class="cse-hint">Résultats Google non exhaustifs. Vérifie chaque annonce sur son site d’origine.</div><p id="resultSummary" class="result-summary" aria-live="polite"></p><div id="google-results"></div><nav id="pageNavigator" class="pagination-box" aria-label="Pages de résultats" hidden><strong id="pagePosition"></strong><div id="pageButtons" class="pagination-controls"></div><p>Le nombre de pistes correspond uniquement à cette page.</p></nav></div>
       </section>
       <aside class="rail" id="professionalSources" aria-label="Lotisseurs et aménageurs">
-        <div class="box"><h3>Lotisseurs &amp; aménageurs</h3><p class="caption">Les liens ouvrent directement les offres de terrains. Lorsqu’un filtre de ville officiel est absent, utilise le lien Google ciblé sur la commune.</p><div id="developers"></div></div>
+        <details class="box" id="developerAccordion"><summary><span>🏘 Lotisseurs</span><span class="lotisseur-chevron" aria-hidden="true">⌄</span></summary><div class="developer-body"><p class="caption">Programmes repérés dans les sources officielles, avec détails des lots lorsqu'ils sont publiés.</p><div id="developers"></div></div></details>
         <div class="box"><h3>Recherches par site</h3><p class="caption">Les recherches ouvrent les sites immobiliers. Les sites externes peuvent afficher des communes voisines ou des offres de constructeurs, que TerrainScope ne contrôle pas.</p><div id="sites"><p class="notice">Lancez une recherche pour activer les liens.</p></div><a href="#" id="allSites" class="general" hidden target="_blank" rel="noopener noreferrer">↗ Google · Recherche Web</a></div>
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V19 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <footer class="foot">TerrainScope V21 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -236,6 +273,7 @@
     <div class="dialog-actions"><button id="saveCx" class="search" type="button">Enregistrer</button><button id="removeCx" class="light" type="button">Revenir au moteur initial</button></div>
     <p><small>La version gratuite peut comporter des publicités et être soumise à des restrictions Google. L'identifiant est conservé localement sur cet appareil ; aucune annonce ni historique de recherche n'est stocké par TerrainScope. Google et les sites consultés appliquent leurs propres règles de traitement des recherches.</small></p>
   </div></div>
+  <script src="./lotisseurs-data.js"></script>
   <script>
     'use strict';
     // Le prototype n'utilise aucune API non autorisée. Les résultats sont obtenus
@@ -552,6 +590,11 @@
       const makeLink=(label,url,main,help,internal=false)=>{
         const a=document.createElement('a');a.href=url;
         if(!internal){a.target='_blank';a.rel='noopener noreferrer'}
+        else if(url==='#developerAccordion')a.addEventListener('click',event=>{
+          event.preventDefault();
+          el('developerAccordion').open=true;
+          el('developerAccordion').scrollIntoView({behavior:'smooth',block:'start'});
+        });
         if(main)a.className='main-source';
         a.append(document.createTextNode(label+' ↗'));
         const small=document.createElement('small');small.textContent=help;a.append(small);root.append(a);
@@ -571,7 +614,7 @@
           ?'https://www.iadfrance.fr/annonces/joue-les-tours-37300/vente/terrain':linkFor([city],'iadfrance.fr');
         makeLink('4 · IAD · '+city,direct,false,normalize(city)==='joue-les-tours'?'Annonces de terrains IAD pour Joué-lès-Tours':'Recherche ciblée IAD via Google');
       }
-      makeLink('5 · Lotisseurs & aménageurs','#developers',false,'Villadim, SET, AFEDIM, Val Touraine Habitat, Lelièvre',true);
+      makeLink('5 · Lotisseurs & aménageurs','#developerAccordion',false,'Voir les programmes disponibles sur les sites officiels',true);
       el('quickSources').hidden=false;
     }
     function handleSearch(e){
