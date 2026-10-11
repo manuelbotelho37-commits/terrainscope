@@ -261,7 +261,7 @@
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V21 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <footer class="foot">TerrainScope V22 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -639,8 +639,7 @@
       if(window.TerrainAggregator){window.TerrainAggregator.onRendered();return}
       (nodes||[]).forEach(enhanceResult);
     }
-    // Le collecteur gere le rendu : pas d'observateur modifiant les resultats Google.
-    refreshResultMode();
+    // Le mode d'affichage est initialise plus haut. L'ancien controle a ete supprime.
     function loadGoogleEngine(){
       const cx=settingsStore.getItem('terrainScopeCx')||DEFAULT_CX;if(!cx)return;
       googleConfigured=true;
