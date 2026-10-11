@@ -281,7 +281,7 @@
     <button id="terrainUp" type="button" title="Retour en haut" aria-label="Retour aux critères de recherche">↑</button>
     <button id="terrainDown" type="button" title="Descendre" aria-label="Descendre dans les résultats">↓</button>
   </nav>
-  <footer class="foot">TerrainScope V32 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+  <footer class="foot">TerrainScope V33 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -682,7 +682,10 @@
       const directory=directoryPage(title);
       // Les annuaires et les portails mixtes restent accessibles au contrôle pro,
       // mais pas parmi les annonces individuelles présentées au client.
-      const hideFromClient=(mixedPortal||directory) && kind!=='constructeurs';
+      // Le classement Google ne suffit pas : seule une fiche terrain individuelle
+      // peut entrer dans la liste client. Écarter pages IAD de conseillers/maisons.
+      const isLandCard=window.TerrainAggregator?.isIndividualLandListing?.(title,href)===true;
+      const hideFromClient=(mixedPortal||directory||!isLandCard||place.status!=='match') && kind!=='constructeurs';
       node.dataset.clientHidden=String(hideFromClient);
       node.dataset.reviewReason=directory
         ?'Page regroupant plusieurs annonces : ce n’est pas une parcelle individuelle.'
@@ -697,7 +700,7 @@
       let caution=node.querySelector('.listing-caution');
       if(!caution){caution=document.createElement('div');caution.className='listing-caution';node.prepend(caution)}
       const cautionLabel=kind==='constructeurs'?'Constructeur détecté':
-        hideFromClient?'Page catalogue ou portail mixte':
+        hideFromClient?'Annonce de terrain non confirmée, page générale ou mauvaise commune':
         kind==='incertains'?'Localisation à confirmer':'Terrain repéré · annonce originale';
       if(caution.textContent!==cautionLabel)caution.textContent=cautionLabel;
       return kind;
