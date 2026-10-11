@@ -196,8 +196,8 @@
       'primea.fr','maisons-stephanie.fr','mikit.fr','natilia.fr',
       'maisons-tradibudget.com','villadeale.fr','maisons-cpr.com'
     ];
-    const BUILDER_WORDS=/\\b(?:constructeur(?:s)?\\s+(?:de\\s+)?maison|constructeur\\s+de\\s+maisons|constructeur\\s+de\\s+maisons\\s+individuelles|maison\\s*(?:\\+|et|avec|sur)\\s*(?:son\\s+)?terrain|terrain\\s*(?:\\+|et|avec)\\s*(?:une\\s+)?maison|maison\\s+(?:neuve|\\u00e0\\s+construire)|projet\\s+de\\s+construction|construction\\s+de\\s+(?:votre|ma|une)\\s+maison|offre\\s+maison\\s+terrain|maisons\\s+(?:pierre|ericlor|concept|france confort|st\\u00e9phanie|cpr)|maisons\\s+individuelles|mod\\u00e8le\\s+de\\s+maison|terrain\\s+avec\\s+projet\\s+de\\s+maison|maisons\\s+primea|prim\\u00e9a|villad\\u00e9ale|mikit|natilia)\\b/i;
-    const TERRAIN_WORDS=/\\b(?:terrain(?:s)?|parcelle(?:s)?|lot(?:s)?\\s+\\u00e0\\s+b\\u00e2tir|foncier)\\b/i;
+    const BUILDER_WORDS=/\b(?:constructeur(?:s)?\s+(?:de\s+)?maison|constructeur\s+de\s+maisons|constructeur\s+de\s+maisons\s+individuelles|maison\s*(?:\+|et|avec|sur)\s*(?:son\s+)?terrain|terrain\s*(?:\+|et|avec)\s*(?:une\s+)?maison|maison\s+(?:neuve|\u00e0\s+construire)|projet\s+de\s+construction|construction\s+de\s+(?:votre|ma|une)\s+maison|offre\s+maison\s+terrain|maisons\s+(?:pierre|ericlor|concept|france confort|st\u00e9phanie|cpr)|maisons\s+individuelles|mod\u00e8le\s+de\s+maison|terrain\s+avec\s+projet\s+de\s+maison|maisons\s+primea|prim\u00e9a|villad\u00e9ale|mikit|natilia)\b/i;
+    const TERRAIN_WORDS=/\b(?:terrain(?:s)?|parcelle(?:s)?|lot(?:s)?\s+\u00e0\s+b\u00e2tir|foncier)\b/i;
     function classifyResult(node){
       const title=node.querySelector('a.gs-title')?.textContent||'';
       const snippet=node.querySelector('.gs-snippet')?.textContent||'';
@@ -349,7 +349,7 @@
     cityInput.addEventListener('input',drawSuggestions);
     cityInput.addEventListener('focus',drawSuggestions);
     cityInput.addEventListener('keydown',e=>{
-      if(e.key==='Enter'){e.preventDefault();addCity(cityInput.value||el('citySuggestions').querySelector('button')?.textContent?.replace(/^\\+ /,''));}
+      if(e.key==='Enter'){e.preventDefault();if(clean(cityInput.value))addCity(cityInput.value);else if(selectedCities.length)handleSearch();}
       if(e.key==='Escape')el('citySuggestions').hidden=true;
     });
     el('addCity').onclick=()=>{addCity(cityInput.value);cityInput.focus()};
