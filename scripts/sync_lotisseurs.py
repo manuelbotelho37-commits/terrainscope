@@ -257,7 +257,8 @@ def main() -> int:
         except Exception as exc:
             result = {"status": "unavailable", "expected": None, "found": None,
                       "programs": [], "lotsVerified": False,
-                      "message": f"Source officielle inaccessible ou analyse impossible : {type(exc).__name__}"}
+                      "message": f"Source officielle inaccessible ou analyse impossible : {type(exc).__name__}",
+                      "errorDetail": str(exc)[:180]}
         result["checkedAt"] = now
         result["source"] = url
         results[name] = result
@@ -293,7 +294,9 @@ def test():
     assert extract_set("<p>Erreur temporaire</p>")["status"] == "incomplete"
     vth_mock = '<a href="/lotissement/bellevue/">Voir le lotissement</a>'
     assert len(extract_vth(vth_mock, VTH)[0]) == 1
-    print("11 contrôles du moteur d'audit : OK")
+    # Ne jamais prendre l'absence de fiches pour une déclaration de vente.
+    assert observed([], "page temporairement vide")["status"] == "incomplete"
+    print("12 contrôles du moteur d'audit : OK")
 
 
 if __name__ == "__main__":
