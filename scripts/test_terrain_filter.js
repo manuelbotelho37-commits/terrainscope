@@ -19,7 +19,21 @@ const document = {
 const window = {};
 vm.runInNewContext(source, {window,document,URL,Intl,Set,Map,console,clearTimeout,setTimeout});
 const accept = window.TerrainAggregator.isIndividualLandListing;
+const previewSaysInactive = window.TerrainAggregator.previewSaysInactive;
 assert.equal(typeof accept, 'function');
+assert.equal(typeof previewSaysInactive, 'function');
+const inactiveExamples = [
+  ['Cette annonce est désactivée !', '', true],
+  ['Terrain 420 m² à Nouzilly', 'Cette annonce est désactivée !', true],
+  ['Terrain 320 m² à Monnaie', 'Annonce supprimée par son auteur', true],
+  ['Terrain 550 m² à Veigné', 'Le bien a déjà été vendu', true],
+  ['Terrain 350 m² à Tours', 'Description terrain viabilisé disponible', false],
+  ['Terrain 600 m² à Monnaie', 'Informations à confirmer chez le vendeur', false],
+];
+for (const [title, description, expected] of inactiveExamples) {
+  assert.equal(previewSaysInactive(title,description), expected,
+    'Statut explicite : '+title+' / '+description);
+}
 const scenarios = [
   ['Annonce terrain Le Bon Coin', 'Terrain 404 m² Nouzilly - Ventes immobilières - Leboncoin', 'https://www.leboncoin.fr/ad/ventes_immobilieres/123456', true],
   ['Autre terrain Le Bon Coin', 'Terrain 544 m² Nouzilly - Ventes immobilières - Leboncoin', 'https://www.leboncoin.fr/ad/ventes_immobilieres/18881', true],
@@ -45,4 +59,6 @@ assert.match(source, /kind!=='terrains'/, 'Seules les fiches classées terrain p
 assert.match(source, /node\.dataset\.locationStatus!=='match'/, 'La commune doit être retrouvée dans le titre');
 assert.doesNotMatch(source, /return cities\.length===1\?cities\[0\]/, 'Interdire attribution automatique de commune');
 assert.match(html, /!isLandCard\|\|place\.status!==\x27match\x27/, 'Les pages Google non confirmées restent masquées');
-console.log('TerrainScope : '+scenarios.length+' scénarios terrain / maison / conseiller / catalogue VALIDÉS.');
+assert.match(source, /previewSaysInactive\(title,description\)/, 'Les annonces explicitement désactivées sont exclues');
+assert.match(source, /Annonces NON vérifiées sur les sites vendeurs/, 'Le statut doit rester incertain');
+console.log('TerrainScope : '+scenarios.length+' contrôles de type + '+inactiveExamples.length+' contrôles de statut explicite VALIDÉS.');
