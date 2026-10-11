@@ -46,6 +46,8 @@
     .quick-source-links a.main-source{background:#d3f3a3;border-color:#badf92;color:#153e2d}
     .quick-source-links a small{display:block;font-size:11px;font-weight:500;color:#527461}
     #google-results [data-terrain-kind="incertains"]{border-left:4px solid #d59b48!important}
+    body[data-result-mode="terrains"] #google-results .gsc-webResult.gsc-result[data-client-hidden="true"]{display:none!important}
+    #google-results .gsc-adBlock{margin-bottom:9px}
     #google-results .listing-caution{margin:0 0 8px;font-size:11px;font-weight:800;color:#81541d}
     @media(max-width:520px){.quick-source-links{grid-template-columns:1fr}}
     /* Multi-communes, affichage client et espace professionnel */
@@ -140,7 +142,7 @@
     </section>
     <div class="results-toolbar">
       <span class="customer-mode">✓ Pistes visibles immédiatement · annonces à vérifier</span>
-      <span class="price-order">↗ Prix croissant sur les annonces trouvées</span>
+      <span class="price-order">Sources prioritaires, puis prix croissant</span>
       <span class="price-order" title="Les analyses locales ne consomment aucun crédit d’hébergement.">Recherche gratuite · analyse sur ce téléphone</span>
       <details id="professionalArea" class="professional-area">
         <summary>🔒 Espace professionnel · annonces à contrôler</summary>
@@ -155,9 +157,9 @@
       </details>
     </div>
     <p id="criteriaText" class="criteria-text" hidden></p><div class="content-grid">
-      <section class="results" id="mainResults" aria-live="polite"><section id="quickSources" class="quick-sources" hidden><h3>Consulter les annonces sur les sites immobiliers</h3><p>Accès direct aux recherches par commune. Google peut ne pas trouver des terrains pourtant disponibles : vérifie aussi les portails.</p><div id="quickSourceLinks" class="quick-source-links"></div></section>
+      <section class="results" id="mainResults" aria-live="polite"><section id="quickSources" class="quick-sources" hidden><h3>Terrains : sources prioritaires</h3><p>Dans cet ordre : Le Bon Coin, SeLoger, Bien’ici, IAD, puis les lotisseurs. Liens directs quand ils existent, sinon recherche Google ciblée sur le site. Les constructeurs ne sont pas contrôlés par les portails.</p><div id="quickSourceLinks" class="quick-source-links"></div></section>
         <div class="box placeholder" id="placeholder"><div class="bigicon" aria-hidden="true">✓</div><h3>Les annonces directement ici</h3><p>Choisis une ou plusieurs communes et lance la recherche. Les annonces apparaîtront ci-dessous, avec leurs liens d’origine. Les constructeurs identifiés sont séparés.</p><button id="setupMain" class="search" type="button">Paramètres du moteur</button></div><section id="approvedSelection" class="approved-selection" hidden><h3>Ma sélection de terrains vérifiés</h3><div id="approvedCards" class="approved-cards" aria-live="polite"></div></section>
-        <div id="csePanel" class="box cse-holder" hidden><div id="cseHint" class="cse-hint">Résultats Google non exhaustifs : les annonces à vérifier apparaissent également ici. Contrôle la commune, le vendeur et la disponibilité avant présentation au client.</div><p id="resultSummary" class="result-summary" aria-live="polite"></p><div id="google-results"></div></div>
+        <div id="csePanel" class="box cse-holder" hidden><h3>Pistes complémentaires trouvées par Google</h3><div id="cseHint" class="cse-hint">Résultats Google non exhaustifs : les annonces à vérifier apparaissent également ici. Contrôle la commune, le vendeur et la disponibilité avant présentation au client.</div><p id="resultSummary" class="result-summary" aria-live="polite"></p><div id="google-results"></div></div>
       </section>
       <aside class="rail" id="professionalSources" aria-label="Sources complémentaires non vérifiées">
         <div class="box"><h3>Lotisseurs &amp; aménageurs</h3><p class="caption">Les liens ouvrent directement les offres de terrains. Lorsqu’un filtre de ville officiel est absent, utilise le lien Google ciblé sur la commune.</p><div id="developers"></div></div>
@@ -165,7 +167,7 @@
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V14 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <footer class="foot">TerrainScope V15 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -183,8 +185,8 @@
     // exclusivement via l'élément officiel Google PSE et les liens de recherche.
     const PORTALS = [
       ['Leboncoin','leboncoin.fr'],['SeLoger','seloger.com'],['Bien’ici','bienici.com'],
-      ['Nos-terrains','nos-terrains.com'],['Lelièvre Immobilier','lelievre-immobilier.com'],
-      ['IAD · terrains','iadfrance.fr'],['Immonot · notaires','immonot.com'],
+      ['IAD · terrains','iadfrance.fr'],['Lelièvre Immobilier','lelievre-immobilier.com'],
+      ['Nos-terrains','nos-terrains.com'],['Immonot · notaires','immonot.com'],
       ['Notaires de France','immobilier.notaires.fr'],['Terrain-Construction','terrain-construction.com'],
       ['ParuVendu','paruvendu.fr'],['Logic-Immo','logic-immo.com'],['PAP','pap.fr'],
       ['Figaro Immobilier','immobilier.lefigaro.fr'],['Kazimo','kazimo.fr'],
@@ -286,6 +288,20 @@
     ];
     const BUILDER_WORDS=/\b(?:constructeur(?:s)?\s+(?:de\s+)?maison|constructeur\s+de\s+maisons|constructeur\s+de\s+maisons\s+individuelles|maison\s*(?:\+|et|avec|sur)\s*(?:son\s+)?terrain|terrain\s*(?:\+|et|avec)\s*(?:une\s+)?maison|maison\s+(?:neuve|\u00e0\s+construire)|projet\s+de\s+construction|construction\s+de\s+(?:votre|ma|une)\s+maison|offre\s+maison\s+terrain|maisons\s+(?:pierre|ericlor|concept|france confort|st\u00e9phanie|cpr)|maisons\s+individuelles|mod\u00e8le\s+de\s+maison|terrain\s+avec\s+projet\s+de\s+maison|maisons\s+primea|prim\u00e9a|villad\u00e9ale|mikit|natilia)\b/i;
     const MIXED_PORTAL_DOMAINS=['nos-terrains.com','terrain-construction.com'];
+    // Classement affiché au client, indépendant du classement Google.
+    const PRIORITY_DOMAINS=['leboncoin.fr','seloger.com','bienici.com','iadfrance.fr',
+      ...DEVELOPERS.map(d=>d.domain)];
+    const sourcePriority = href => {
+      try{
+        const host=new URL(href).hostname.replace(/^www\./,'');
+        const i=PRIORITY_DOMAINS.findIndex(d=>host===d||host.endsWith('.'+d));
+        return i<0?PRIORITY_DOMAINS.length:i;
+      }catch(e){return PRIORITY_DOMAINS.length}
+    };
+    // Les pages de catalogues ("233 terrains à vendre") ne sont pas une annonce de parcelle.
+    const directoryPage = title => /(?:\b\d{2,}\s+terrains?\s+a\s+vendre\b|\bterrains\s+a\s+vendre\s+a\b|\bterrains?\s+pas\s+cher\b)/.test(normalize(title));
+    // Détection spécifique des marques, même si le résultat est hébergé par Logic-Immo ou un autre portail.
+    const builderBrand = text => /\b(?:les\s+)?maisons?\s+(?:de\s+|d['’]\s*)?(?:stephanie|pierre|ericlor|concept|france\s+confort|l['’]?avenir|cpr)|\b(?:primea|mikit|natilia|villadeale|maisons?\s+tradibudget)\b/i.test(normalize(text));
     const TERRAIN_WORDS=/\b(?:terrain(?:s)?|parcelle(?:s)?|lot(?:s)?\s+\u00e0\s+b\u00e2tir|foncier)\b/i;
     const PLACE_REASONS={
       unknown:'La commune exacte n’est pas confirmée dans le résultat Google.',
@@ -321,12 +337,19 @@
         || /constructions?\s+id[eé]ale\s+demeure|id[eé]ale\s+demeure|constructeur\s+partenaire/i.test(textContent);
       const mixedPortal=MIXED_PORTAL_DOMAINS.some(d=>hostname===d||hostname.endsWith('.'+d));
       const place=checkLocation(title,snippet);
-      let kind=builders||BUILDER_WORDS.test(textContent)?'constructeurs':
+      let kind=builders||BUILDER_WORDS.test(textContent)||builderBrand(textContent)?'constructeurs':
         mixedPortal||place.status!=='match'?'incertains':
         TERRAIN_WORDS.test(textContent)?'terrains':'incertains';
-      node.dataset.reviewReason=place.reason;
+      const directory=directoryPage(title);
+      // Les annuaires et les portails mixtes restent accessibles au contrôle pro,
+      // mais pas parmi les annonces individuelles présentées au client.
+      const hideFromClient=(mixedPortal||directory) && kind!=='constructeurs';
+      node.dataset.clientHidden=String(hideFromClient);
+      node.dataset.reviewReason=directory
+        ?'Page regroupant plusieurs annonces : ce n’est pas une parcelle individuelle.'
+        :place.reason;
       node.dataset.locationStatus=place.status;
-      if(kind==='incertains'&&mixedPortal)node.dataset.reviewReason='Portail mixte : certaines annonces incluent des offres de constructeurs. Vérifier obligatoirement le vendeur.';
+      if(kind==='incertains'&&mixedPortal&&!directory)node.dataset.reviewReason='Portail mixte : des constructeurs y diffusent des offres. Fiche masquée du résultat client, à contrôler ici.';
       else if(kind==='incertains'&&place.status==='match')node.dataset.reviewReason='Le texte ne suffit pas à confirmer qu’il s’agit d’un terrain seul et qui le commercialise.';
       // Le moteur de recherche ne sait pas ouvrir ni certifier la fiche tierce.
       node.dataset.terrainKind=kind;
@@ -335,6 +358,7 @@
       let caution=node.querySelector('.listing-caution');
       if(!caution){caution=document.createElement('div');caution.className='listing-caution';node.prepend(caution)}
       caution.textContent=kind==='constructeurs'?'Constructeur détecté · offre séparée':
+        hideFromClient?'Source mixte ou page catalogue · réservée au contrôle professionnel':
         kind==='incertains'?'Piste à vérifier · commune ou vendeur non confirmé':'Piste terrain · vendeur et disponibilité à contrôler';
       return kind;
     }
@@ -383,7 +407,7 @@
     function renderReviewCards(nodes){
       const root=el('reviewCards');root.replaceChildren();
       const items=nodes.map(detailsOf).filter(Boolean).filter(d=>resultMode==='terrains'?d.kind!=='constructeurs':d.kind===resultMode);
-      items.sort((a,b)=>(a.price??Infinity)-(b.price??Infinity)||a.title.localeCompare(b.title,'fr'));
+      items.sort((a,b)=>sourcePriority(a.url)-sourcePriority(b.url)||(a.price??Infinity)-(b.price??Infinity)||a.title.localeCompare(b.title,'fr'));
       if(!items.length){const p=document.createElement('p');p.className='pro-note';p.textContent='Aucun résultat de cette catégorie sur la page Google actuelle.';root.append(p);return}
       for(const d of items){
         const card=document.createElement('div');card.className='review-card';
@@ -438,36 +462,39 @@
       if(!lastSearch)return;
       const nodes=Array.from(el('google-results').querySelectorAll('.gsc-webResult.gsc-result'));
       const seen=new Set(),uniqueNodes=[];
-      const counts={terrains:0,constructeurs:0,incertains:0};
+      const counts={terrains:0,constructeurs:0,incertains:0,ecartees:0};
       for(const node of nodes){
         const target=canonicalListingUrl(node.querySelector('a.gs-title')?.href||'');
         if(!target||seen.has(target)){node.dataset.listingDuplicate='true';continue}
         seen.add(target);
         node.dataset.listingDuplicate='false';
         uniqueNodes.push(node);
-        counts[classifyResult(node)]++;
+        const kind=classifyResult(node);counts[kind]++;
+        if(kind!=='constructeurs'&&node.dataset.clientHidden==='true')counts.ecartees++;
       }
       const byParent=new Map();
       for(const node of nodes){const parent=node.parentElement;if(!parent)continue;if(!byParent.has(parent))byParent.set(parent,[]);byParent.get(parent).push(node)}
       for(const [parent,entries] of byParent){
-        const sorted=entries.map((node,i)=>({node,i,price:Number(node.dataset.terrainPrice)||Infinity}))
-          .sort((a,b)=>a.price-b.price||a.i-b.i).map(x=>x.node);
+        const sorted=entries.map((node,i)=>({node,i,priority:sourcePriority(node.querySelector('a.gs-title')?.href||''),
+          excluded:node.dataset.clientHidden==='true'||node.dataset.terrainKind==='constructeurs',
+          price:Number(node.dataset.terrainPrice)||Infinity}))
+          .sort((a,b)=>Number(a.excluded)-Number(b.excluded)||a.priority-b.priority||a.price-b.price||a.i-b.i).map(x=>x.node);
         for(let i=0;i<sorted.length;i++){
           const current=Array.from(parent.children).filter(e=>e.matches?.('.gsc-webResult.gsc-result'));
           if(current[i]&&current[i]!==sorted[i])parent.insertBefore(sorted[i],current[i]);
         }
       }
       const countTotal=counts.terrains+counts.constructeurs+counts.incertains;
-      const potentialCount=counts.terrains+counts.incertains;
+      const potentialCount=counts.terrains+counts.incertains-counts.ecartees;
       el('terrainCount').textContent=String(potentialCount);
       el('countDescription').textContent=potentialCount
-        ?potentialCount+' piste(s) visibles, dont '+counts.incertains+' à vérifier. Consulte aussi Le Bon Coin : Google ne trouve pas tout.'
-        :'Aucune piste dans les résultats Google actuels. Cela ne signifie PAS zéro terrain disponible : ouvre les recherches par portail juste en dessous.';
+        ?potentialCount+' piste(s) parmi les résultats Google, triées par source. '+counts.ecartees+' page(s) mixtes ou catalogues écartées. Vérifie directement Le Bon Coin, SeLoger, Bien’ici et IAD.'
+        :'Aucune piste individuelle fiable dans les résultats Google actuels. Ce n’est PAS une absence de terrains : utilise les cinq sources prioritaires juste en dessous.';
       el('showUncertainFromCounter').hidden=counts.incertains===0;
       el('statusBadge').textContent=countTotal+' résultat(s) Google analysé(s)';
-      el('resultSummary').textContent=potentialCount+' pistes affichées (dont '+counts.incertains+' à vérifier) · '+counts.constructeurs+' constructeurs détectés · page Google uniquement';
+      el('resultSummary').textContent=potentialCount+' piste(s) à contrôler · '+counts.constructeurs+' annonce(s) constructeur écartées · '+counts.ecartees+' page(s) catalogue ou portails mixtes masquées · résultats Google seulement';
       el('countBreakdown').hidden=false;
-      el('countBreakdown').textContent=countTotal+' résultats distincts sur cette page Google ; '+counts.constructeurs+' constructeur(s) séparés. Les autres portails doivent être consultés aussi.';
+      el('countBreakdown').textContent=countTotal+' résultat(s) Google au total, dont '+counts.constructeurs+' constructeur(s) et '+counts.ecartees+' page(s) mixtes/catalogues exclus de la présentation. Les liens directs aux portails sont au-dessus.';
       el('uncertainCount').textContent=counts.incertains?'('+counts.incertains+')':'';
       renderReviewCards(uniqueNodes);renderApprovedCards();
     }
@@ -503,18 +530,23 @@
     }
     function updateQuickSources(cities){
       const root=el('quickSourceLinks');root.replaceChildren();
-      const makeLink=(label,url,main,help)=>{
-        const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';
+      const makeLink=(label,url,main,help,internal=false)=>{
+        const a=document.createElement('a');a.href=url;
+        if(!internal){a.target='_blank';a.rel='noopener noreferrer'}
         if(main)a.className='main-source';
         a.append(document.createTextNode(label+' ↗'));
         const small=document.createElement('small');small.textContent=help;a.append(small);root.append(a);
       };
+      // Sources classées en premier, puis communes : l'ordre reste exact pour les recherches multiples.
+      for(const city of cities)makeLink('1 · Le Bon Coin · '+city,leboncoinUrl(city),true,'Ouvre les annonces sur Le Bon Coin');
+      for(const city of cities)makeLink('2 · SeLoger · '+city,linkFor([city],'seloger.com'),false,'Recherche ciblée SeLoger via Google');
+      for(const city of cities)makeLink('3 · Bien’ici · '+city,linkFor([city],'bienici.com'),false,'Recherche ciblée Bien’ici via Google');
       for(const city of cities){
-        makeLink('Le Bon Coin · '+city,leboncoinUrl(city),true,'Recherche directement sur Le Bon Coin');
-        makeLink('SeLoger · '+city,linkFor([city],'seloger.com'),false,'Recherche Google ciblée sur SeLoger');
-        makeLink('Bien’ici · '+city,linkFor([city],'bienici.com'),false,'Recherche Google ciblée sur Bien’ici');
+        const direct=normalize(city)==='joue-les-tours'
+          ?'https://www.iadfrance.fr/annonces/joue-les-tours-37300/vente/terrain':linkFor([city],'iadfrance.fr');
+        makeLink('4 · IAD · '+city,direct,false,normalize(city)==='joue-les-tours'?'Annonces de terrains IAD pour Joué-lès-Tours':'Recherche ciblée IAD via Google');
       }
-      makeLink('Tous les portails · Google',googleUrl(query(cities)),false,'Recherche générale supplémentaire');
+      makeLink('5 · Lotisseurs & aménageurs','#developers',false,'Villadim, SET, AFEDIM, Val Touraine Habitat, Lelièvre',true);
       el('quickSources').hidden=false;
     }
     function handleSearch(e){
