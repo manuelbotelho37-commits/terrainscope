@@ -322,25 +322,103 @@
     const leboncoinUrl=city=>normalize(city)==='joue-les-tours'
       ?'https://www.leboncoin.fr/cl/ventes_immobilieres/cp_joue-les-tours_37300/real_estate_type%3A3'
       :'https://www.leboncoin.fr/recherche?'+new URLSearchParams({text:'terrain '+city,category:'9'}).toString();
+    // Relevé officiel de programmes : ce sont des indications datées, jamais des disponibilités en direct.
     function displayDevelopers(cities=[]){
       const names=(Array.isArray(cities)?cities:[cities]).filter(Boolean);
+      const catalog=window.TERRAIN_LOTISSEURS_DATA||{date:'',programs:[]};
       const root=el('developers');root.replaceChildren();
-      for(const dev of DEVELOPERS){
-        const box=document.createElement('div');box.className='partner';
-        const title=document.createElement('span');title.className='partner-name';title.textContent=dev.name;
-        const subtitle=document.createElement('span');subtitle.className='dev-hint';subtitle.textContent=dev.type;
-        const official=document.createElement('a');official.className='partner-link';official.href=dev.url;official.target='_blank';official.rel='noopener noreferrer';
-        official.textContent=dev.name==='Villadim'||dev.name.includes('AFEDIM')?'Ouvrir la recherche officielle par ville ↗':'Voir directement les terrains officiels ↗';
-        box.append(title,subtitle,official);
-        // Google site: recherche ciblée lorsque le site ne possède pas de filtre exploitable dans son URL.
-        for(const city of names){
-          const search=document.createElement('a');search.className='partner-link partner-search';
-          search.href=linkFor([city],dev.domain);search.target='_blank';search.rel='noopener noreferrer';
-          search.textContent='Chercher '+city+' (Google · site officiel) ↗';
-          box.append(search);
-        }
-        root.append(box);
+      const queryKey=t=>normalize(t).replace(/[’'\-–—]/g,' ').replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
+      const hits=program=>names.some(city=>queryKey(city)===queryKey(program.city));
+      const matched=catalog.programs.filter(hits);
+      const matchedDevelopers=[...new Set(matched.map(p=>p.developer))];
+      const info=el('developerMatchNotice');
+      if(names.length){
+        info.hidden=false;
+        info.textContent=matched.length
+          ?matchedDevelopers.length+' lotisseur(s) avec '+matched.length+' programme(s) repéré(s) sur '+names.join(', ')+'. Ouvre « Lotisseurs » pour voir les détails. Quantités à reconfirmer.'
+          :'Aucun programme de lotisseur repéré dans notre sélection sur '+names.join(', ')+'. Cela ne signifie pas qu’aucun terrain n’y est disponible.';
+      }else info.hidden=true;
+      const meta=document.createElement('p');meta.className='dev-catalog-top';
+      meta.textContent=catalog.programs.length+' programmes fonciers référencés auprès de '+DEVELOPERS.length+' lotisseurs. Relevé du '+(catalog.date||'date inconnue')+'. Inventaire non exhaustif : vérifie les disponibilités chez le vendeur.';
+      root.append(meta);
+      const areaRange=p=>{
+        if(p.surfaceMin&&p.surfaceMax)return 'Surfaces : '+fmt(p.surfaceMin)+(p.surfaceMin!==p.surfaceMax?' à '+fmt(p.surfaceMax):'')+' m²';
+        return 'Surfaces : voir l’offre officielle';
+      };
+      function external(url,title){
+        const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.textContent=title;return a;
       }
+      for(const dev of DEVELOPERS){
+        const items=catalog.programs.filter(p=>p.developer===dev.name)
+          .sort((a,b)=>Number(hits(b))-Number(hits(a))||a.city.localeCompare(b.city,'fr'));
+        const selected=items.filter(hits);
+        const group=document.createElement('details');group.className='dev-group';
+        group.open=names.length>0&&selected.length>0;
+        const caption=document.createElement('summary');
+        const label=document.createElement('span');label.textContent=dev.name;
+        const count=document.createElement('span');count.className='dev-subcount';
+        count.textContent=names.length
+          ?selected.length+' ici · '+items.length+' référencés'
+          :items.length+' programmes';
+        caption.append(label,count);group.append(caption);
+        const body=document.createElement('div');body.className='dev-group-content';
+        if(names.length&&selected.length===0){
+          const empty=document.createElement('div');empty.className='dev-empty';
+          empty.textContent='Pas de programme repéré dans les communes recherchées. Les autres programmes du lotisseur restent consultables ci-dessous.';
+          body.append(empty);
+        }
+        if(!items.length){
+          const p=document.createElement('p');p.className='dev-empty';
+          p.textContent='Programmes détaillés non encore récupérés automatiquement. Consulter les annonces du lotisseur.';
+          body.append(p);
+        }
+        for(const program of items){
+          const panel=document.createElement('details');panel.className='dev-program';
+          // Le lecteur peut ouvrir toutes les opérations; aucune validation à effectuer.
+          const summary=document.createElement('summary');
+          const title=document.createElement('span');title.textContent=program.name;
+          const town=document.createElement('span');town.className='program-city';town.textContent=program.city+' (37)';
+          const availability=document.createElement('span');availability.className='program-count';
+          availability.textContent=Number.isFinite(program.remaining)
+            ?program.remaining+' · '+(program.countLabel||'lots indiqués sur le site')
+            :Number.isFinite(program.totalLots)
+              ?program.totalLots+' · total indiqué (reste à vendre non connu)'
+              :'Quantité à vérifier sur le site';
+          summary.append(title,town,availability);
+          const details=document.createElement('div');details.className='program-body';
+          const surface=document.createElement('p');surface.textContent=areaRange(program);details.append(surface);
+          const price=document.createElement('p');
+          price.textContent=program.priceFrom?'Prix annoncés dès '+fmt(program.priceFrom)+' €':
+            program.pricePerM2From?'À partir de '+fmt(program.pricePerM2From)+' €/m²':'Prix à voir sur la fiche';
+          details.append(price);
+          if(program.note){
+            const note=document.createElement('p');note.textContent='Attention : '+program.note;details.append(note);
+          }
+          if(Array.isArray(program.lots)&&program.lots.length){
+            const lotsTitle=document.createElement('p');
+            lotsTitle.style.fontWeight='850';
+            lotsTitle.textContent=program.lots.length+' lot(s) documenté(s) ci-dessous (relevé, non mis à jour en temps réel) :';
+            details.append(lotsTitle);
+            for(const lot of program.lots){
+              const row=document.createElement('div');row.className='lot-row';
+              const first=document.createElement('span');first.textContent='Lot '+lot.number+' · '+fmt(lot.surface)+' m² · '+fmt(lot.price)+' €';
+              const second=document.createElement('span');second.textContent='Statut indiqué : '+lot.status;
+              row.append(first,second);details.append(row);
+            }
+          }else{
+            const p=document.createElement('p');p.textContent='Détail des lots non accessible dans ce relevé : consulter l’offre officielle.';details.append(p);
+          }
+          details.append(external(program.url,'Voir ce lotissement sur le site officiel ↗'));
+          panel.append(summary,details);body.append(panel);
+        }
+        body.append(external(dev.url,'Tous les programmes de '+dev.name+' ↗'));
+        for(const city of names){
+          body.append(external(linkFor([city],dev.domain),'Recherche complémentaire '+city+' ↗'));
+        }
+        group.append(body);root.append(group);
+      }
+      const active=el('developerAccordion');
+      if(active)active.querySelector('summary span:first-child').textContent='🏘 Lotisseurs · '+matchedDevelopers.length+(names.length?' ici':' sur 5');
     }
     function getPrice(s){
       // Prix suivi du symbole €, à l'exclusion des prix par m².
