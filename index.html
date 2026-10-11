@@ -84,6 +84,12 @@
     .tab-count{display:inline-block;font-variant-numeric:tabular-nums;font-weight:800}
     .review-reason{padding:9px 10px;border-left:3px solid #bc814b;background:#fff8ed;color:#764f2b;font-size:12px;line-height:1.45;border-radius:4px}
     #showUncertain.active{background:#f5e3cc;border-color:#e5c6a8;color:#79502b}
+    
+    #approvedSelection[hidden]{display:none}
+    .approved-selection{margin-top:14px;border:1px solid #cee5d3;border-radius:15px;padding:15px;background:#f4faf4}
+    .approved-selection h3{font-size:16px;margin:0 0 7px}
+    .content-grid>.rail{display:block}
+    @media(min-width:801px){.content-grid{grid-template-columns:minmax(0,1fr) 300px}}
     </style>
 </head>
 <body>
@@ -107,16 +113,16 @@
     <section class="terrain-counter" id="terrainCounter" role="status" aria-live="polite" aria-atomic="true">
       <div class="counter-primary">
         <span class="counter-icon" aria-hidden="true">⌂</span>
-        <div><span class="counter-number" id="terrainCount">—</span><span class="counter-label">terrains validés</span></div>
+        <div><span class="counter-number" id="terrainCount">—</span><span class="counter-label">terrains repérés</span></div>
       </div>
       <div class="counter-details">
         <span id="countDescription">Lance une recherche pour compter les annonces.</span>
         <span id="countBreakdown" hidden></span>
-        <small>Le compteur client indique les terrains validés pendant cette recherche. Les résultats Google non vérifiés sont comptés séparément.</small>
+        <small>Résultats de la page Google affichée : les annonces et vendeurs doivent être vérifiés avant présentation à un client.</small>
       </div>
     </section>
     <div class="results-toolbar">
-      <span class="customer-mode">✓ Terrains validés · sans publicité ni constructeurs</span>
+      <span class="customer-mode">✓ Terrains repérés · constructeurs identifiés à part</span>
       <span class="price-order">↗ Prix croissant sur les annonces trouvées</span>
       <span class="price-order" title="Les analyses locales ne consomment aucun crédit d’hébergement.">Recherche gratuite · analyse sur ce téléphone</span>
       <details id="professionalArea" class="professional-area">
@@ -131,16 +137,16 @@
     </div>
     <p id="criteriaText" class="criteria-text" hidden></p><div class="content-grid">
       <section class="results" id="mainResults" aria-live="polite">
-        <div class="box placeholder" id="placeholder"><div class="bigicon" aria-hidden="true">✓</div><h3>Présentation client : terrains validés</h3><p>Les annonces non vérifiées restent dans l’espace professionnel. Seuls les terrains que tu as contrôlés et validés s’afficheront ici.</p><button id="setupMain" class="search" type="button">Paramètres du moteur</button></div><div id="approvedCards" class="approved-cards" aria-live="polite"></div>
-        <div id="csePanel" class="box cse-holder" hidden><div id="cseHint" class="cse-hint">Résultats bruts Google : leur vendeur n’est PAS vérifié. Les annonces sponsorisées, lorsqu’elles existent, restent visibles uniquement dans cet espace professionnel.</div><p id="resultSummary" class="result-summary" aria-live="polite"></p><div id="google-results"></div></div>
+        <div class="box placeholder" id="placeholder"><div class="bigicon" aria-hidden="true">✓</div><h3>Les annonces directement ici</h3><p>Choisis une ou plusieurs communes et lance la recherche. Les annonces apparaîtront ci-dessous, avec leurs liens d’origine. Les constructeurs identifiés sont séparés.</p><button id="setupMain" class="search" type="button">Paramètres du moteur</button></div><section id="approvedSelection" class="approved-selection" hidden><h3>Ma sélection de terrains vérifiés</h3><div id="approvedCards" class="approved-cards" aria-live="polite"></div></section>
+        <div id="csePanel" class="box cse-holder" hidden><div id="cseHint" class="cse-hint">Terrains repérés dans l’index de Google. Vérifie toujours la commune et le vendeur avant de présenter une annonce à un client. Google peut également afficher des publicités.</div><p id="resultSummary" class="result-summary" aria-live="polite"></p><div id="google-results"></div></div>
       </section>
       <aside class="rail" id="professionalSources" aria-label="Sources complémentaires non vérifiées">
-        <div class="box"><h3>Liens vers les portails · contrôle professionnel</h3><p class="caption">Attention : ces liens externes ne sont pas filtrés et peuvent contenir des annonces de constructeurs. Ne les ouvre pas pendant une présentation client.</p><div id="sites"><p class="notice">Lancez une recherche pour activer les liens.</p></div><a href="#" id="allSites" class="general" hidden target="_blank" rel="noopener noreferrer">↗ Google · Recherche Web</a></div>
-        <div class="box"><h3>Lotisseurs &amp; aménageurs · sites officiels</h3><p class="caption">Les liens ouvrent directement les offres de terrains. Lorsqu’un filtre de ville officiel est absent, utilise le lien Google ciblé sur la commune.</p><div id="developers"></div></div>
+        <div class="box"><h3>Recherches par site</h3><p class="caption">Les recherches ouvrent les sites immobiliers. Les sites externes peuvent afficher des communes voisines ou des offres de constructeurs, que TerrainScope ne contrôle pas.</p><div id="sites"><p class="notice">Lancez une recherche pour activer les liens.</p></div><a href="#" id="allSites" class="general" hidden target="_blank" rel="noopener noreferrer">↗ Google · Recherche Web</a></div>
+        <div class="box"><h3>Lotisseurs &amp; aménageurs</h3><p class="caption">Les liens ouvrent directement les offres de terrains. Lorsqu’un filtre de ville officiel est absent, utilise le lien Google ciblé sur la commune.</p><div id="developers"></div></div>
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V11 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <footer class="foot">TerrainScope V12 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -333,9 +339,7 @@
     function renderApprovedCards(){
       const root=el('approvedCards');root.replaceChildren();
       const arr=Array.from(approved.values()).sort((a,b)=>(a.price??Infinity)-(b.price??Infinity)||a.title.localeCompare(b.title,'fr'));
-      el('terrainCount').textContent=String(arr.length);
-      el('countDescription').textContent=arr.length===0?'Aucun terrain validé. Pour trouver les annonces, ouvre l’espace professionnel. Analyse gratuite sur ton téléphone, sans abonnement supplémentaire.':
-        arr.length===1?'1 terrain sélectionné après ton contrôle.':arr.length+' terrains sélectionnés après ton contrôle.';
+      el('approvedSelection').hidden=arr.length===0;
       for(const d of arr){
         const card=document.createElement('article');card.className='approved-card';
         const head=document.createElement('div');head.className='approved-head';
@@ -428,7 +432,12 @@
       }
       const active=counts[resultMode]||0;
       const countTotal=counts.terrains+counts.constructeurs+counts.incertains;
-      el('statusBadge').textContent=active+' piste(s) — '+(resultMode==='terrains'?'terrains':resultMode==='constructeurs'?'constructeurs':'vendeur inconnu');
+      el('terrainCount').textContent=String(counts.terrains);
+      el('countDescription').textContent=counts.terrains
+        ?counts.terrains+' terrain(s) repéré(s) parmi les résultats de cette page, commune et vendeur à confirmer.'
+        :countTotal?counts.incertains+' annonce(s) à vérifier et '+counts.constructeurs+' annonce(s) constructeur(s) : ouvre les onglets pour les voir.'
+          :'Aucun résultat affiché par Google pour cette recherche. Utilise les liens des sites à droite.';
+      el('statusBadge').textContent=countTotal+' annonce(s) analysée(s)';
       el('resultSummary').textContent=counts.terrains+' pistes terrains · '+counts.constructeurs+' constructeurs suspectés · '+counts.incertains+' à vérifier (page Google affichée)';
       el('countBreakdown').hidden=false;
       el('countBreakdown').textContent=countTotal+' annonces distinctes repérées : '+counts.terrains+' pistes terrains, '+counts.constructeurs+' constructeurs, '+counts.incertains+' à vérifier. Les doublons sont ignorés.';
@@ -481,9 +490,9 @@
       approved.clear();openedForReview.clear();renderApprovedCards();el('reviewCards').replaceChildren();
       el('uncertainCount').textContent='';
       el('resultSummary').textContent='';
-      el('terrainCount').textContent='0';
-      el('countDescription').textContent='Aucune fiche encore contrôlée. Ouvre l’espace professionnel pour rechercher et valider des terrains.';
-      el('countBreakdown').textContent='Recherche en attente de contrôle.';el('countBreakdown').hidden=false;
+      el('terrainCount').textContent='…';
+      el('countDescription').textContent='Recherche des annonces en cours…';
+      el('countBreakdown').textContent='Les résultats peuvent prendre quelques secondes à apparaître.';el('countBreakdown').hidden=false;
       el('statusBadge').textContent=googleConfigured?'Recherche en cours…':'Accès aux sites prêts';
       el('placeholder').hidden=true;
       el('citySuggestions').hidden=true;
@@ -499,8 +508,7 @@
       else addSource('Leboncoin · toutes ces communes (Google)',linkFor(cities,'leboncoin.fr'));
       for(const [name,domain] of PORTALS){if(name==='Leboncoin')continue;addSource('Google · '+name,linkFor(cities,domain))}
       const all=el('allSites');all.hidden=false;all.href=googleUrl(query(cities));
-      if(googleConfigured && requestedGoogle && engineLoaded && el('professionalArea').open)performGoogleSearch(cities);
-      else if(googleConfigured)el('statusBadge').textContent='Sélection client vide · ouvrir l’espace professionnel';
+      if(googleConfigured)performGoogleSearch(cities);
       else el('csePanel').hidden=true;
       el('mainResults').querySelector('.fallback')?.remove();
       if(!googleConfigured){const box=document.createElement('div');box.className='box placeholder fallback';box.innerHTML='<h3>Le moteur doit être activé pour afficher les annonces</h3><p>La recherche par site reste accessible à droite.</p><button type="button" class="search" id="activateResults">Configurer le moteur</button>';el('mainResults').appendChild(box);el('activateResults').onclick=openModal}
@@ -560,16 +568,10 @@
     el('showUncertain').onclick=()=>{resultMode='incertains';refreshResultMode();analyzeAndSortResults()};
     renderCities();
     displayDevelopers();
-    // Google, les liens externes, les lotisseurs et les publicités restent hors présentation client.
-    el('professionalArea').append(el('csePanel'),el('professionalSources'));
-    el('professionalArea').addEventListener('toggle',()=>{
-      if(!el('professionalArea').open)return;
-      el('csePanel').hidden=false;
-      if(!googleConfigured)return;
-      if(!requestedGoogle){requestedGoogle=true;loadGoogleEngine()}
-      else if(lastSearch&&engineLoaded)performGoogleSearch(lastSearch.cities);
-    });
+    // La recherche Google et les lotisseurs sont visibles sur la page d'accueil.
+    // Les résultats de constructeurs et les annonces incertaines restent dans l'espace professionnel.
     renderApprovedCards();
+    if(googleConfigured)loadGoogleEngine();
     if('serviceWorker' in navigator && location.protocol==='https:')navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
   </script>
 </body>
