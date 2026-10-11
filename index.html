@@ -163,38 +163,27 @@
       </div>
       <div class="counter-details">
         <span id="countDescription">Lance une recherche pour compter les annonces.</span>
-        <span id="countBreakdown" hidden></span><button id="showUncertainFromCounter" type="button" class="setup-link" hidden>Voir les annonces à vérifier →</button>
+        <span id="countBreakdown" hidden></span>
         <small>Ce chiffre concerne uniquement les résultats affichés par Google, pas l’ensemble des terrains disponibles sur Le Bon Coin ou ailleurs.</small>
       </div>
     </section>
     <div class="results-toolbar">
-      <span class="customer-mode">✓ Pistes visibles immédiatement · annonces à vérifier</span>
+      <span class="customer-mode">Annonces accessibles directement</span>
       <span class="price-order">Sources prioritaires, puis prix croissant</span>
       <span class="price-order" title="Les analyses locales ne consomment aucun crédit d’hébergement.">Recherche gratuite · analyse sur ce téléphone</span>
-      <details id="professionalArea" class="professional-area">
-        <summary>🔒 Espace professionnel · annonces à contrôler</summary>
-        <div class="professional-buttons">
-          <button type="button" id="showTerrains" class="view-btn active" aria-pressed="true">Toutes les pistes hors constructeurs</button>
-          <button type="button" id="showBuilders" class="view-btn" aria-pressed="false">Annonces constructeurs</button>
-          <button type="button" id="showUncertain" class="view-btn" aria-pressed="false">À vérifier <span id="uncertainCount" class="tab-count"></span></button>
-        </div>
-        <p id="proNotice" class="pro-note">Annonces non vérifiées : ouvre chaque fiche, vérifie le vendeur, puis valide uniquement les terrains vraiment indépendants.</p>
-        <div id="builderPortalLinks" class="builder-portal-links"><strong>Portails susceptibles de proposer des annonces de constructeurs</strong><div id="builderLinks"></div></div>
-        <div id="reviewCards" class="review-cards" aria-live="polite"></div>
-      </details>
     </div>
     <p id="criteriaText" class="criteria-text" hidden></p><div class="content-grid">
       <section class="results" id="mainResults" aria-live="polite"><section id="quickSources" class="quick-sources" hidden><h3>Voir les annonces sur les sites</h3><p>Accès direct aux recherches, dans l’ordre demandé.</p><div id="quickSourceLinks" class="quick-source-links"></div></section>
-        <div class="box placeholder" id="placeholder"><div class="bigicon" aria-hidden="true">✓</div><h3>Les annonces directement ici</h3><p>Choisis une ou plusieurs communes et lance la recherche. Les annonces apparaîtront ci-dessous, avec leurs liens d’origine. Les constructeurs identifiés sont séparés.</p><button id="setupMain" class="search" type="button">Paramètres du moteur</button></div><section id="approvedSelection" class="approved-selection" hidden><h3>Ma sélection de terrains vérifiés</h3><div id="approvedCards" class="approved-cards" aria-live="polite"></div></section>
+        <div class="box placeholder" id="placeholder"><div class="bigicon" aria-hidden="true">✓</div><h3>Les annonces directement ici</h3><p>Choisis une ou plusieurs communes et lance la recherche. Touche une annonce pour ouvrir le site d’origine. Les constructeurs identifiés sont écartés.</p><button id="setupMain" class="search" type="button">Paramètres du moteur</button></div>
         <div id="csePanel" class="box cse-holder" hidden><h3>Autres terrains repérés</h3><div id="cseHint" class="cse-hint">Résultats Google non exhaustifs. Vérifie chaque annonce sur son site d’origine.</div><p id="resultSummary" class="result-summary" aria-live="polite"></p><div id="google-results"></div><nav id="pageNavigator" class="pagination-box" aria-label="Pages de résultats" hidden><strong id="pagePosition"></strong><div id="pageButtons" class="pagination-controls"></div><p>Le nombre de pistes correspond uniquement à cette page.</p></nav></div>
       </section>
-      <aside class="rail" id="professionalSources" aria-label="Sources complémentaires non vérifiées">
+      <aside class="rail" id="professionalSources" aria-label="Lotisseurs et aménageurs">
         <div class="box"><h3>Lotisseurs &amp; aménageurs</h3><p class="caption">Les liens ouvrent directement les offres de terrains. Lorsqu’un filtre de ville officiel est absent, utilise le lien Google ciblé sur la commune.</p><div id="developers"></div></div>
         <div class="box"><h3>Recherches par site</h3><p class="caption">Les recherches ouvrent les sites immobiliers. Les sites externes peuvent afficher des communes voisines ou des offres de constructeurs, que TerrainScope ne contrôle pas.</p><div id="sites"><p class="notice">Lancez une recherche pour activer les liens.</p></div><a href="#" id="allSites" class="general" hidden target="_blank" rel="noopener noreferrer">↗ Google · Recherche Web</a></div>
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V16 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <footer class="foot">TerrainScope V17 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -241,8 +230,6 @@
     let resultMode='terrains';
     let reviewSchedule=false;
     let requestedGoogle=false;
-    const approved=new Map();
-    const openedForReview=new Set();
     const clean = v=>String(v||'').trim().replace(/\s+/g,' ');
     const normalize = t=>clean(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
     const fmt = v=>new Intl.NumberFormat('fr-FR').format(v);
@@ -384,95 +371,13 @@
       if(!node.querySelector('.terrain-meta'))enhanceResult(node);
       let caution=node.querySelector('.listing-caution');
       if(!caution){caution=document.createElement('div');caution.className='listing-caution';node.prepend(caution)}
-      const cautionLabel=kind==='constructeurs'?'Constructeur détecté · offre séparée':
-        hideFromClient?'Page catalogue ou source mixte · contrôle professionnel':
-        kind==='incertains'?'Localisation ou vendeur à vérifier':'Terrain à vérifier sur le site d’origine';
+      const cautionLabel=kind==='constructeurs'?'Constructeur détecté':
+        hideFromClient?'Page catalogue ou portail mixte':
+        kind==='incertains'?'Localisation à confirmer':'Terrain repéré · annonce originale';
       if(caution.textContent!==cautionLabel)caution.textContent=cautionLabel;
       return kind;
     }
-    function refreshResultMode(){
-      document.body.dataset.resultMode=resultMode;
-      for(const [id,m] of [['showTerrains','terrains'],['showBuilders','constructeurs'],['showUncertain','incertains']]){
-        const b=el(id);b.classList.toggle('active',resultMode===m);b.setAttribute('aria-pressed',String(resultMode===m));
-      }
-      el('proNotice').textContent=resultMode==='terrains'
-        ?'Toutes les pistes hors constructeurs détectés, y compris les incertaines. Vérifie sur chaque annonce avant présentation.'
-        :resultMode==='constructeurs'?'Annonces de constructeurs : isolées de la sélection client.'
-        :'Ces annonces présentent une incertitude sur la commune, le vendeur ou la nature du bien. Elles ne sont jamais publiées dans la sélection client sans contrôle.';
-    }
-
-    // Contrôle volontairement humain : aucune annonce tierce n'est certifiée automatiquement.
-    function detailsOf(node){
-      const a=node.querySelector('a.gs-title'),href=a?.href||'';
-      let host='';try{const u=new URL(href);if(!['https:','http:'].includes(u.protocol))return null;host=u.hostname.replace(/^www\./,'')}catch(e){return null}
-      const title=(a.textContent||'Annonce de terrain').trim().slice(0,200);
-      const description=(node.querySelector('.gs-snippet')?.textContent||'').trim().slice(0,500);
-      return {url:href,title,description,host,kind:node.dataset.terrainKind||'incertains',
-        reason:node.dataset.reviewReason||'Vendeur et localisation à contrôler sur la fiche d’origine.',
-        locationStatus:node.dataset.locationStatus||'unknown',
-        price:getPrice(title+' '+description),area:getArea(title+' '+description)};
-    }
-    function reviewButton(label,kind='light'){
-      const b=document.createElement('button');b.type='button';b.className='review-action '+kind;b.textContent=label;return b;
-    }
-    function renderApprovedCards(){
-      const root=el('approvedCards');root.replaceChildren();
-      const arr=Array.from(approved.values()).sort((a,b)=>(a.price??Infinity)-(b.price??Infinity)||a.title.localeCompare(b.title,'fr'));
-      el('approvedSelection').hidden=arr.length===0;
-      for(const d of arr){
-        const card=document.createElement('article');card.className='approved-card';
-        const head=document.createElement('div');head.className='approved-head';
-        const title=document.createElement('strong');title.textContent=d.title;
-        const price=document.createElement('strong');price.textContent=d.price?fmt(d.price)+' €':'Prix à vérifier';
-        head.append(title,price);
-        const line=document.createElement('p');line.textContent=(d.area?fmt(d.area)+' m² · ':'')+'Commune contrôlée : '+(d.confirmedCity||'non confirmée')+' · '+d.host+' · Vérification manuelle.';
-        const actions=document.createElement('div');actions.className='approved-actions';
-        const link=document.createElement('a');link.href=d.url;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Voir l’annonce originale ↗';link.className='review-link';
-        const remove=reviewButton('Retirer de la sélection');remove.onclick=()=>{approved.delete(d.url);renderApprovedCards();if(el('professionalArea').open)analyzeAndSortResults()};
-        actions.append(link,remove);card.append(head,line,actions);root.append(card);
-      }
-    }
-    function renderReviewCards(nodes){
-      const root=el('reviewCards');root.replaceChildren();
-      const items=nodes.map(detailsOf).filter(Boolean).filter(d=>resultMode==='terrains'?d.kind!=='constructeurs':d.kind===resultMode);
-      items.sort((a,b)=>sourcePriority(a.url)-sourcePriority(b.url)||(a.price??Infinity)-(b.price??Infinity)||a.title.localeCompare(b.title,'fr'));
-      if(!items.length){const p=document.createElement('p');p.className='pro-note';p.textContent='Aucun résultat de cette catégorie sur la page Google actuelle.';root.append(p);return}
-      for(const d of items){
-        const card=document.createElement('div');card.className='review-card';
-        const title=document.createElement('strong');title.textContent=d.title;
-        const info=document.createElement('div');info.className='review-info';
-        info.textContent=(d.price?fmt(d.price)+' € · ':'Prix inconnu · ')+(d.area?fmt(d.area)+' m² · ':'')+d.host;
-        const snippet=document.createElement('p');snippet.className='review-summary';snippet.textContent=d.description;
-        const reason=document.createElement('p');reason.className='review-reason';
-        reason.textContent='Contrôle : '+(d.kind==='constructeurs'?'Offre de constructeur détectée.':d.reason)+' Vendeur, disponibilité et commune à vérifier sur l’annonce originale.';
-        const actions=document.createElement('div');actions.className='review-actions';
-        const open=document.createElement('a');open.className='review-link';open.href=d.url;open.target='_blank';open.rel='noopener noreferrer';
-        open.textContent='1. Vérifier la fiche, le vendeur et la commune ↗';
-        open.onclick=()=>{openedForReview.add(d.url);if(approve)approve.disabled=false};
-        actions.append(open);
-        let approve;
-        if(d.kind!=='constructeurs'){
-          approve=reviewButton(approved.has(d.url)?'✓ Validé pour le client':'2. Valider après contrôle','approve');
-          approve.disabled=!openedForReview.has(d.url)||approved.has(d.url);
-          approve.onclick=()=>{
-            if(!openedForReview.has(d.url))return;
-            const requested=lastSearch?.cities||[];
-            const location=prompt('Sur la fiche originale, quelle est la COMMUNE EXACTE du terrain ? Tape-la ici :','');
-            if(!location)return;
-            if(!requested.some(c=>normalize(c)===normalize(location))){
-              alert('Refusé : « '+location+' » ne fait pas partie des communes demandées. Cette annonce reste dans l’espace professionnel.');return;
-            }
-            if(!confirm('Confirme uniquement après vérification : terrain SITUÉ À '+location+', vendeur non constructeur, terrain vendu indépendamment de la construction, annonce disponible, prix et surface corrects. Tout est vérifié sur la fiche originale ?'))return;
-            approved.set(d.url,{...d,confirmedCity:location,validatedManually:true});renderApprovedCards();
-            approve.disabled=true;approve.textContent='✓ Validé pour le client';
-          };
-          actions.append(approve);
-        }else{
-          const warning=document.createElement('span');warning.className='builder-warning';warning.textContent='Classé constructeur : interdit en présentation client.';actions.append(warning);
-        }
-        card.append(title,info,snippet,reason,actions);root.append(card);
-      }
-    }
+    document.body.dataset.resultMode='terrains';
     function canonicalListingUrl(href){
       try {
         const u=new URL(href);
@@ -532,14 +437,13 @@
     function analyzeAndSortResults(){
       if(!lastSearch)return;
       const nodes=Array.from(el('google-results').querySelectorAll('.gsc-webResult.gsc-result'));
-      const seen=new Set(),uniqueNodes=[];
+      const seen=new Set();
       const counts={terrains:0,constructeurs:0,incertains:0,ecartees:0};
       for(const node of nodes){
         const target=canonicalListingUrl(node.querySelector('a.gs-title')?.href||'');
         if(!target||seen.has(target)){node.dataset.listingDuplicate='true';continue}
         seen.add(target);
         node.dataset.listingDuplicate='false';
-        uniqueNodes.push(node);
         const kind=classifyResult(node);counts[kind]++;
         if(kind!=='constructeurs'&&node.dataset.clientHidden==='true')counts.ecartees++;
       }
@@ -563,15 +467,12 @@
       el('countDescription').textContent=potentialCount
         ?potentialCount+' piste(s) sur cette page Google · '+pageLabel
         :'Aucune piste retenue sur cette page · '+pageLabel;
-      el('showUncertainFromCounter').hidden=counts.incertains===0;
       el('statusBadge').textContent=pageInfo.available?'Page '+pageInfo.page+' sur '+pageInfo.available:'Résultats Google';
       el('resultSummary').textContent=(potentialCount?potentialCount+' piste(s) sur cette page':'Aucune piste sur cette page')+
         (pageInfo.available?' · Page '+pageInfo.page+' sur '+pageInfo.available:'')+
         ' · '+counts.constructeurs+' constructeur(s) écarté(s)';
       el('countBreakdown').hidden=false;
       el('countBreakdown').textContent=countTotal+' résultats analysés sur cette page Google uniquement.';
-      el('uncertainCount').textContent=counts.incertains?'('+counts.incertains+')':'';
-      renderReviewCards(uniqueNodes);renderApprovedCards();
     }
     function scheduleResultReview(){
       if(reviewSchedule)return;reviewSchedule=true;
@@ -639,14 +540,11 @@
       googleCurrentPage=1;el('pageNavigator').hidden=true;el('csePanel').dataset.mirrorPager='false';
       const surface=Number(el('surface').value)||0,budget=Number(el('budget').value)||0;
       lastSearch={cities,surface,budget};
-      resultMode='terrains';refreshResultMode();el('professionalArea').open=false;
       displayDevelopers(cities);
       updateQuickSources(cities);
       el('sectionTitle').textContent=cities.join(' · ');
       el('criteriaText').hidden=false;
       el('criteriaText').textContent='Communes : '+cities.join(' · ')+' · Surface minimale : '+(surface?fmt(surface)+' m²':'non précisée')+' · Budget maximal : '+(budget?fmt(budget)+' €':'non précisé')+' — critères indicatifs selon les extraits.';
-      approved.clear();openedForReview.clear();renderApprovedCards();el('reviewCards').replaceChildren();
-      el('uncertainCount').textContent='';
       el('resultSummary').textContent='';
       el('terrainCount').textContent='…';
       el('countDescription').textContent='Recherche des annonces en cours…';
@@ -664,14 +562,8 @@
       }
       if(cities.length===1)addSource('Leboncoin · recherche directe',leboncoinUrl(cities[0]));
       else addSource('Leboncoin · toutes ces communes (Google)',linkFor(cities,'leboncoin.fr'));
-      const buildersRoot=el('builderLinks');buildersRoot.replaceChildren();
       for(const [name,domain] of PORTALS){
         if(name==='Leboncoin')continue;
-        if(['nos-terrains.com','terrain-construction.com'].includes(domain)){
-          const a=document.createElement('a');a.className='builder-source';a.href=linkFor(cities,domain);
-          a.target='_blank';a.rel='noopener noreferrer';a.textContent='↗ '+name+' · recherche externe non filtrée';
-          buildersRoot.append(a);continue;
-        }
         addSource('Google · '+name,linkFor(cities,domain));
       }
       const all=el('allSites');all.hidden=false;all.href=googleUrl(query(cities));
@@ -730,15 +622,6 @@
     });
     el('addCity').onclick=()=>{addCity(cityInput.value);cityInput.focus()};
     document.addEventListener('click',e=>{if(!cityInput.parentElement.parentElement.contains(e.target))el('citySuggestions').hidden=true});
-    el('showTerrains').onclick=()=>{resultMode='terrains';refreshResultMode();analyzeAndSortResults()};
-    el('showBuilders').onclick=()=>{resultMode='constructeurs';refreshResultMode();analyzeAndSortResults()};
-    el('showUncertain').onclick=()=>{resultMode='incertains';refreshResultMode();analyzeAndSortResults()};
-    el('showUncertainFromCounter').onclick=()=>{el('professionalArea').open=true;resultMode='incertains';refreshResultMode();analyzeAndSortResults();el('reviewCards').scrollIntoView({behavior:'smooth',block:'start'})};
-    // L'écran principal ne montre pas les onglets techniques.
-    const professional=el('professionalArea');
-    professional.classList.add('simple-pro');
-    professional.querySelector('summary').textContent='Options avancées : contrôler les annonces écartées';
-    document.querySelector('footer.foot').before(professional);
     renderCities();
     displayDevelopers();
     // La recherche Google et les lotisseurs sont visibles sur la page d'accueil.
