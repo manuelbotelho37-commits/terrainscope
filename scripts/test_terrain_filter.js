@@ -23,6 +23,9 @@ assert.equal(typeof accept, 'function');
 const scenarios = [
   ['Annonce terrain Le Bon Coin', 'Terrain 404 m² Nouzilly - Ventes immobilières - Leboncoin', 'https://www.leboncoin.fr/ad/ventes_immobilieres/123456', true],
   ['Autre terrain Le Bon Coin', 'Terrain 544 m² Nouzilly - Ventes immobilières - Leboncoin', 'https://www.leboncoin.fr/ad/ventes_immobilieres/18881', true],
+  ['Le Bon Coin page de tous les biens', 'Terrain 404 m² Nouzilly - Ventes immobilières - Leboncoin', 'https://www.leboncoin.fr/l/cp_nouzilly_37380', false],
+  ['Le Bon Coin résultats maison', 'Terrain 404 m² Nouzilly - Ventes immobilières - Leboncoin', 'https://www.leboncoin.fr/cl/ventes_immobilieres/cp_nouzilly_37380/real_estate_type%3A1', false],
+  ['Le Bon Coin résultats terrains', 'Terrain 404 m² Nouzilly - Ventes immobilières - Leboncoin', 'https://www.leboncoin.fr/cl/ventes_immobilieres/cp_nouzilly_37380/real_estate_type%3A3', false],
   ['Conseiller IAD Vouvray', 'Joël Ligeron - Conseiller immobilier à Vouvray (37210) - IAD', 'https://www.iadfrance.fr/conseiller-immobilier/joel-ligeron', false],
   ['Conseillère IAD Mettray', 'Lucie Legaré - Conseillère immobilier à Mettray (37390) - iad', 'https://www.iadfrance.fr/agents/lucie-legare', false],
   ['Catalogue IAD 1195 biens', '1 195 biens immobiliers à vendre : Indre-et-Loire (37) - IAD', 'https://www.iadfrance.fr/annonces/vente', false],
