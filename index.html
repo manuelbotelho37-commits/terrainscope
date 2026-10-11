@@ -117,12 +117,12 @@
     <section class="terrain-counter" id="terrainCounter" role="status" aria-live="polite" aria-atomic="true">
       <div class="counter-primary">
         <span class="counter-icon" aria-hidden="true">⌂</span>
-        <div><span class="counter-number" id="terrainCount">—</span><span class="counter-label">terrains repérés</span></div>
+        <div><span class="counter-number" id="terrainCount">—</span><span class="counter-label">annonces potentielles hors constructeurs</span></div>
       </div>
       <div class="counter-details">
         <span id="countDescription">Lance une recherche pour compter les annonces.</span>
-        <span id="countBreakdown" hidden></span>
-        <small>Résultats de la page Google affichée : les annonces et vendeurs doivent être vérifiés avant présentation à un client.</small>
+        <span id="countBreakdown" hidden></span><button id="showUncertainFromCounter" type="button" class="setup-link" hidden>Voir les annonces à vérifier →</button>
+        <small>Ce nombre inclut les pistes terrains et les annonces à vérifier, hors constructeurs détectés. Aucune annonce n’est automatiquement validée.</small>
       </div>
     </section>
     <div class="results-toolbar">
@@ -152,7 +152,7 @@
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V12 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <footer class="foot">TerrainScope V13 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -188,7 +188,7 @@
       {name:'Val Touraine Habitat',domain:'valtourainehabitat-vente.fr',url:'https://www.valtourainehabitat-vente.fr/acheter-un-terrain-a-batir/',type:'Lotissements et annonces officiels'},
       {name:'Lelièvre Immobilier',domain:'lelievre-immobilier.com',url:'https://www.lelievre-immobilier.com/terrains-a-vendre-indre-et-loire',type:'Terrains et programmes du département 37'}
     ];
-    const CITIES = ['Chambray-lès-Tours','Tours','Joué-lès-Tours','Saint-Avertin','Saint-Cyr-sur-Loire','La Riche','Fondettes','Ballan-Miré','Montlouis-sur-Loire','Azay-sur-Cher','Véretz','Savonnières','Parçay-Meslay','Rochecorbon','Larçay','Esvres-sur-Indre','Montbazon','Veigné','Saint-Pierre-des-Corps','Amboise','Loches','Dolus-le-Sec','Azay-le-Rideau','Monts','Sorigny','Saint-Branchs','Luynes','Pernay','Notre-Dame-d’Oé','Chanceaux-sur-Choisille','Artannes-sur-Indre','Saint-Martin-le-Beau','Athée-sur-Cher','Monnaie','La Ville-aux-Dames','Bléré','Esvres','Langeais'];
+    const CITIES = ['Chambray-lès-Tours','Tours','Joué-lès-Tours','Saint-Avertin','Saint-Cyr-sur-Loire','La Riche','Fondettes','Ballan-Miré','Montlouis-sur-Loire','Azay-sur-Cher','Véretz','Savonnières','Parçay-Meslay','Rochecorbon','Larçay','Esvres-sur-Indre','Montbazon','Veigné','Saint-Pierre-des-Corps','Amboise','Loches','Dolus-le-Sec','Azay-le-Rideau','Monts','Sorigny','Saint-Branchs','Luynes','Pernay','Notre-Dame-d’Oé','Chanceaux-sur-Choisille','Artannes-sur-Indre','Saint-Martin-le-Beau','Athée-sur-Cher','Monnaie','La Ville-aux-Dames','Bléré','Esvres','Langeais','Cheillé'];
     const el=id=>document.getElementById(id);
     const settingsStore=(()=>{try{const storage=window.localStorage;storage.getItem('terrainScopeCx');return storage}catch(e){return {getItem:()=>null,setItem:()=>{},removeItem:()=>{}}}})();
     const DEFAULT_CX = 'c051883a11ead4ffb'; // Moteur Google créé pour TerrainScope le 11/10/2026.
@@ -270,6 +270,7 @@
       'maisons-tradibudget.com','villadeale.fr','maisons-cpr.com'
     ];
     const BUILDER_WORDS=/\b(?:constructeur(?:s)?\s+(?:de\s+)?maison|constructeur\s+de\s+maisons|constructeur\s+de\s+maisons\s+individuelles|maison\s*(?:\+|et|avec|sur)\s*(?:son\s+)?terrain|terrain\s*(?:\+|et|avec)\s*(?:une\s+)?maison|maison\s+(?:neuve|\u00e0\s+construire)|projet\s+de\s+construction|construction\s+de\s+(?:votre|ma|une)\s+maison|offre\s+maison\s+terrain|maisons\s+(?:pierre|ericlor|concept|france confort|st\u00e9phanie|cpr)|maisons\s+individuelles|mod\u00e8le\s+de\s+maison|terrain\s+avec\s+projet\s+de\s+maison|maisons\s+primea|prim\u00e9a|villad\u00e9ale|mikit|natilia)\b/i;
+    const MIXED_PORTAL_DOMAINS=['nos-terrains.com','terrain-construction.com'];
     const TERRAIN_WORDS=/\b(?:terrain(?:s)?|parcelle(?:s)?|lot(?:s)?\s+\u00e0\s+b\u00e2tir|foncier)\b/i;
     const PLACE_REASONS={
       unknown:'La commune exacte n’est pas confirmée dans le résultat Google.',
@@ -302,15 +303,16 @@
       const href=node.querySelector('a.gs-title')?.href||'';
       let hostname='';try{hostname=new URL(href).hostname.replace(/^www\./,'')}catch(e){}
       const builders=BUILDER_DOMAINS.some(d=>hostname===d||hostname.endsWith('.'+d))
-        || ['nos-terrains.com','terrain-construction.com'].some(d=>hostname===d||hostname.endsWith('.'+d))
         || /constructions?\s+id[eé]ale\s+demeure|id[eé]ale\s+demeure|constructeur\s+partenaire/i.test(textContent);
+      const mixedPortal=MIXED_PORTAL_DOMAINS.some(d=>hostname===d||hostname.endsWith('.'+d));
       const place=checkLocation(title,snippet);
       let kind=builders||BUILDER_WORDS.test(textContent)?'constructeurs':
-        place.status!=='match'?'incertains':
+        mixedPortal||place.status!=='match'?'incertains':
         TERRAIN_WORDS.test(textContent)?'terrains':'incertains';
       node.dataset.reviewReason=place.reason;
       node.dataset.locationStatus=place.status;
-      if(kind==='incertains'&&place.status==='match')node.dataset.reviewReason='Le texte ne suffit pas à confirmer qu’il s’agit d’un terrain seul et qui le commercialise.';
+      if(kind==='incertains'&&mixedPortal)node.dataset.reviewReason='Portail mixte : certaines annonces incluent des offres de constructeurs. Vérifier obligatoirement le vendeur.';
+      else if(kind==='incertains'&&place.status==='match')node.dataset.reviewReason='Le texte ne suffit pas à confirmer qu’il s’agit d’un terrain seul et qui le commercialise.';
       // Le moteur de recherche ne sait pas ouvrir ni certifier la fiche tierce.
       node.dataset.terrainKind=kind;
       node.dataset.terrainPrice=String(getPrice(textContent)??'');
@@ -438,11 +440,13 @@
       }
       const active=counts[resultMode]||0;
       const countTotal=counts.terrains+counts.constructeurs+counts.incertains;
-      el('terrainCount').textContent=String(counts.terrains);
-      el('countDescription').textContent=counts.terrains
-        ?counts.terrains+' terrain(s) repéré(s) parmi les résultats de cette page, commune et vendeur à confirmer.'
-        :countTotal?counts.incertains+' annonce(s) à vérifier et '+counts.constructeurs+' annonce(s) constructeur(s) : ouvre les onglets pour les voir.'
+      const potentialCount=counts.terrains+counts.incertains;
+      el('terrainCount').textContent=String(potentialCount);
+      el('countDescription').textContent=potentialCount
+        ?counts.terrains+' piste(s) terrain affichée(s) · '+counts.incertains+' annonce(s) à vérifier dans l’espace professionnel.'
+        :countTotal?counts.constructeurs+' annonce(s) de constructeur(s) détectée(s), aucune piste terrain indépendante à afficher.'
           :'Aucun résultat affiché par Google pour cette recherche. Utilise les liens des sites à droite.';
+      el('showUncertainFromCounter').hidden=counts.incertains===0;
       el('statusBadge').textContent=countTotal+' annonce(s) analysée(s)';
       el('resultSummary').textContent=counts.terrains+' pistes terrains · '+counts.constructeurs+' constructeurs suspectés · '+counts.incertains+' à vérifier (page Google affichée)';
       el('countBreakdown').hidden=false;
@@ -581,6 +585,7 @@
     el('showTerrains').onclick=()=>{resultMode='terrains';refreshResultMode();analyzeAndSortResults()};
     el('showBuilders').onclick=()=>{resultMode='constructeurs';refreshResultMode();analyzeAndSortResults()};
     el('showUncertain').onclick=()=>{resultMode='incertains';refreshResultMode();analyzeAndSortResults()};
+    el('showUncertainFromCounter').onclick=()=>{el('professionalArea').open=true;resultMode='incertains';refreshResultMode();analyzeAndSortResults();el('reviewCards').scrollIntoView({behavior:'smooth',block:'start'})};
     renderCities();
     displayDevelopers();
     // La recherche Google et les lotisseurs sont visibles sur la page d'accueil.
