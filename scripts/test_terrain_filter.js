@@ -71,4 +71,39 @@ assert.match(html, /el\('googleLeads'\)\.open=false;/,
 assert.match(html, /TerrainScope V35/,
   'Version cohérente V35');
 assert.match(source, /Annonces NON vérifiées sur les sites vendeurs/, 'Le statut doit rester incertain');
+
+// Tester les URL TERRAIN de IAD construites depuis les codes postaux officiels.
+// Un lien /annonces/<ville>/vente ou une recherche Google générale renvoie des maisons.
+const communeData = JSON.parse(fs.readFileSync(path.join(__dirname,'..','communes-37.json'),'utf8'));
+assert.equal(communeData.length,272,'Répertoire officiel du 37 complet');
+const cityKey=value=>String(value||'').trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+  .toLowerCase().replace(/[’'\-–—]/g,' ').replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
+const normalized=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const postalCodes=new Map();
+for(const city of communeData){
+  assert.ok(Array.isArray(city.codesPostaux)&&city.codesPostaux.length,
+    'Code postal manquant : '+city.nom);
+  postalCodes.set(cityKey(city.nom),city.codesPostaux[0]);
+}
+const begin=html.indexOf('    const iadTerrainUrl=city=>{');
+const end=html.indexOf('    /* Catalogue à preuve',begin);
+assert.ok(begin>=0&&end>begin,'Fonction de lien IAD manquante');
+const makeIadLink=vm.runInNewContext(
+  html.slice(begin,end).replace('const iadTerrainUrl=','globalThis._iadTerrainUrl=')+
+  'globalThis._iadTerrainUrl', {CITY_POSTAL_CODES:postalCodes,citySearchKey:cityKey,normalize:normalized,globalThis:{}}
+); 
+for(const [city,expected] of [
+  ['Nouzilly','https://www.iadfrance.fr/annonces/nouzilly-37380/vente/terrain'],
+  ['Monnaie','https://www.iadfrance.fr/annonces/monnaie-37380/vente/terrain'],
+  ['Joué-lès-Tours','https://www.iadfrance.fr/annonces/joue-les-tours-37300/vente/terrain'],
+  ['Vouvray','https://www.iadfrance.fr/annonces/vouvray-37210/vente/terrain'],
+]){
+  assert.equal(makeIadLink(city),expected,'Catégorie terrain et commune : '+city);
+}
+assert.match(html,/makeLink\('4 · IAD · terrains · '\+city,iadTerrainUrl\(city\)/,
+  'Raccourci IAD devrait ouvrir une recherche terrain par commune');
+assert.doesNotMatch(html,/linkFor\(\[city\],'iadfrance.fr'\)/,
+  'Aucune recherche IAD générique susceptible de remonter des maisons');
+console.log('TerrainScope : vérifications IAD strictes pour 4 communes, 272 codes postaux et filtrage terrain OK.');
+
 console.log('TerrainScope : '+scenarios.length+' contrôles de type + '+inactiveExamples.length+' contrôles de statut et 5 tests de protection contre les liens périmés VALIDÉS.');
