@@ -1,0 +1,179 @@
+#!/usr/bin/env python3
+"""TerrainScope: audit horaire des catalogues OFFICIELS, sans faux zero.
+
+Un inventaire ne devient "verified" que si son compteur public existe et
+que TOUS les liens de programmes uniques sont identifies. Ne jamais convertir
+une page inaccessible, partielle ou une absence en "vendu" ou "0 programme".
+Les prix et le nombre de lots ne sont PAS synchronises depuis ce simple index.
+"""
+from __future__ import annotations
+
+import argparse
+from datetime import datetime, timezone
+import json
+from pathlib import Path
+import re
+import sys
+from urllib.parse import urljoin, urlparse, urlunparse
+
+import requests
+from bs4 import BeautifulSoup
+
+ROOT = Path(__file__).resolve().parent.parent
+OUTPUT = ROOT / "lotisseurs-live.json"
+AFEDIM = "https://www.afedim.fr/fr/achat-immobilier/annonces/Terrain/Indre-et-Loire-France/surface-0-800-m2/budget-0-2000000-euros/rayon-0-km/Resultats"
+VILLADIM = "https://www.villadim.fr/programmes/indre-et-loire"
+HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; TerrainScopeCatalogAudit/1.0; +https://manuelbotelho37-commits.github.io/terrainscope/)"}
+MAX_COUNT = 200
+
+
+def normalized_link(link: str, base: str) -> str:
+    parsed = urlparse(urljoin(base, link))
+    if parsed.scheme != "https":
+        return ""
+    return urlunparse((parsed.scheme, parsed.netloc.lower().removeprefix("www."),
+                       parsed.path.rstrip("/"), "", "", ""))
+
+
+def extract_afedim(html: str) -> dict:
+    soup = BeautifulSoup(html, "html.parser")
+    visible = soup.get_text(" ", strip=True)
+    m = re.search(r"\b(\d{1,3})\s+biens?\s+disponibles?\b", visible, re.IGNORECASE)
+    expected = int(m.group(1)) if m else None
+    links = {}
+    for a in soup.find_all("a", href=True):
+        url = normalized_link(a["href"], AFEDIM)
+        if "afedim.fr" not in urlparse(url).netloc:
+            continue
+        if not re.search(r"/(?:annonces/)?programme/terrain/[^/]+-37/\d+/Fiche$", url, re.I):
+            continue
+        city = re.search(r"/terrain/([^/]+)-37/\d+/Fiche$", url, re.I).group(1)
+        links[url] = {
+            "url": url,
+            "city": city.replace("-", " ").title(),
+            "label": city.replace("-", " ").title(),
+        }
+    return audit(expected, list(links.values()), "AFEDIM",
+                 "Index AFEDIM terrains Indre-et-Loire (total des programmes, pas des lots libres)")
+
+
+def extract_villadim(html: str) -> dict:
+    soup = BeautifulSoup(html, "html.parser")
+    visible = soup.get_text(" ", strip=True)
+    m = re.search(r"\b(\d{1,3})\s+programmes?\s+disponibles?\b", visible, re.IGNORECASE)
+    expected = int(m.group(1)) if m else None
+    links = {}
+    for a in soup.find_all("a", href=True):
+        url = normalized_link(a["href"], VILLADIM)
+        if urlparse(url).netloc != "villadim.fr":
+            continue
+        match = re.search(r"/terrains/([^/]+)/([^/]+)$", url, re.I)
+        if not match:
+            continue
+        city, slug = match.groups()
+        links[url] = {"url": url, "city": city.replace("-", " ").title(),
+                      "label": slug.replace("-", " ").title()}
+    return audit(expected, list(links.values()), "Villadim",
+                 "Catalogue Villadim 37 : ne valider que si les liens des fiches sont tous identifiés")
+
+
+def audit(expected: int | None, programs: list[dict], name: str, method: str) -> dict:
+    # Une erreur de parsing ne doit JAMAIS signifier zero programme.
+    valid = expected is not None and 1 <= expected <= MAX_COUNT and len(programs) == expected
+    return {
+        "status": "verified" if valid else "incomplete",
+        "expected": expected,
+        "found": len(programs),
+        "programs": programs if valid else [],
+        "method": method,
+        "message": ("Inventaire des programmes cohérent avec le compteur officiel."
+                    if valid else "Inventaire non vérifié : nombre officiel absent ou lien(s) manquant(s)."),
+        "lotsVerified": False,
+    }
+
+
+def fetch_afedim() -> dict:
+    r = requests.get(AFEDIM, headers=HEADERS, timeout=25)
+    r.raise_for_status()
+    return extract_afedim(r.text)
+
+
+def fetch_villadim() -> dict:
+    # Le catalogue Villadim charge ses fiches en JavaScript. Ne pas conclure
+    # a zero apres un simple requests.get() d'une page non encore rendue.
+    from playwright.sync_api import sync_playwright
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
+        try:
+            page = browser.new_page(viewport={"width": 1440, "height": 1000}, locale="fr-FR")
+            page.goto(VILLADIM, wait_until="domcontentloaded", timeout=45000)
+            # Attendre une éventuelle requête réseau ; les erreurs restent explicites.
+            try:
+                page.get_by_text(re.compile(r"\d+\s+programmes?\s+disponibles?", re.I)).first.wait_for(timeout=20000)
+            except Exception:
+                pass
+            page.wait_for_timeout(2500)
+            # Charger les éventuelles cartes plus bas sur la page.
+            for _ in range(5):
+                page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                page.wait_for_timeout(550)
+            page.evaluate("window.scrollTo(0, 0)")
+            return extract_villadim(page.content())
+        finally:
+            browser.close()
+
+
+def main() -> int:
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    results = {}
+    for name, url, fn in [
+        ("Villadim", VILLADIM, fetch_villadim),
+        ("CM-CIC · AFEDIM", AFEDIM, fetch_afedim),
+    ]:
+        try:
+            result = fn()
+        except Exception as exc:
+            result = {"status": "unavailable", "expected": None, "found": None,
+                      "programs": [], "lotsVerified": False,
+                      "message": f"Source officielle inaccessible ou analyse impossible : {type(exc).__name__}"}
+        result["checkedAt"] = now
+        result["source"] = url
+        results[name] = result
+        print(f"{name}: {result['status']} - total officiel={result['expected']} "
+              f"liens={result['found']}", flush=True)
+    # Les autres lotisseurs restent explicitement hors périmètre automatique.
+    for name in ["Groupe SET", "Val Touraine Habitat", "Lelièvre Immobilier"]:
+        results[name] = {"status": "not_configured", "expected": None, "found": None,
+                         "programs": [], "lotsVerified": False, "checkedAt": None,
+                         "source": None,
+                         "message": "Synchronisation automatique non encore implémentée pour ce site."}
+    report = {"schema": 1, "generatedAt": now,
+              "notice": "Contrôle des catalogues, PAS des stocks de lots. Aucun lot libre, vendu ou optionné n'est certifié par ce fichier.",
+              "developers": results}
+    OUTPUT.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    # Le workflow continue en cas de site inaccessible : le JSON affiche UNAVAILABLE.
+    return 0
+
+
+def test():
+    afedim = '<h1>Terrain 37</h1><p>2 biens disponibles</p>' + ''.join(
+        f'<a href="/fr/achat-immobilier/annonces/programme/terrain/{city}-37/{pid}/Fiche">Terrain</a>'
+        for city, pid in [("azay-sur-cher", "015753"), ("artannes-sur-indre", "020086")])
+    assert extract_afedim(afedim)["status"] == "verified"
+    assert extract_afedim(afedim.replace("2 biens", "4 biens"))["status"] == "incomplete"
+    assert extract_afedim("<p>0 biens disponibles</p>")["status"] == "incomplete"
+    villadim = '<p>2 programmes disponibles</p>' + ''.join(
+        f'<a href="/terrains/{city}/{slug}">{slug}</a>' for city, slug in
+        [("monnaie", "les-terrasses-de-bel-r"), ("pernay", "la-cle-des-champs")])
+    assert extract_villadim(villadim)["status"] == "verified"
+    assert extract_villadim(villadim.replace("2 programmes", "11 programmes"))["status"] == "incomplete"
+    assert extract_villadim("<p>Chargement des programmes…</p>")["status"] == "incomplete"
+    assert all("lotsVerified" in extract_afedim(afedim) for _ in range(1))
+    print("6 contrôles du moteur d'audit : OK")
+
+
+if __name__ == "__main__":
+    if "--test" in sys.argv:
+        test()
+    else:
+        sys.exit(main())
