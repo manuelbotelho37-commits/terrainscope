@@ -136,7 +136,17 @@
     #csePanel[data-mirror-pager="true"] #google-results .gsc-cursor-box{position:absolute!important;left:-10000px!important;height:1px!important;width:1px!important;overflow:hidden!important}
     @media(max-width:800px) and (min-width:701px){.content-grid{grid-template-columns:minmax(0,1fr) 240px}}
     @media(max-width:620px){.quick-source-links{grid-template-columns:1fr}.panel{padding:17px}.status-row h2{font-size:19px}}
-/* V18 : une seule liste de terrains, toutes sources confondues. */
+/* Commune : suggestions visibles sur le Galaxy Z Fold, au-dessus du formulaire. */
+    #form .field:first-child{position:relative;z-index:30}
+    #form .inwrap{position:relative;z-index:40}
+    #citySuggestions{z-index:5000;max-height:min(340px,45vh);overflow-y:auto;overscroll-behavior:contain;
+      background:#fff;box-shadow:0 16px 34px #112f3260;border:2px solid #9ccbb3;
+      border-radius:12px;top:calc(100% + 5px)}
+    #citySuggestions[hidden]{display:none!important}
+    #citySuggestions .city-item{display:block;min-height:43px;line-height:1.45;padding:11px 12px;
+      font-size:14px;font-weight:700;color:#1c4b37}
+    #citySuggestions .city-item:focus,#citySuggestions .city-item:hover{background:#e4f4e2}
+    /* V18 : une seule liste de terrains, toutes sources confondues. */
     #csePanel{position:absolute!important;left:-15000px!important;top:0!important;
       width:850px!important;height:1px!important;overflow:hidden!important;
       visibility:hidden!important;pointer-events:none!important;opacity:0!important}
@@ -214,7 +224,7 @@
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V18 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <footer class="foot">TerrainScope V19 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -642,27 +652,57 @@
       cityInput.value='';el('citySuggestions').hidden=true;
       renderCities();return true;
     }
+    // Accents, espaces, apostrophes et traits d'union sont équivalents.
+    const citySearchKey=value=>normalize(value).replace(/[’'\-–—]/g,' ')
+      .replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
+    function matchingCities(value){
+      const search=citySearchKey(value);
+      const options=CITIES.filter(city=>!selectedCities.some(x=>citySearchKey(x)===citySearchKey(city))&&
+        (!search||citySearchKey(city).includes(search)));
+      return options.sort((a,b)=>{
+        const aa=citySearchKey(a),bb=citySearchKey(b);
+        const pa=search&&aa.startsWith(search)?0:1;
+        const pb=search&&bb.startsWith(search)?0:1;
+        return pa-pb||aa.localeCompare(bb,'fr');
+      }).slice(0,12);
+    }
     function drawSuggestions(){
-      const s=normalize(cityInput.value),box=el('citySuggestions');box.replaceChildren();
-      const picks=CITIES.filter(c=>!selectedCities.some(x=>normalize(x)===normalize(c))&&(!s||normalize(c).includes(s))).slice(0,8);
+      const box=el('citySuggestions'),picks=matchingCities(cityInput.value);
+      box.replaceChildren();
       for(const city of picks){
-        const btn=document.createElement('button');btn.type='button';btn.className='city-item';btn.role='option';btn.textContent='+ '+city;btn.onclick=()=>addCity(city);box.appendChild(btn);
+        const btn=document.createElement('button');
+        btn.type='button';btn.className='city-item';btn.role='option';
+        btn.textContent=city;
+        btn.addEventListener('click',()=>{addCity(city);drawSuggestions();cityInput.focus()});
+        box.append(btn);
       }
-      box.hidden=!picks.length;
+      box.hidden=picks.length===0;
+      cityInput.setAttribute('aria-expanded',String(picks.length>0));
     }
     cityInput.addEventListener('input',drawSuggestions);
     cityInput.addEventListener('focus',drawSuggestions);
     cityInput.addEventListener('keydown',e=>{
-      if(e.key==='Enter'){e.preventDefault();if(clean(cityInput.value))addCity(cityInput.value);else if(selectedCities.length)handleSearch();}
-      if(e.key==='Escape')el('citySuggestions').hidden=true;
+      if(e.key==='Enter'){
+        e.preventDefault();
+        const first=matchingCities(cityInput.value)[0];
+        if(clean(cityInput.value))addCity(first||cityInput.value);
+        else if(selectedCities.length)handleSearch();
+      }
+      if(e.key==='Escape'){el('citySuggestions').hidden=true;cityInput.setAttribute('aria-expanded','false')}
     });
-    el('addCity').onclick=()=>{addCity(cityInput.value);cityInput.focus()};
-    document.addEventListener('click',e=>{if(!cityInput.parentElement.parentElement.contains(e.target))el('citySuggestions').hidden=true});
+    el('addCity').onclick=()=>{
+      const typed=cityInput.value;
+      if(clean(typed))addCity(matchingCities(typed)[0]||typed);
+      cityInput.focus();drawSuggestions();
+    };
+    document.addEventListener('click',e=>{
+      if(!cityInput.parentElement.parentElement.contains(e.target)){
+        el('citySuggestions').hidden=true;cityInput.setAttribute('aria-expanded','false');
+      }
+    });
     renderCities();
     displayDevelopers();
-    // La recherche Google et les lotisseurs sont visibles sur la page d'accueil.
-    // Les résultats de constructeurs et les annonces incertaines restent dans l'espace professionnel.
-    renderApprovedCards();
+    // L'ancien système de validation manuelle a été supprimé : ne plus l'appeler.
     if(googleConfigured)loadGoogleEngine();
     if('serviceWorker' in navigator && location.protocol==='https:')navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
   </script>
