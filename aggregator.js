@@ -19,7 +19,10 @@
     'immobilier','immobiliere','ideal','pour','dans','avec','sans','zone','prix',
     'm2','sur','une','des','les','aux','chez','proche','secteur','jardin',
     'vente','exclusivite','nouveau','nouveaute','centre','france','terrainabatir',
-    'habitation','description','disponible','situe','situee','jolie','beau'
+    'habitation','description','disponible','situe','situee','jolie','beau',
+    'viabilise','viabilisee','viabilisation','lotissement','proximite','agence',
+    'surface','offre','propose','proposition','rare','calme','quartier',
+    'residentiel','pavillonnaire','plat','cadre','emplacement','vente'
   ]);
   const state={serial:0,stage:0,active:false,waiting:1,pageSeen:new Set(),
     byUrl:new Set(),entries:[],unique:[],duplicates:0,page:1,
@@ -99,6 +102,7 @@
     if(node.dataset.locationStatus==='nearby')return null;
     const price=getPrice(title+' '+description);
     const area=getArea(title+' '+description);
+    if(price===null&&area===null)return null;
     return {url,title,description,city,price,area,source:sourceName(url),
       rank:rank(url),otherLinks:[]};
   }
