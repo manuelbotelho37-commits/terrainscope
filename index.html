@@ -90,6 +90,10 @@
     .approved-selection h3{font-size:16px;margin:0 0 7px}
     .content-grid>.rail{display:block}
     @media(min-width:801px){.content-grid{grid-template-columns:minmax(0,1fr) 300px}}
+    
+    .builder-portal-links{border-top:1px solid #e1eae3;padding-top:12px;margin-top:13px;color:#576d5e;font-size:12px}
+    .builder-portal-links strong{display:block;margin-bottom:5px}
+    .builder-source{display:inline-flex;align-items:center;max-width:100%;text-decoration:underline;color:#45675c;font-size:12px;padding:8px 12px;background:#f3f7f2;border-radius:8px;margin:5px 7px 0 0}
     </style>
 </head>
 <body>
@@ -132,7 +136,9 @@
           <button type="button" id="showBuilders" class="view-btn" aria-pressed="false">Annonces constructeurs</button>
           <button type="button" id="showUncertain" class="view-btn" aria-pressed="false">À vérifier <span id="uncertainCount" class="tab-count"></span></button>
         </div>
-        <p id="proNotice" class="pro-note">Annonces non vérifiées : ouvre chaque fiche, vérifie le vendeur, puis valide uniquement les terrains vraiment indépendants.</p><div id="reviewCards" class="review-cards" aria-live="polite"></div>
+        <p id="proNotice" class="pro-note">Annonces non vérifiées : ouvre chaque fiche, vérifie le vendeur, puis valide uniquement les terrains vraiment indépendants.</p>
+        <div id="builderPortalLinks" class="builder-portal-links"><strong>Portails susceptibles de proposer des annonces de constructeurs</strong><div id="builderLinks"></div></div>
+        <div id="reviewCards" class="review-cards" aria-live="polite"></div>
       </details>
     </div>
     <p id="criteriaText" class="criteria-text" hidden></p><div class="content-grid">
@@ -141,8 +147,8 @@
         <div id="csePanel" class="box cse-holder" hidden><div id="cseHint" class="cse-hint">Terrains repérés dans l’index de Google. Vérifie toujours la commune et le vendeur avant de présenter une annonce à un client. Google peut également afficher des publicités.</div><p id="resultSummary" class="result-summary" aria-live="polite"></p><div id="google-results"></div></div>
       </section>
       <aside class="rail" id="professionalSources" aria-label="Sources complémentaires non vérifiées">
-        <div class="box"><h3>Recherches par site</h3><p class="caption">Les recherches ouvrent les sites immobiliers. Les sites externes peuvent afficher des communes voisines ou des offres de constructeurs, que TerrainScope ne contrôle pas.</p><div id="sites"><p class="notice">Lancez une recherche pour activer les liens.</p></div><a href="#" id="allSites" class="general" hidden target="_blank" rel="noopener noreferrer">↗ Google · Recherche Web</a></div>
         <div class="box"><h3>Lotisseurs &amp; aménageurs</h3><p class="caption">Les liens ouvrent directement les offres de terrains. Lorsqu’un filtre de ville officiel est absent, utilise le lien Google ciblé sur la commune.</p><div id="developers"></div></div>
+        <div class="box"><h3>Recherches par site</h3><p class="caption">Les recherches ouvrent les sites immobiliers. Les sites externes peuvent afficher des communes voisines ou des offres de constructeurs, que TerrainScope ne contrôle pas.</p><div id="sites"><p class="notice">Lancez une recherche pour activer les liens.</p></div><a href="#" id="allSites" class="general" hidden target="_blank" rel="noopener noreferrer">↗ Google · Recherche Web</a></div>
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
@@ -506,7 +512,16 @@
       }
       if(cities.length===1)addSource('Leboncoin · recherche directe',leboncoinUrl(cities[0]));
       else addSource('Leboncoin · toutes ces communes (Google)',linkFor(cities,'leboncoin.fr'));
-      for(const [name,domain] of PORTALS){if(name==='Leboncoin')continue;addSource('Google · '+name,linkFor(cities,domain))}
+      const buildersRoot=el('builderLinks');buildersRoot.replaceChildren();
+      for(const [name,domain] of PORTALS){
+        if(name==='Leboncoin')continue;
+        if(['nos-terrains.com','terrain-construction.com'].includes(domain)){
+          const a=document.createElement('a');a.className='builder-source';a.href=linkFor(cities,domain);
+          a.target='_blank';a.rel='noopener noreferrer';a.textContent='↗ '+name+' · recherche externe non filtrée';
+          buildersRoot.append(a);continue;
+        }
+        addSource('Google · '+name,linkFor(cities,domain));
+      }
       const all=el('allSites');all.hidden=false;all.href=googleUrl(query(cities));
       if(googleConfigured)performGoogleSearch(cities);
       else el('csePanel').hidden=true;
