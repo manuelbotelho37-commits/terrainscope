@@ -12,7 +12,7 @@
   <title>TerrainScope · Recherche de terrains</title>
   <style>
     :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#142b34;background:#f4f6f3;font-synthesis:none}
-    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-height:100vh}button,input{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.58}a{color:inherit}
+    *{box-sizing:border-box}html{scroll-behavior:auto!important;overflow-x:hidden;overflow-y:auto;touch-action:auto}body{margin:0;min-height:100vh;overflow-y:visible;touch-action:auto}button,input{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.58}a{color:inherit}
     .top{background:linear-gradient(115deg,#0c2930 0%,#13413f 63%,#266555 100%);color:#fff;padding:20px 0 88px;overflow:hidden;position:relative}
     .top:before,.top:after{content:"";border:1px solid #ffffff15;position:absolute;width:420px;height:420px;border-radius:50%;right:-150px;top:45px;pointer-events:none}.top:after{width:290px;height:290px;right:-80px;top:115px}
     .wrap{width:min(1050px,calc(100% - 32px));margin:auto;position:relative;z-index:1}.nav{display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:-.5px;font-size:21px}.logo{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:#e8fbcd;color:#123931;font-size:22px;box-shadow:0 5px 14px #061b1b40}.nav-actions{display:flex;gap:8px}.btn-ghost{border:1px solid #ffffff45;background:#ffffff10;color:#fff;border-radius:12px;padding:11px 14px;font-weight:650}.btn-ghost:hover{background:#ffffff20}
@@ -155,6 +155,13 @@
     #citySuggestions .city-close{width:100%;display:block;text-align:center;background:#eef6ed;
       border:0;border-top:1px solid #dce7dc;border-radius:0 0 10px 10px;
       padding:12px;color:#365747;font-size:13px;font-weight:800;min-height:44px}
+    /* Navigation discrète des résultats : sortie immédiate, sans animation. */
+    #terrainNav{position:fixed;right:max(12px,env(safe-area-inset-right));bottom:calc(24px + env(safe-area-inset-bottom));
+      z-index:110;display:none;flex-direction:column;gap:8px;pointer-events:none}
+    #terrainNav.show{display:flex}
+    #terrainNav button{pointer-events:auto;width:45px;height:45px;padding:0;display:grid;place-items:center;
+      border:1px solid #a9c5b4;border-radius:50%;background:#dcf2d0;color:#214c35;
+      font-size:22px;font-weight:800;box-shadow:0 3px 14px #152c2460}
     /* Un accès direct aux lotisseurs, dès l'accueil. */
     #lotisseursTop{background:#e8f5da;color:#214e35;border:1px solid #a9d39d;border-radius:10px;
       min-height:42px;padding:10px 13px;font-weight:850;font-size:13px;white-space:nowrap}
@@ -166,7 +173,7 @@
     #developerAccordion .lotisseur-chevron{margin-left:auto;font-size:20px}
     #developerAccordion .developer-body{padding:10px 12px 13px}
     #developerAccordion .developer-body>.caption{font-size:11px;line-height:1.45;margin:5px 0 8px}
-    #developerAccordion[open] .developer-body{max-height:74vh;overflow-y:auto;overscroll-behavior:contain}
+    #developerAccordion[open] .developer-body{max-height:none!important;overflow:visible!important;overscroll-behavior:auto!important}
     #developerMatchNotice{margin:10px 1px;padding:12px 13px;background:#e8f6e4;color:#2b563b;
       border:1px solid #cfebc9;border-radius:11px;font-size:13px;font-weight:800;line-height:1.45}
     #developerMatchNotice[hidden]{display:none}
@@ -270,7 +277,11 @@
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V31 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <nav id="terrainNav" aria-label="Déplacement dans la page">
+    <button id="terrainUp" type="button" title="Retour en haut" aria-label="Retour aux critères de recherche">↑</button>
+    <button id="terrainDown" type="button" title="Descendre" aria-label="Descendre dans les résultats">↓</button>
+  </nav>
+  <footer class="foot">TerrainScope V32 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -739,7 +750,7 @@
           if(!item)return;
           googleCurrentPage=number;
           item.element.click();
-          el('csePanel').scrollIntoView({behavior:'smooth',block:'start'});
+          el('csePanel').scrollIntoView({behavior:'instant',block:'start'});
         };
         buttons.append(button);
       }
@@ -827,7 +838,7 @@
         else if(url==='#developerAccordion')a.addEventListener('click',event=>{
           event.preventDefault();
           el('developerAccordion').open=true;
-          el('developerAccordion').scrollIntoView({behavior:'smooth',block:'start'});
+          el('developerAccordion').scrollIntoView({behavior:'instant',block:'start'});
         });
         if(main)a.className='main-source';
         a.append(document.createTextNode(label+' ↗'));
@@ -895,7 +906,8 @@
       }else el('csePanel').hidden=true;
       el('mainResults').querySelector('.fallback')?.remove();
       if(!googleConfigured){const box=document.createElement('div');box.className='box placeholder fallback';box.innerHTML='<h3>Le moteur doit être activé pour afficher les annonces</h3><p>La recherche par site reste accessible à droite.</p><button type="button" class="search" id="activateResults">Configurer le moteur</button>';el('mainResults').appendChild(box);el('activateResults').onclick=openModal}
-      el('mainResults').scrollIntoView({behavior:'smooth',block:'start'});
+      /* Déplacement automatique supprimé : il empêchait parfois le balayage sur Android. */
+      el('terrainNav').classList.add('show');
     }
     function escapeHtml(v){return v.replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
     function openModal(){el('cx').value=settingsStore.getItem('terrainScopeCx')||DEFAULT_CX;el('modal').classList.add('show')}
@@ -913,9 +925,17 @@
     el('lotisseursTop').addEventListener('click',()=>{
       const panel=el('developerAccordion');
       panel.open=true;
-      panel.scrollIntoView({behavior:'smooth',block:'start'});
+      panel.scrollIntoView({behavior:'instant',block:'start'});
     });
     el('form').addEventListener('submit',handleSearch);
+    el('terrainUp').addEventListener('click',()=>{
+      document.activeElement?.blur?.();
+      window.scrollTo({top:0,behavior:'instant'});
+    });
+    el('terrainDown').addEventListener('click',()=>{
+      document.activeElement?.blur?.();
+      window.scrollBy({top:Math.max(window.innerHeight*.82,400),behavior:'instant'});
+    });
     el('resetBtn').addEventListener('click',()=>{location.reload()});
     const cityInput=el('city');
     function renderCities(){
