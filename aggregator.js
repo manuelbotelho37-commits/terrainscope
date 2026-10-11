@@ -3,8 +3,9 @@
    Aucun appel direct aux portails tiers, aucune cle API exposee. */
 (function(){
   'use strict';
+  // Le Bon Coin ne figure plus dans la collecte Google : ses URL restent
+  // souvent indexées après désactivation. On utilise la recherche du site.
   const SOURCES=[
-    {name:'Le Bon Coin',domain:'leboncoin.fr'},
     {name:'SeLoger',domain:'seloger.com'},
     {name:'Bien’ici',domain:'bienici.com'},
     {name:'IAD',domain:'iadfrance.fr'},
@@ -132,6 +133,10 @@
   function candidate(node){
     const a=node.querySelector('a.gs-title'),url=a?.href||'';
     if(!url||!/^https?:/.test(url))return null;
+    // Ne jamais proposer comme annonce vérifiée un lien Le Bon Coin provenant
+    // de Google : impossible d'en certifier l'activation depuis cette PWA.
+    const host=domainOf(url);
+    if(host==='leboncoin.fr'||host.endsWith('.leboncoin.fr'))return null;
     const title=(a.textContent||'Terrain à bâtir').replace(/\s+/g,' ').trim();
     const description=(node.querySelector('.gs-snippet')?.textContent||'').replace(/\s+/g,' ').trim();
     if(!title||previewSaysInactive(title,description))return null;
@@ -180,7 +185,7 @@
     const unique=state.unique,number=unique.length;
     const pagesCount=Math.max(1,Math.ceil(number/PAGE_SIZE));
     state.page=Math.min(state.page,pagesCount);
-    const status=state.active?'Recherche en cours · '+SOURCES[state.stage]?.name:
+    const status=state.active?'Recherche en cours · '+(SOURCES[state.stage]?.name||'autres sources'):
       'Recherche Google terminée';
     summary.textContent=number+' lien(s) de terrain repéré(s) dans Google · '+state.duplicates+
       ' doublon(s) regroupé(s) · '+status+
