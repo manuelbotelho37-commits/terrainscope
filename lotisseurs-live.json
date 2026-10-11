@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "generatedAt": null,
+  "notice": "L'audit automatique n'a pas encore exécuté sa première collecte. Les catalogues historiques ne prouvent pas la disponibilité des lots.",
+  "developers": {
+    "Villadim": {
+      "status": "pending",
+      "source": "https://www.villadim.fr/programmes/indre-et-loire",
+      "checkedAt": null,
+      "expected": null,
+      "found": null,
+      "programs": [],
+      "lotsVerified": false,
+      "message": "Première vérification automatique en attente."
+    },
+    "CM-CIC · AFEDIM": {
+      "status": "pending",
+      "source": "https://www.afedim.fr/fr/achat-immobilier/annonces/Terrain/Indre-et-Loire-France/surface-0-800-m2/budget-0-2000000-euros/rayon-0-km/Resultats",
+      "checkedAt": null,
+      "expected": null,
+      "found": null,
+      "programs": [],
+      "lotsVerified": false,
+      "message": "Première vérification automatique en attente."
+    },
+    "Groupe SET": {
+      "status": "not_configured",
+      "checkedAt": null,
+      "expected": null,
+      "found": null,
+      "programs": [],
+      "lotsVerified": false,
+      "message": "Contrôle automatique non installé."
+    },
+    "Val Touraine Habitat": {
+      "status": "not_configured",
+      "checkedAt": null,
+      "expected": null,
+      "found": null,
+      "programs": [],
+      "lotsVerified": false,
+      "message": "Contrôle automatique non installé."
+    },
+    "Lelièvre Immobilier": {
+      "status": "not_configured",
+      "checkedAt": null,
+      "expected": null,
+      "found": null,
+      "programs": [],
+      "lotsVerified": false,
+      "message": "Contrôle automatique non installé."
+    }
+  }
+}
