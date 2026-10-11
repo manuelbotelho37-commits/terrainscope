@@ -1,62 +1,139 @@
-/* Relevé public daté, non exhaustif. Jamais de disponibilité certifiée en temps réel. */
+/* Catalogue officiel daté, non exhaustif hors Villadim, disponibilité en temps réel non garantie. */
 window.TERRAIN_LOTISSEURS_DATA = {
   "date": "2026-10-11",
-  "scope": "Sélection NON EXHAUSTIVE de programmes consultés sur les sites officiels. Les quantités LIBRE sont les statuts visibles lors du relevé, non une garantie de disponibilité actuelle.",
+  "scope": "Catalogue Villadim : 11 opérations en Indre-et-Loire réconciliées avec la liste officielle du 11/10/2026. Autres lotisseurs : catalogues partiels. Chiffres des lots = compteurs visibles sur les fiches officielles, pas des disponibilités certifiées en temps réel.",
   "programs": [
     {
       "developer": "Villadim",
-      "city": "Pernay",
-      "name": "La Clé des Champs",
-      "url": "https://www.villadim.fr/terrains/pernay/la-cle-des-champs",
-      "remaining": 19,
-      "countLabel": "lots annoncés disponibles",
-      "surfaceMin": 354,
-      "surfaceMax": 453,
-      "priceFrom": 63000
-    },
-    {
-      "developer": "Villadim",
-      "city": "Druye",
-      "name": "Les Vergers de la Nauraie",
-      "url": "https://www.villadim.fr/terrains/druye/les-vergers-de-la-nauraie",
-      "remaining": 8,
-      "countLabel": "lots annoncés disponibles",
-      "surfaceMin": 287,
-      "surfaceMax": 420,
-      "priceFrom": 64000
-    },
-    {
-      "developer": "Villadim",
-      "city": "Chinon",
-      "name": "Le Bosquet de la Libourne",
-      "url": "https://www.villadim.fr/terrains/chinon/le-bosquet-de-la-libourne",
-      "remaining": 3,
-      "countLabel": "lots annoncés disponibles",
-      "surfaceMin": 369,
-      "surfaceMax": 736,
-      "priceFrom": 39000
-    },
-    {
-      "developer": "Villadim",
-      "city": "Sainte-Maure-de-Touraine",
+      "countLabel": "lots annoncés « disponibles » sur la fiche officielle (relevé daté)",
       "name": "Le Cabernet",
+      "city": "Sainte-Maure-de-Touraine",
       "url": "https://www.villadim.fr/terrains/sainte-maure-de-touraine/le-cabernet",
-      "remaining": 11,
-      "countLabel": "lots annoncés disponibles",
+      "remaining": 9,
       "surfaceMin": 406,
       "surfaceMax": 534,
-      "priceFrom": 46000
+      "priceFrom": 48000,
+      "seen": "2026-10-11"
     },
     {
       "developer": "Villadim",
-      "city": "Veigné",
+      "countLabel": "lots annoncés « disponibles » sur la fiche officielle (relevé daté)",
+      "name": "Le Clos de la Bréanderie",
+      "city": "Montbazon",
+      "url": "https://www.villadim.fr/terrains/montbazon/le-clos-de-la-breanderie",
+      "remaining": 1,
+      "surfaceMin": 471,
+      "surfaceMax": 760,
+      "priceFrom": 115000,
+      "seen": "2026-10-11"
+    },
+    {
+      "developer": "Villadim",
+      "countLabel": "lots annoncés « disponibles » sur la fiche officielle (relevé daté)",
+      "name": "Bono",
+      "city": "Athée-sur-Cher",
+      "url": "https://www.villadim.fr/terrains/athee-sur-cher/bono-la-gangnerie",
+      "remaining": 1,
+      "surfaceMin": 407,
+      "surfaceMax": 647,
+      "priceFrom": 53000,
+      "seen": "2026-10-11"
+    },
+    {
+      "developer": "Villadim",
+      "countLabel": "quantité disponible non confirmée",
+      "name": "Le Grand Hélas 1",
+      "city": "Chambourg-sur-Indre",
+      "url": "https://www.villadim.fr/terrains/chambourg-sur-indre/le-grand-helas-1",
+      "surfaceMin": 684,
+      "surfaceMax": 853,
+      "priceFrom": 40000,
+      "seen": "2026-10-11",
+      "note": "Programme présent dans le catalogue Villadim mais la fiche consultée indique « 0 lot dispo ». Ce chiffre ne prouve pas la vente de tous les lots ; demander confirmation du statut."
+    },
+    {
+      "developer": "Villadim",
+      "countLabel": "lots annoncés « disponibles » sur la fiche officielle (relevé daté)",
+      "name": "Le Hameau de Villeneuve",
+      "city": "Saint-Laurent-en-Gâtines",
+      "url": "https://www.villadim.fr/terrains/saint-laurent-en-gatines/le-hameau-de-villeneuve",
+      "remaining": 6,
+      "surfaceMin": 466,
+      "surfaceMax": 731,
+      "priceFrom": 49900,
+      "seen": "2026-10-11"
+    },
+    {
+      "developer": "Villadim",
+      "countLabel": "lots annoncés « disponibles » sur la fiche officielle (relevé daté)",
       "name": "La Martinière",
+      "city": "Veigné",
       "url": "https://www.villadim.fr/terrains/veigne/la-martiniere",
       "remaining": 2,
-      "countLabel": "lots annoncés disponibles",
       "surfaceMin": 456,
       "surfaceMax": 919,
-      "priceFrom": 93000
+      "priceFrom": 93000,
+      "seen": "2026-10-11"
+    },
+    {
+      "developer": "Villadim",
+      "countLabel": "lots annoncés « disponibles » sur la fiche officielle (relevé daté)",
+      "name": "Les Jardins d'Eléonore",
+      "city": "Azay-le-Rideau",
+      "url": "https://www.villadim.fr/terrains/azay-le-rideau/les-jardins-deleonore",
+      "remaining": 1,
+      "surfaceMin": 377,
+      "surfaceMax": 760,
+      "priceFrom": 50800,
+      "seen": "2026-10-11"
+    },
+    {
+      "developer": "Villadim",
+      "countLabel": "lots annoncés « disponibles » sur la fiche officielle (relevé daté)",
+      "name": "Le Bosquet de la Libourne",
+      "city": "Chinon",
+      "url": "https://www.villadim.fr/terrains/chinon/le-bosquet-de-la-libourne",
+      "remaining": 3,
+      "surfaceMin": 369,
+      "surfaceMax": 736,
+      "priceFrom": 39000,
+      "seen": "2026-10-11"
+    },
+    {
+      "developer": "Villadim",
+      "countLabel": "lots annoncés « disponibles » sur la fiche officielle (relevé daté)",
+      "name": "La Clé des Champs",
+      "city": "Pernay",
+      "url": "https://www.villadim.fr/terrains/pernay/la-cle-des-champs",
+      "remaining": 19,
+      "surfaceMin": 354,
+      "surfaceMax": 453,
+      "priceFrom": 63000,
+      "seen": "2026-10-11"
+    },
+    {
+      "developer": "Villadim",
+      "countLabel": "lots annoncés « disponibles » sur la fiche officielle (relevé daté)",
+      "name": "Les Terrasses de Bel'R",
+      "city": "Monnaie",
+      "url": "https://www.villadim.fr/terrains/monnaie/les-terrasses-de-bel-r",
+      "remaining": 16,
+      "surfaceMin": 260,
+      "surfaceMax": 459,
+      "priceFrom": 61800,
+      "seen": "2026-10-11"
+    },
+    {
+      "developer": "Villadim",
+      "countLabel": "lots annoncés « disponibles » sur la fiche officielle (relevé daté)",
+      "name": "Les Glycines",
+      "city": "Villandry",
+      "url": "https://www.villadim.fr/terrains/villandry/les-glycines",
+      "remaining": 1,
+      "surfaceMin": 445,
+      "surfaceMax": 445,
+      "priceFrom": 79000,
+      "seen": "2026-10-11"
     },
     {
       "developer": "Groupe SET",
@@ -581,5 +658,13 @@ window.TERRAIN_LOTISSEURS_DATA = {
         }
       ]
     }
-  ]
+  ],
+  "audit": {
+    "developer": "Villadim",
+    "officialListingUrl": "https://www.villadim.fr/terrains",
+    "official37Count": 11,
+    "recordedCount": 11,
+    "checkedOn": "2026-10-11",
+    "notes": "Liste comparée aux liens de 11 opérations (37) affichés dans le catalogue Villadim ; Le Grand Hélas 1 est répertorié mais sa fiche indique zéro lot disponible. Les Vergers de la Nauraie à Druye n'est plus dans la liste et n'est pas déclaré vendu."
+  }
 };
