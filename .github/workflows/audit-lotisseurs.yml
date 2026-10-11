@@ -43,7 +43,18 @@ jobs:
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
             git add lotisseurs-live.json
             git commit -m "chore: audit horaire des catalogues officiels [skip ci]"
-            git push
+            # Les mises à jour du site et l'audit peuvent être simultanés.
+            # Intégrer les changements distants sans force-push, puis retenter.
+            for attempt in 1 2 3 4 5; do
+              if git pull --rebase origin main && git push origin HEAD:main; then
+                echo "Audit enregistré (tentative $attempt)"
+                exit 0
+              fi
+              echo "Conflit de mise à jour : tentative $attempt/5"
+              sleep 4
+            done
+            echo "Échec d'enregistrement : aucun changement forcé."
+            exit 1
           else
             echo 'Aucun changement de rapport'
           fi
