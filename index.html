@@ -56,7 +56,7 @@
     <div class="status-row"><h2 id="sectionTitle">Résultats de recherche</h2><span id="statusBadge" class="status-pill" role="status">Prêt à rechercher</span></div>
     <p id="criteriaText" class="criteria-text" hidden></p><div class="content-grid">
       <section class="results" id="mainResults" aria-live="polite">
-        <div class="box placeholder" id="placeholder"><div class="bigicon" aria-hidden="true">⌕</div><h3>Les annonces directement ici</h3><p>Une fois le moteur gratuit Google activé, les annonces trouvées apparaîtront dans cette colonne avec le prix et la surface lorsqu'ils sont indiqués, et un lien vers la source. Une seule configuration est nécessaire.</p><button id="setupMain" class="search" type="button">Activer l'affichage des annonces</button></div>
+        <div class="box placeholder" id="placeholder"><div class="bigicon" aria-hidden="true">⌕</div><h3>Les annonces directement ici</h3><p>Le moteur Google TerrainScope est relié. Renseigne la commune et lance une recherche : les annonces indexées apparaîtront ici, avec un accès direct au site qui les publie.</p><button id="setupMain" class="search" type="button">Gérer les sites recherchés</button></div>
         <div id="csePanel" class="box cse-holder" hidden><div id="cseHint" class="cse-hint">Résultats issus de l'index de Google : l'affichage ne garantit ni l'exhaustivité ni la disponibilité des annonces.</div><div id="google-results"></div></div>
       </section>
       <aside class="rail" aria-label="Sources complémentaires">
@@ -65,16 +65,16 @@
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V5 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <footer class="foot">TerrainScope V6 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
-    <div class="dialog-head"><h2 id="dialogTitle">Activer la recherche groupée</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
-    <p>La recherche par site est déjà disponible gratuitement. Pour afficher des résultats <strong>dans l'application</strong>, activez gratuitement Google Programmable Search Engine (version avec publicités).</p>
-    <ol><li>Ouvrez <a href="https://programmablesearchengine.google.com/controlpanel/create" target="_blank" rel="noopener noreferrer">Créer un moteur de recherche Google ↗</a>.</li><li>Donnez-lui un nom, par exemple <strong>Recherche Terrains</strong>.</li><li>Dans « Sites à rechercher », ajoutez les domaines des portails qui vous intéressent, par exemple :</li></ol>
+    <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
+    <p><strong>Ton moteur Google est déjà relié à TerrainScope.</strong> Pour ajouter d'autres annonces, complète simplement la liste de ses sites dans les paramètres Google. Les annonces sont des résultats indexés, pas une extraction exhaustive des portails.</p>
+    <p><a href="https://programmablesearchengine.google.com/controlpanel/all" target="_blank" rel="noopener noreferrer">Ouvrir les paramètres de mon moteur Google ↗</a></p><p>Dans le moteur « TerrainScope – Terrains », ajoute les domaines immobiliers supplémentaires (sans recréer de moteur) :</p>
     <div><span class="tag">leboncoin.fr</span><span class="tag">seloger.com</span><span class="tag">bienici.com</span><span class="tag">nos-terrains.com</span><span class="tag">lelievre-immobilier.com</span><span class="tag">iadfrance.fr</span><span class="tag">immonot.com</span><span class="tag">immobilier.notaires.fr</span><span class="tag">terrain-construction.com</span><span class="tag">paruvendu.fr</span><span class="tag">logic-immo.com</span><span class="tag">pap.fr</span><span class="tag">immobilier.lefigaro.fr</span><span class="tag">kazimo.fr</span><span class="tag">superimmo.com</span><span class="tag">ouestfrance-immo.com</span><span class="tag">idealista.fr</span><span class="tag">orpi.com</span><span class="tag">century21.fr</span><span class="tag">safti.fr</span><span class="tag">villadim.fr</span><span class="tag">set.fr</span><span class="tag">afedim.fr</span><span class="tag">valtourainehabitat-vente.fr</span></div>
-    <p><button id="copyDomains" class="setup-link" type="button">Copier tous les domaines en une seule fois</button></p><ol start="4"><li>Créez le moteur Google et récupérez son <strong>identifiant du moteur de recherche</strong> (CX) dans « Code » ou « Paramètres ». Le moteur doit rechercher uniquement les sites indiqués.</li><li>Collez l’identifiant CX ci-dessous, puis enregistrez. La liste d’annonces sera alors intégrée à TerrainScope à chaque recherche.</li></ol>
+    <p><button id="copyDomains" class="setup-link" type="button">Copier la liste des domaines</button></p><p>Identifiant Google déjà renseigné automatiquement. Modifie-le uniquement si tu changes de moteur :</p>
     <label class="field" for="cx"><strong style="font-size:12px">Identifiant Google (CX)</strong></label><input id="cx" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="Ex. 0123456789abcdef0" aria-label="Identifiant du moteur Google">
-    <div class="dialog-actions"><button id="saveCx" class="search" type="button">Enregistrer</button><button id="removeCx" class="light" type="button">Désactiver</button></div>
+    <div class="dialog-actions"><button id="saveCx" class="search" type="button">Enregistrer</button><button id="removeCx" class="light" type="button">Revenir au moteur initial</button></div>
     <p><small>La version gratuite peut comporter des publicités et être soumise à des restrictions Google. L'identifiant est conservé localement sur cet appareil ; aucune annonce ni historique de recherche n'est stocké par TerrainScope. Google et les sites consultés appliquent leurs propres règles de traitement des recherches.</small></p>
   </div></div>
   <script>
@@ -104,7 +104,8 @@
     const CITIES = ['Chambray-lès-Tours','Tours','Joué-lès-Tours','Saint-Avertin','Saint-Cyr-sur-Loire','La Riche','Fondettes','Ballan-Miré','Montlouis-sur-Loire','Azay-sur-Cher','Véretz','Savonnières','Parçay-Meslay','Rochecorbon','Larçay','Esvres-sur-Indre','Montbazon','Veigné','Saint-Pierre-des-Corps','Amboise','Loches','Dolus-le-Sec','Azay-le-Rideau','Monts','Sorigny','Saint-Branchs','Luynes','Pernay','Notre-Dame-d’Oé','Chanceaux-sur-Choisille','Artannes-sur-Indre','Saint-Martin-le-Beau','Athée-sur-Cher','Monnaie','La Ville-aux-Dames','Bléré','Esvres','Langeais'];
     const el=id=>document.getElementById(id);
     const settingsStore=(()=>{try{const storage=window.localStorage;storage.getItem('terrainScopeCx');return storage}catch(e){return {getItem:()=>null,setItem:()=>{},removeItem:()=>{}}}})();
-    let googleConfigured = Boolean(settingsStore.getItem('terrainScopeCx'));
+    const DEFAULT_CX = 'c051883a11ead4ffb'; // Moteur Google créé pour TerrainScope le 11/10/2026.
+    let googleConfigured = Boolean(settingsStore.getItem('terrainScopeCx') || DEFAULT_CX);
     let engineLoaded = false;
     let lastSearch = null;
     const clean = v=>String(v||'').trim().replace(/\s+/g,' ');
@@ -160,7 +161,7 @@
       el('statusBadge').textContent=count?count+' résultat(s) sur cette page':'Aucun résultat sur cette page';
     }
     function loadGoogleEngine(){
-      const cx=settingsStore.getItem('terrainScopeCx');if(!cx)return;
+      const cx=settingsStore.getItem('terrainScopeCx')||DEFAULT_CX;if(!cx)return;
       googleConfigured=true;
       window.__gcse={parsetags:'onload',searchCallbacks:{web:{rendered:onGoogleResults}}};
       const root=el('google-results');root.innerHTML='';
@@ -208,7 +209,7 @@
       el('mainResults').scrollIntoView({behavior:'smooth',block:'start'});
     }
     function escapeHtml(v){return v.replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
-    function openModal(){el('cx').value=settingsStore.getItem('terrainScopeCx')||'';el('modal').classList.add('show')}
+    function openModal(){el('cx').value=settingsStore.getItem('terrainScopeCx')||DEFAULT_CX;el('modal').classList.add('show')}
     function closeModal(){el('modal').classList.remove('show')}
     el('settingsBtn').onclick=openModal;el('settingsBtn2').onclick=openModal;el('setupMain').onclick=openModal;el('closeBtn').onclick=closeModal;
     el('copyDomains').onclick=async()=>{const list=[...new Set(PORTALS.map(row=>row[1]))].join('\n');try{await navigator.clipboard.writeText(list);el('copyDomains').textContent='✓ Domaines copiés';}catch(e){el('copyDomains').textContent='Copie impossible : sélectionnez les noms ci-dessus';}};
