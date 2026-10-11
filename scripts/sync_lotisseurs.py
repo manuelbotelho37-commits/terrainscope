@@ -193,17 +193,30 @@ def extract_vth(html: str, base: str) -> tuple[list[dict], list[str]]:
 
 def fetch_vth() -> dict:
     visited, pending, all_programs = set(), [VTH], {}
-    while pending and len(visited) < 12:
-        url = pending.pop(0)
-        if url in visited:
-            continue
-        visited.add(url)
-        r = requests.get(url, timeout=30, headers=HEADERS)
+    try:
+        while pending and len(visited) < 12:
+            url = pending.pop(0)
+            if url in visited:
+                continue
+            visited.add(url)
+            r = requests.get(url, timeout=30, headers=HEADERS)
+            r.raise_for_status()
+            pages, next_pages = extract_vth(r.text, url)
+            for program in pages:
+                all_programs[program["url"]] = program
+            pending.extend(url for url in next_pages if url not in visited)
+    except requests.RequestException:
+        # Le catalogue /lotissement/ renvoie parfois HTTP 500.
+        # La page officielle de présentation liste un sous-ensemble uniquement.
+        # Il faut montrer un relevé PARTIEL, jamais un total garanti.
+        fallback = "https://www.valtourainehabitat-vente.fr/acheter-un-terrain-a-batir/"
+        r = requests.get(fallback, timeout=30, headers=HEADERS)
         r.raise_for_status()
-        pages, next_pages = extract_vth(r.text, url)
-        for program in pages:
-            all_programs[program["url"]] = program
-        pending.extend(url for url in next_pages if url not in visited)
+        pages, _ = extract_vth(r.text, fallback)
+        report = observed(pages,
+                          "Seulement les programmes visibles sur la page de présentation VTH ; catalogue complet inaccessible.")
+        report["warning"] = "Catalogue général VTH inaccessible lors de cette vérification. Inventaire partiel."
+        return report
     result = observed(list(all_programs.values()),
                       "Fiches parcourues dans la pagination officielle VTH, sans compteur total indépendant.")
     result["pagesVisited"] = len(visited)
