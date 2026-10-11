@@ -191,6 +191,67 @@ def extract_vth(html: str, base: str) -> tuple[list[dict], list[str]]:
     return list(found.values()), pagination
 
 
+
+def check_known_vth() -> list[dict]:
+    """Inspecte chaque fiche VTH répertoriée, même absente de la page à quatre cartes."""
+    raw=(ROOT / "lotisseurs-data.js").read_text(encoding="utf-8")
+    match=re.search(r"window\.TERRAIN_LOTISSEURS_DATA\s*=\s*(\{.*\});\s*$", raw, re.S)
+    if not match:
+        raise ValueError("Catalogue historique illisible")
+    old=json.loads(match.group(1))
+    results=[]
+    for item in old.get("programs", []):
+        if item.get("developer")!="Val Touraine Habitat":
+            continue
+        url=normalized_link(item.get("url",""), VTH)
+        if urlparse(url).netloc!="valtourainehabitat-vente.fr":
+            continue
+        result={"url":url,"name":item.get("name"),"city":item.get("city"),
+                "httpStatus":None,"status":"unavailable","lotsVerified":False,
+                "freeLots":None,"rowCount":None}
+        try:
+            page=requests.get(url,timeout=16,headers=HEADERS)
+            result["httpStatus"]=page.status_code
+            if page.status_code==404:
+                result["status"]="not_found"
+            elif page.ok:
+                soup=BeautifulSoup(page.text,"html.parser")
+                heading=soup.find("h1")
+                if heading:
+                    result["status"]="reachable"
+                    n=free=0
+                    for tr in soup.find_all("tr"):
+                        cells=[x.get_text(" ",strip=True).lower()
+                               for x in tr.find_all(["td","th"])]
+                        if len(cells)<4 or not re.fullmatch(r"\d{1,3}(?:\s*[a-z]+)?",cells[0]):
+                            continue
+                        status=cells[3].strip()
+                        if status not in {"libre","option","optionné","sous-compromis","vendu","vendue"}:
+                            continue
+                        n+=1
+                        free+=int(status=="libre")
+                    if n:
+                        result["lotsVerified"]=True
+                        result["rowCount"]=n
+                        result["freeLots"]=free
+                else:
+                    result["status"]="uncertain"
+        except requests.RequestException:
+            pass
+        results.append(result)
+    return results
+
+
+def with_vth_details(report:dict) -> dict:
+    checks=check_known_vth()
+    report["trackedReferences"]=len(checks)
+    report["referenceChecks"]=checks
+    report["warning"]=(report.get("warning","")+
+        f" {len(checks)} fiches connues, dont {sum(x['status']=='reachable' for x in checks)} accessibles pendant ce contrôle."+
+        " Un lien en erreur ne prouve ni une vente ni la disparition du programme.").strip()
+    return report
+
+
 def fetch_vth() -> dict:
     visited, pending, all_programs = set(), [VTH], {}
     try:
@@ -216,14 +277,14 @@ def fetch_vth() -> dict:
         report = observed(pages,
                           "Seulement les programmes visibles sur la page de présentation VTH ; catalogue complet inaccessible.")
         report["warning"] = "Catalogue général VTH inaccessible lors de cette vérification. Inventaire partiel."
-        return report
+        return with_vth_details(report)
     result = observed(list(all_programs.values()),
                       "Fiches parcourues dans la pagination officielle VTH, sans compteur total indépendant.")
     result["pagesVisited"] = len(visited)
     if pending:
         result["status"] = "incomplete"
         result["message"] = "Pagination VTH trop longue ou incomplète. Vérification exhaustive impossible."
-    return result
+    return with_vth_details(result)
 
 
 def fetch_lelievre() -> dict:
@@ -309,7 +370,8 @@ def test():
     assert len(extract_vth(vth_mock, VTH)[0]) == 1
     # Ne jamais prendre l'absence de fiches pour une déclaration de vente.
     assert observed([], "page temporairement vide")["status"] == "incomplete"
-    print("12 contrôles du moteur d'audit : OK")
+    assert callable(check_known_vth)
+    print("13 contrôles du moteur d'audit : OK")
 
 
 if __name__ == "__main__":
