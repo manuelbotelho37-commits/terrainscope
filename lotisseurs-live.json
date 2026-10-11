@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-10-11T20:57:40+00:00",
+  "generatedAt": "2026-10-11T21:08:57+00:00",
   "notice": "Contrôle des catalogues, PAS des stocks de lots. Aucun lot libre, vendu ou optionné n'est certifié par ce fichier.",
   "developers": {
     "Villadim": {
@@ -67,7 +67,7 @@
       "method": "Catalogue Villadim 37 : ne valider que si les liens des fiches sont tous identifiés",
       "message": "Inventaire des programmes cohérent avec le compteur officiel.",
       "lotsVerified": false,
-      "checkedAt": "2026-10-11T20:57:40+00:00",
+      "checkedAt": "2026-10-11T21:08:57+00:00",
       "source": "https://www.villadim.fr/programmes/indre-et-loire"
     },
     "CM-CIC · AFEDIM": {
@@ -99,7 +99,7 @@
       "method": "Index AFEDIM terrains Indre-et-Loire (total des programmes, pas des lots libres)",
       "message": "Inventaire des programmes cohérent avec le compteur officiel.",
       "lotsVerified": false,
-      "checkedAt": "2026-10-11T20:57:40+00:00",
+      "checkedAt": "2026-10-11T21:08:57+00:00",
       "source": "https://www.afedim.fr/fr/achat-immobilier/annonces/Terrain/Indre-et-Loire-France/surface-0-800-m2/budget-0-2000000-euros/rayon-0-km/Resultats"
     },
     "Groupe SET": {
@@ -131,7 +131,7 @@
       "lotsVerified": false,
       "method": "Programmes repérés sur la page officielle SET ; pas de compteur total certifiable.",
       "message": "Fiches repérées, exhaustivité du catalogue non attestée.",
-      "checkedAt": "2026-10-11T20:57:40+00:00",
+      "checkedAt": "2026-10-11T21:08:57+00:00",
       "source": "https://set.fr/nos-offres/pour-les-particuliers/terrains-a-vendre/"
     },
     "Val Touraine Habitat": {
@@ -163,8 +163,71 @@
       "lotsVerified": false,
       "method": "Seulement les programmes visibles sur la page de présentation VTH ; catalogue complet inaccessible.",
       "message": "Fiches repérées, exhaustivité du catalogue non attestée.",
-      "warning": "Catalogue général VTH inaccessible lors de cette vérification. Inventaire partiel.",
-      "checkedAt": "2026-10-11T20:57:40+00:00",
+      "warning": "Catalogue général VTH inaccessible lors de cette vérification. Inventaire partiel. 6 fiches connues, dont 2 accessibles pendant ce contrôle. Un lien en erreur ne prouve ni une vente ni la disparition du programme.",
+      "trackedReferences": 6,
+      "referenceChecks": [
+        {
+          "url": "https://valtourainehabitat-vente.fr/lotissement/neuvy-le-roi-beauregard",
+          "name": "Beauregard",
+          "city": "Neuvy-le-Roi",
+          "httpStatus": 200,
+          "status": "reachable",
+          "lotsVerified": true,
+          "freeLots": 0,
+          "rowCount": 3
+        },
+        {
+          "url": "https://valtourainehabitat-vente.fr/lotissement/la-guillonniere",
+          "name": "La Guillonnière",
+          "city": "Beaumont-Louestault",
+          "httpStatus": 200,
+          "status": "reachable",
+          "lotsVerified": true,
+          "freeLots": 20,
+          "rowCount": 22
+        },
+        {
+          "url": "https://valtourainehabitat-vente.fr/lotissement/les-etres-2",
+          "name": "Les Étres 2",
+          "city": "Saint-Paterne-Racan",
+          "httpStatus": 500,
+          "status": "unavailable",
+          "lotsVerified": false,
+          "freeLots": null,
+          "rowCount": null
+        },
+        {
+          "url": "https://valtourainehabitat-vente.fr/lotissement/bellevue",
+          "name": "Bellevue",
+          "city": "Nouzilly",
+          "httpStatus": 500,
+          "status": "unavailable",
+          "lotsVerified": false,
+          "freeLots": null,
+          "rowCount": null
+        },
+        {
+          "url": "https://valtourainehabitat-vente.fr/lotissement/la-borde-2",
+          "name": "La Borde 2",
+          "city": "Notre-Dame-d'Oé",
+          "httpStatus": 500,
+          "status": "unavailable",
+          "lotsVerified": false,
+          "freeLots": null,
+          "rowCount": null
+        },
+        {
+          "url": "https://valtourainehabitat-vente.fr/logement/langeais-terrains-a-batir-prets-a-construire",
+          "name": "Les Mistrais",
+          "city": "Langeais",
+          "httpStatus": 404,
+          "status": "not_found",
+          "lotsVerified": false,
+          "freeLots": null,
+          "rowCount": null
+        }
+      ],
+      "checkedAt": "2026-10-11T21:08:57+00:00",
       "source": "https://www.valtourainehabitat-vente.fr/lotissement/"
     },
     "Lelièvre Immobilier": {
@@ -186,7 +249,7 @@
       "lotsVerified": false,
       "method": "Offres de terrain repérées dans la page Lelièvre (pagination non garantie).",
       "message": "Fiches repérées, exhaustivité du catalogue non attestée.",
-      "checkedAt": "2026-10-11T20:57:40+00:00",
+      "checkedAt": "2026-10-11T21:08:57+00:00",
       "source": "https://www.lelievre-immobilier.com/terrains-a-vendre-indre-et-loire"
     }
   }
