@@ -291,7 +291,7 @@
     <button id="terrainUp" type="button" title="Retour en haut" aria-label="Retour aux critères de recherche">↑</button>
     <button id="terrainDown" type="button" title="Descendre" aria-label="Descendre dans les résultats">↓</button>
   </nav>
-  <footer class="foot">TerrainScope V35 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+  <footer class="foot">TerrainScope V36 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -331,7 +331,8 @@
     const CITIES = ['Chambray-lès-Tours','Tours','Joué-lès-Tours','Saint-Avertin','Saint-Cyr-sur-Loire','La Riche','Fondettes','Ballan-Miré','Montlouis-sur-Loire','Azay-sur-Cher','Véretz','Savonnières','Parçay-Meslay','Rochecorbon','Larçay','Esvres-sur-Indre','Montbazon','Veigné','Saint-Pierre-des-Corps','Amboise','Loches','Dolus-le-Sec','Azay-le-Rideau','Monts','Sorigny','Saint-Branchs','Luynes','Pernay','Notre-Dame-d’Oé','Chanceaux-sur-Choisille','Artannes-sur-Indre','Saint-Martin-le-Beau','Athée-sur-Cher','Monnaie','La Ville-aux-Dames','Bléré','Esvres','Langeais','Cheillé','Sainte-Maure-de-Touraine','Chambourg-sur-Indre','Saint-Laurent-en-Gâtines','Villandry','Chinon'];
     // Annuaire officiel des communes du 37, mis en cache pour rester disponible
     // lors des prochaines ouvertures et conserver les recherches hors connexion.
-    const CITY_CACHE_KEY='terrainscope-communes37-v1';
+    const CITY_CACHE_KEY='terrainscope-communes37-v2';
+    let CITY_POSTAL_CODES=new Map();
     let ALL_CITIES=[...CITIES];
     let cityIndexLoading=false;
     let cityIndexLoaded=false;
@@ -341,9 +342,18 @@
       'https://geo.api.gouv.fr/communes?codeDepartement=37&fields=nom,code,codesPostaux&format=json'
     ];
     function installCityIndex(values){
-      const names=[...new Set(values.filter(v=>typeof v==='string'))];
+      const valid=values.filter(v=>typeof v==='string'||
+        (v&&typeof v.nom==='string'&&typeof v.code==='string'));
+      const names=[...new Set(valid.map(v=>typeof v==='string'?v:v.nom))];
       if(names.length<200)return false;
+      const postalCodes=new Map();
+      for(const item of valid){
+        if(typeof item==='string')continue;
+        const postal=(item.codesPostaux||[]).find(p=>/^37\d{3}$/.test(p));
+        if(postal)postalCodes.set(citySearchKey(item.nom),postal);
+      }
       ALL_CITIES=names.sort((a,b)=>a.localeCompare(b,'fr'));
+      CITY_POSTAL_CODES=postalCodes;
       cityIndexLoaded=true;
       return true;
     }
@@ -351,7 +361,7 @@
       if(cityIndexLoading)return;
       try{
         const saved=JSON.parse(window.localStorage?.getItem(CITY_CACHE_KEY)||'null');
-        if(Array.isArray(saved?.names)&&installCityIndex(saved.names)){
+        if(Array.isArray(saved?.entries)&&installCityIndex(saved.entries)){
           if(typeof drawSuggestions==='function' && document.activeElement?.id==='city')drawSuggestions();
         }
       }catch(e){}
@@ -368,13 +378,15 @@
           const payload=await response.json();
           if(!Array.isArray(payload))continue;
           const entries=payload.filter(x=>x&&typeof x.nom==='string'&&typeof x.code==='string');
-          if(entries.length<200||!installCityIndex(entries.map(x=>x.nom)))continue;
-          try{window.localStorage?.setItem(CITY_CACHE_KEY,JSON.stringify({savedAt:Date.now(),names:entries.map(x=>x.nom)}))}catch(e){}
+          if(entries.length<200||!installCityIndex(entries))continue;
+          if(CITY_POSTAL_CODES.size<200)continue; // Attendre le catalogue avec les vrais codes postaux.
+          try{window.localStorage?.setItem(CITY_CACHE_KEY,JSON.stringify({savedAt:Date.now(),entries}))}catch(e){}
           break;
         }catch(e){}
       }
       cityIndexLoading=false;
       if(typeof drawSuggestions==='function'&&document.activeElement?.id==='city')drawSuggestions();
+      if(lastSearch?.cities?.length&&typeof updateQuickSources==='function')updateQuickSources(lastSearch.cities);
     }
     const el=id=>document.getElementById(id);
     const settingsStore=(()=>{try{const storage=window.localStorage;storage.getItem('terrainScopeCx');return storage}catch(e){return {getItem:()=>null,setItem:()=>{},removeItem:()=>{}}}})();
@@ -399,6 +411,14 @@
     const leboncoinUrl=city=>normalize(city)==='joue-les-tours'
       ?'https://www.leboncoin.fr/cl/ventes_immobilieres/cp_joue-les-tours_37300/real_estate_type%3A3'
       :'https://www.leboncoin.fr/recherche?'+new URLSearchParams({text:'terrain '+city,category:'9'}).toString();
+    // L'URL IAD /annonces/<ville>-<codepostal>/vente/terrain applique réellement
+    // le filtre "Terrain". /annonces/<ville>/vente mène sinon à des maisons.
+    const iadTerrainUrl=city=>{
+      const postal=CITY_POSTAL_CODES.get(citySearchKey(city));
+      if(!postal)return 'https://www.iadfrance.fr/annonces/vente/terrain';
+      const slug=normalize(city).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+      return 'https://www.iadfrance.fr/annonces/'+slug+'-'+postal+'/vente/terrain';
+    };
     /* Catalogue à preuve : seule une comparaison complète avec le compteur officiel
        autorise le badge "contrôlé". Aucune fiche n'atteste qu'un lot est libre. */
     function displayDevelopers(cities=[]){
@@ -869,9 +889,10 @@
       }
       for(const city of cities)makeLink('3 · Bien’ici · '+city,linkFor([city],'bienici.com'),false,'Recherche ciblée Bien’ici via Google');
       for(const city of cities){
-        const direct=normalize(city)==='joue-les-tours'
-          ?'https://www.iadfrance.fr/annonces/joue-les-tours-37300/vente/terrain':linkFor([city],'iadfrance.fr');
-        makeLink('4 · IAD · '+city,direct,false,normalize(city)==='joue-les-tours'?'Annonces de terrains IAD pour Joué-lès-Tours':'Recherche ciblée IAD via Google');
+        const hasPostal=CITY_POSTAL_CODES.has(citySearchKey(city));
+        makeLink('4 · IAD · terrains · '+city,iadTerrainUrl(city),false,
+          hasPostal?'Page IAD filtrée « Terrain » pour '+city:
+            'Page officielle IAD avec filtre Terrain ; sélectionner '+city+' si non préremplie');
       }
       makeLink('5 · Lotisseurs & aménageurs','#developerAccordion',false,'Voir les programmes disponibles sur les sites officiels',true);
       el('quickSources').hidden=false;
@@ -912,7 +933,11 @@
       else addSource('Leboncoin · toutes ces communes (Google)',linkFor(cities,'leboncoin.fr'));
       for(const [name,domain] of PORTALS){
         if(name==='Leboncoin')continue;
-        addSource('Google · '+name,linkFor(cities,domain));
+        if(name==='IAD'){
+          for(const city of cities)addSource('IAD · terrains · '+city,iadTerrainUrl(city));
+          continue;
+        }
+        addSource('Recherche Google · '+name,linkFor(cities,domain));
       }
       const all=el('allSites');all.hidden=false;all.href=googleUrl(query(cities));
       if(googleConfigured){
