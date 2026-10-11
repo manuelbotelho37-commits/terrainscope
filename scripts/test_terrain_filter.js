@@ -68,8 +68,14 @@ assert.ok(html.indexOf('<section id="quickSources"') < html.indexOf('<details id
   'Les recherches directes officielles doivent apparaître avant les pistes Google');
 assert.match(html, /el\('googleLeads'\)\.open=false;/,
   'Les liens Google non vérifiés doivent être repliés à chaque recherche');
-assert.match(html, /TerrainScope V36/,
-  'Version cohérente V36');
+assert.match(html, /TerrainScope V37/,
+  'Version cohérente V37');
+assert.match(html, /id="selectedCities"[^>]*><\/div><button id="citySearchBtn"[^>]*type="submit">/,
+  'Le bouton de recherche doit être juste sous les communes sélectionnées');
+assert.equal((html.match(/type="submit"/g)||[]).length,1,
+  'Un seul bouton de recherche pour éviter les doublons en bas du formulaire');
+assert.ok(html.indexOf('id="citySearchBtn"') < html.indexOf('id="lotisseursTop"'),
+  'Recherche accessible sans descendre jusqu’aux autres commandes');
 assert.match(source, /Annonces NON vérifiées sur les sites vendeurs/, 'Le statut doit rester incertain');
 
 // Tester les URL TERRAIN de IAD construites depuis les codes postaux officiels.
