@@ -50,11 +50,35 @@
     return r<SOURCES.length?SOURCES[r].name:domainOf(url);
   };
   const sameUrl=(a,b)=>canonicalListingUrl(a)===canonicalListingUrl(b);
+
+  // Seules les annonces INDIVIDUELLES de terrain sont montrées au client.
+  // Une page de conseiller, un catalogue ou une maison ayant un jardin n'est pas un terrain à bâtir.
+  function isIndividualLandListing(title,url){
+    const t=normalized(title),host=domainOf(url);
+    if(!t||!host)return false;
+    if(!/\b(?:terrain|terrains|parcelle|parcelles|foncier)\b/.test(t)&&
+       !/\blot(?:s)?\s+(?:a\s+)?batir\b/.test(t))return false;
+    if(/\b(?:maison|maisons|appartement|appartements|immeuble|immeubles|villa|villas|pavillon|pavillons|domaine|domaines|longere|longeres|propriete|proprietes|chateau|chateaux)\b/.test(t))return false;
+    if(/\b(?:conseiller|conseillere|agent immobilier|agence immobiliere|mandataire immobilier|expert immobilier|profil|notre equipe)\b/.test(t))return false;
+    if(/\b(?:\d[\d\s]*\s+(?:biens?|annonces?|resultats?|offres?|terrains?)\s+(?:immobiliers?|a\s+vendre|disponibles?)|toutes?\s+les\s+annonces|resultats?\s+de\s+recherche|nos\s+terrains|chercher\s+un\s+terrain)\b/.test(t))return false;
+    try {
+      const u=new URL(url),path=u.pathname.toLowerCase();
+      if(/\/(?:conseiller|conseillere|agents?|mandataires?|agences?|recherche|search|nos-biens)(?:\/|$)/.test(path))return false;
+      if(/\/(?:maison|appartement|immeuble|propriete)[-_](?:vente|achat)/.test(path))return false;
+      // IAD : les annonces réelles ont un lien /annonce/terrain-vente-.../rNNN
+      // Les pages /annonces/ ou de conseiller ne sont pas des fiches de parcelle.
+      if(host==='iadfrance.fr'||host.endsWith('.iadfrance.fr')){
+        if(!/^\/annonce\/terrain-vente-[^/]+\/r\d+\/?$/.test(path))return false;
+      }
+    }catch(e){return false}
+    return true;
+  }
+
   const cityFor=(title,description)=>{
     const cities=lastSearch?.cities||[];
+    // Ne jamais attribuer Nouzilly à un agent de Vouvray ou à une page générale.
     for(const c of cities)if(containsPlace(title,c))return c;
-    for(const c of cities)if(containsPlace(description,c))return c;
-    return cities.length===1?cities[0]:'';
+    return '';
   };
   const tokens=(s,city)=>{
     const exclusion=new Set([...STOP,...normalized(city).split(' ')]);
@@ -96,8 +120,10 @@
     const description=(node.querySelector('.gs-snippet')?.textContent||'').replace(/\s+/g,' ').trim();
     if(!title)return null;
     const kind=classifyResult(node);
-    if(kind==='constructeurs'||node.dataset.clientHidden==='true')return null;
+    if(kind!=='terrains'||node.dataset.clientHidden==='true')return null;
+    if(node.dataset.locationStatus!=='match'||!isIndividualLandListing(title,url))return null;
     const city=cityFor(title,description);
+    if(!city)return null;
     // Si Google nomme clairement une commune differente, la garder hors de la selection.
     if(node.dataset.locationStatus==='nearby')return null;
     const price=getPrice(title+' '+description);
