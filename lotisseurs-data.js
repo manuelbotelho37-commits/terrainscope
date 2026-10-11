@@ -1,4 +1,4 @@
-/* Catalogue officiel daté, non exhaustif hors Villadim, disponibilité en temps réel non garantie. */
+/* Relevé officiel daté, jamais de garantie de statut en temps réel. */
 window.TERRAIN_LOTISSEURS_DATA = {
   "date": "2026-10-11",
   "scope": "Catalogue Villadim : 11 opérations en Indre-et-Loire réconciliées avec la liste officielle du 11/10/2026. Autres lotisseurs : catalogues partiels. Chiffres des lots = compteurs visibles sur les fiches officielles, pas des disponibilités certifiées en temps réel.",
@@ -657,6 +657,29 @@ window.TERRAIN_LOTISSEURS_DATA = {
           "status": "libre"
         }
       ]
+    },
+    {
+      "developer": "CM-CIC · AFEDIM",
+      "name": "Artannes-sur-Indre",
+      "city": "Artannes-sur-Indre",
+      "url": "https://www.afedim.fr/fr/achat-immobilier/annonces/programme/terrain/artannes-sur-indre-37/020086/Fiche",
+      "countLabel": "lots indiqués dans la liste officielle AFEDIM, statut individuel à vérifier",
+      "sourceListings": 19,
+      "surfaceMin": 460,
+      "surfaceMax": 737,
+      "priceFrom": 73500,
+      "note": "Le total de la liste AFEDIM peut inclure des lots optionnés. Ne pas l'interpréter comme 19 lots libres."
+    },
+    {
+      "developer": "CM-CIC · AFEDIM",
+      "name": "La Croix-en-Touraine",
+      "city": "La Croix-en-Touraine",
+      "url": "https://www.afedim.fr/fr/achat-immobilier/annonces/programme/terrain/la-croix-en-touraine-37/018133/Fiche",
+      "countLabel": "lots présentés sur la liste AFEDIM ; disponibilité exacte à vérifier",
+      "sourceListings": 4,
+      "surfaceMin": 464,
+      "surfaceMax": 691,
+      "priceFrom": 56000
     }
   ],
   "audit": {
@@ -666,5 +689,14 @@ window.TERRAIN_LOTISSEURS_DATA = {
     "recordedCount": 11,
     "checkedOn": "2026-10-11",
     "notes": "Liste comparée aux liens de 11 opérations (37) affichés dans le catalogue Villadim ; Le Grand Hélas 1 est répertorié mais sa fiche indique zéro lot disponible. Les Vergers de la Nauraie à Druye n'est plus dans la liste et n'est pas déclaré vendu."
+  },
+  "auditByDeveloper": {
+    "CM-CIC · AFEDIM": {
+      "officialListingUrl": "https://www.afedim.fr/fr/achat-immobilier/annonces/Terrain/Indre-et-Loire-France/surface-0-800-m2/budget-0-2000000-euros/rayon-0-km/Resultats",
+      "expectedCount": 4,
+      "recordedCount": 4,
+      "checkedOn": "2026-10-11",
+      "note": "Quatre opérations du 37 relevées dans l'index officiel. Les décomptes de lots ne valent pas confirmation de disponibilité lot par lot."
+    }
   }
 };
