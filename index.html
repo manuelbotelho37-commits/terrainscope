@@ -261,7 +261,7 @@
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V23 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <footer class="foot">TerrainScope V24 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -298,7 +298,7 @@
       {name:'Val Touraine Habitat',domain:'valtourainehabitat-vente.fr',url:'https://www.valtourainehabitat-vente.fr/acheter-un-terrain-a-batir/',type:'Lotissements et annonces officiels'},
       {name:'Lelièvre Immobilier',domain:'lelievre-immobilier.com',url:'https://www.lelievre-immobilier.com/terrains-a-vendre-indre-et-loire',type:'Terrains et programmes du département 37'}
     ];
-    const CITIES = ['Chambray-lès-Tours','Tours','Joué-lès-Tours','Saint-Avertin','Saint-Cyr-sur-Loire','La Riche','Fondettes','Ballan-Miré','Montlouis-sur-Loire','Azay-sur-Cher','Véretz','Savonnières','Parçay-Meslay','Rochecorbon','Larçay','Esvres-sur-Indre','Montbazon','Veigné','Saint-Pierre-des-Corps','Amboise','Loches','Dolus-le-Sec','Azay-le-Rideau','Monts','Sorigny','Saint-Branchs','Luynes','Pernay','Notre-Dame-d’Oé','Chanceaux-sur-Choisille','Artannes-sur-Indre','Saint-Martin-le-Beau','Athée-sur-Cher','Monnaie','La Ville-aux-Dames','Bléré','Esvres','Langeais','Cheillé'];
+    const CITIES = ['Chambray-lès-Tours','Tours','Joué-lès-Tours','Saint-Avertin','Saint-Cyr-sur-Loire','La Riche','Fondettes','Ballan-Miré','Montlouis-sur-Loire','Azay-sur-Cher','Véretz','Savonnières','Parçay-Meslay','Rochecorbon','Larçay','Esvres-sur-Indre','Montbazon','Veigné','Saint-Pierre-des-Corps','Amboise','Loches','Dolus-le-Sec','Azay-le-Rideau','Monts','Sorigny','Saint-Branchs','Luynes','Pernay','Notre-Dame-d’Oé','Chanceaux-sur-Choisille','Artannes-sur-Indre','Saint-Martin-le-Beau','Athée-sur-Cher','Monnaie','La Ville-aux-Dames','Bléré','Esvres','Langeais','Cheillé','Sainte-Maure-de-Touraine','Chambourg-sur-Indre','Saint-Laurent-en-Gâtines','Villandry','Chinon'];
     const el=id=>document.getElementById(id);
     const settingsStore=(()=>{try{const storage=window.localStorage;storage.getItem('terrainScopeCx');return storage}catch(e){return {getItem:()=>null,setItem:()=>{},removeItem:()=>{}}}})();
     const DEFAULT_CX = 'c051883a11ead4ffb'; // Moteur Google créé pour TerrainScope le 11/10/2026.
@@ -339,7 +339,10 @@
           :'Inventaire incomplet pour '+names.join(', ')+'. Aucun programme encore référencé pour cette recherche : ouvre les sites officiels des lotisseurs pour vérifier les offres.';
       }else info.hidden=true;
       const meta=document.createElement('p');meta.className='dev-catalog-top';
-      meta.textContent=catalog.programs.length+' programmes fonciers référencés auprès de '+DEVELOPERS.length+' lotisseurs. Relevé du '+(catalog.date||'date inconnue')+'. Inventaire non exhaustif : vérifie les disponibilités chez le vendeur.';
+      const villadimChecked=catalog.audit?.developer==='Villadim'&&catalog.audit?.official37Count===catalog.programs.filter(p=>p.developer==='Villadim').length;
+      meta.textContent=(villadimChecked?'Villadim : '+catalog.audit.official37Count+' programmes rapprochés du catalogue officiel. ':'Villadim : inventaire à vérifier. ')+
+        'Autres lotisseurs : inventaires partiels. '+catalog.programs.length+' programmes référencés au total. Relevé du '+(catalog.date||'date inconnue')+
+        '. Statuts, prix et disponibilités à reconfirmer sur le site officiel.';
       root.append(meta);
       const areaRange=p=>{
         if(p.surfaceMin&&p.surfaceMax)return 'Surfaces : '+fmt(p.surfaceMin)+(p.surfaceMin!==p.surfaceMax?' à '+fmt(p.surfaceMax):'')+' m²';
