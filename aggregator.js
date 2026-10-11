@@ -23,7 +23,7 @@
   ]);
   const state={serial:0,stage:0,active:false,waiting:1,pageSeen:new Set(),
     byUrl:new Set(),entries:[],unique:[],duplicates:0,page:1,
-    stageTimer:null,pageTimer:null,processing:false,rendered:false};
+    stageTimer:null,pageTimer:null,processing:false,started:false};
   const get=id=>document.getElementById(id);
   const normalized=value=>String(value||'').normalize('NFD')
     .replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[’']/g,' ')
@@ -40,6 +40,10 @@
   };
   const sourceName=url=>{
     const r=rank(url);
+    if(r===SOURCES.length-1){
+      const host=domainOf(url),dev=DEVELOPERS.find(x=>host===x.domain||host.endsWith('.'+x.domain));
+      if(dev)return dev.name;
+    }
     return r<SOURCES.length?SOURCES[r].name:domainOf(url);
   };
   const sameUrl=(a,b)=>canonicalListingUrl(a)===canonicalListingUrl(b);
@@ -52,7 +56,7 @@
   const tokens=(s,city)=>{
     const exclusion=new Set([...STOP,...normalized(city).split(' ')]);
     return new Set(normalized(s).split(' ').filter(w=>
-      w.length>3&&!exclusion.has(w)&&!/^\\d+$/.test(w)
+      w.length>3&&!exclusion.has(w)&&!/^\d+$/.test(w)
     ));
   };
   const shared=(a,b)=>{
@@ -61,8 +65,8 @@
     return count;
   };
   const address=s=>{
-    const m=normalized(s).match(/\b(?:rue|impasse|allee|avenue|chemin|route|lieu dit|boulevard)\s+([a-z0-9]+(?:\s+[a-z0-9]+){0,3})/);
-    return m?m[1]:'';
+    const m=normalized(s).match(/\b(rue|impasse|allee|avenue|chemin|route|lieu dit|boulevard)\s+(?:(?:de|des|du|la|le|l|aux)\s+)*([a-z0-9]{4,})\b/);
+    return m?m[1]+':'+m[2]:'';
   };
   function probableDuplicate(a,b){
     if(sameUrl(a.url,b.url))return true;
@@ -193,13 +197,13 @@
   function nextStage(){
     stopTimers();
     if(!state.active)return;
-    state.stage++;state.pageSeen.clear();state.waiting=1;state.processing=false;
+    state.stage++;state.pageSeen.clear();state.waiting=1;state.processing=false;state.started=false;
     if(state.stage>=SOURCES.length){finish();return}
     startStage();
   }
   const engine=()=>window.google?.search?.cse?.element?.getElement?.('terrains');
   function startStage(tries=0){
-    if(!state.active)return;
+    if(!state.active||state.started)return;
     const g=engine();
     if(!g){
       if(tries<25){setTimeout(()=>startStage(tries+1),350);return}
@@ -207,6 +211,7 @@
     }
     const item=SOURCES[state.stage],cities=lastSearch?.cities||[];
     const q=query(cities)+(item.domain?' site:'+item.domain:'');
+    state.started=true;
     state.stageTimer=setTimeout(()=>nextStage(),MAX_STAGE_MS);
     get('uniquePanel').hidden=false;
     draw();
@@ -260,7 +265,7 @@
     state.serial++;stopTimers();
     state.entries=[];state.unique=[];state.byUrl.clear();
     state.duplicates=0;state.page=1;state.stage=0;state.waiting=1;
-    state.pageSeen.clear();state.active=true;state.processing=false;
+    state.pageSeen.clear();state.active=true;state.processing=false;state.started=false;
     get('uniquePanel').hidden=false;draw();startStage();
   }
   function onRendered(){
