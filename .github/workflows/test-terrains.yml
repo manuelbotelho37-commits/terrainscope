@@ -6,6 +6,7 @@ on:
       - 'aggregator.js'
       - 'index.html'
       - 'scripts/test_terrain_filter.js'
+      - '.github/workflows/test-terrains.yml'
   workflow_dispatch:
 
 permissions:
