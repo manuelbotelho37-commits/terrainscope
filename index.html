@@ -261,7 +261,7 @@
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V24 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <footer class="foot">TerrainScope V25 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -322,108 +322,164 @@
     const leboncoinUrl=city=>normalize(city)==='joue-les-tours'
       ?'https://www.leboncoin.fr/cl/ventes_immobilieres/cp_joue-les-tours_37300/real_estate_type%3A3'
       :'https://www.leboncoin.fr/recherche?'+new URLSearchParams({text:'terrain '+city,category:'9'}).toString();
-    // Relevé officiel de programmes : ce sont des indications datées, jamais des disponibilités en direct.
+    /* Catalogue à preuve : seule une comparaison complète avec le compteur officiel
+       autorise le badge "contrôlé". Aucune fiche n'atteste qu'un lot est libre. */
     function displayDevelopers(cities=[]){
       const names=(Array.isArray(cities)?cities:[cities]).filter(Boolean);
       const catalog=window.TERRAIN_LOTISSEURS_DATA||{date:'',programs:[]};
+      const live=window.TERRAIN_LOTISSEURS_LIVE?.developers||{};
       const root=el('developers');root.replaceChildren();
-      const queryKey=t=>normalize(t).replace(/[’'\-–—]/g,' ').replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
-      const hits=program=>names.some(city=>queryKey(city)===queryKey(program.city));
-      const matched=catalog.programs.filter(hits);
-      const matchedDevelopers=[...new Set(matched.map(p=>p.developer))];
-      const info=el('developerMatchNotice');
+      const cityKey=s=>normalize(s).replace(/[’'\-–—]/g,' ').replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
+      const matches=p=>names.some(x=>cityKey(x)===cityKey(p.city));
+      const sourceKey=url=>{try{const u=new URL(url);return u.hostname.replace(/^www\./,'')+u.pathname.replace(/\/$/,'').toLowerCase()}catch(e){return ''}};
+      function scanFor(name){
+        const a=live[name];
+        if(!a||a.status!=='verified'||!a.checkedAt||!Array.isArray(a.programs))return null;
+        const age=Date.now()-Date.parse(a.checkedAt);
+        if(!Number.isFinite(age)||age<0||age>4*60*60*1000)return null;
+        if(!Number.isInteger(a.expected)||a.expected<1||a.expected!==a.programs.length)return null;
+        if(new Set(a.programs.map(p=>sourceKey(p.url))).size!==a.expected)return null;
+        return a;
+      }
+      const checkedDevelopers=[];
+      const entries=new Map();
+      for(const dev of DEVELOPERS){
+        const checked=scanFor(dev.name);
+        if(checked)checkedDevelopers.push(dev.name);
+        const legacy=catalog.programs.filter(p=>p.developer===dev.name);
+        const rows=checked ? checked.programs.map(p=>{
+          const old=legacy.find(x=>sourceKey(x.url)===sourceKey(p.url));
+          return old?{...old,city:p.city||old.city,url:p.url,sourceVerified:true}:
+            {name:p.label||'Opération à consulter',city:p.city||'Commune à vérifier',
+             developer:dev.name,url:p.url,sourceVerified:true};
+        }) : legacy.map(p=>({...p,sourceVerified:false}));
+        entries.set(dev.name,{checked,scan:live[dev.name],rows});
+      }
+      const matched=[];
+      for(const dev of DEVELOPERS){
+        const item=entries.get(dev.name);
+        if(item.rows.some(matches))matched.push(dev.name);
+      }
+      const notice=el('developerMatchNotice');
       if(names.length){
-        info.hidden=false;
-        info.textContent=matched.length
-          ?matchedDevelopers.length+' lotisseur(s) avec '+matched.length+' programme(s) repéré(s) sur '+names.join(', ')+'. Ouvre « Lotisseurs » pour voir les détails. Quantités à reconfirmer.'
-          :'Inventaire incomplet pour '+names.join(', ')+'. Aucun programme encore référencé pour cette recherche : ouvre les sites officiels des lotisseurs pour vérifier les offres.';
-      }else info.hidden=true;
+        notice.hidden=false;
+        const count=matched.length;
+        notice.textContent=count
+          ?count+' lotisseur(s) avec au moins une opération référencée sur '+names.join(', ')+
+            '. Stock des lots à confirmer. Ouvre « Lotisseurs ».'
+          :'Inventaires incomplets ou non confirmés pour '+names.join(', ')+
+            '. Impossible de conclure à zéro lotissement ou zéro terrain.';
+      }else notice.hidden=true;
       const meta=document.createElement('p');meta.className='dev-catalog-top';
-      const villadimChecked=catalog.audit?.developer==='Villadim'&&catalog.audit?.official37Count===catalog.programs.filter(p=>p.developer==='Villadim').length;
-      meta.textContent=(villadimChecked?'Villadim : '+catalog.audit.official37Count+' programmes rapprochés du catalogue officiel. ':'Villadim : inventaire à vérifier. ')+
-        'Autres lotisseurs : inventaires partiels. '+catalog.programs.length+' programmes référencés au total. Relevé du '+(catalog.date||'date inconnue')+
-        '. Statuts, prix et disponibilités à reconfirmer sur le site officiel.';
+      meta.textContent='Contrôle automatique horaire des catalogues : '+
+        checkedDevelopers.length+' sur '+DEVELOPERS.length+' lotisseurs vérifiés récemment. '+
+        'Si un contrôle échoue, les fiches restantes sont des références historiques, pas un inventaire complet. '+
+        'Aucun statut de lot n’est certifié par le contrôle des programmes.';
       root.append(meta);
-      const areaRange=p=>{
-        if(p.surfaceMin&&p.surfaceMax)return 'Surfaces : '+fmt(p.surfaceMin)+(p.surfaceMin!==p.surfaceMax?' à '+fmt(p.surfaceMax):'')+' m²';
-        return 'Surfaces : voir l’offre officielle';
-      };
       function external(url,title){
-        const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.textContent=title;return a;
+        const a=document.createElement('a');a.href=url;a.target='_blank';
+        a.rel='noopener noreferrer';a.textContent=title;return a;
       }
       for(const dev of DEVELOPERS){
-        const items=catalog.programs.filter(p=>p.developer===dev.name)
-          .sort((a,b)=>Number(hits(b))-Number(hits(a))||a.city.localeCompare(b.city,'fr'));
-        const selected=items.filter(hits);
+        const {checked,scan,rows}=entries.get(dev.name);
+        const items=[...rows].sort((a,b)=>Number(matches(b))-Number(matches(a))+
+          (Number(matches(b))===Number(matches(a))?a.city.localeCompare(b.city,'fr'):0));
+        const selected=items.filter(matches);
         const group=document.createElement('details');group.className='dev-group';
         group.open=names.length>0&&selected.length>0;
         const caption=document.createElement('summary');
         const label=document.createElement('span');label.textContent=dev.name;
         const count=document.createElement('span');count.className='dev-subcount';
-        count.textContent=names.length
-          ?(selected.length?selected.length+' repéré(s) ici':'À vérifier ici')+' · '+(items.length?items.length+' programme(s) dans notre relevé':'inventaire incomplet')
-          :(items.length?items.length+' programme(s) référencé(s)':'inventaire incomplet');
+        count.textContent=checked
+          ?checked.expected+' programmes · catalogue contrôlé'
+          :'Inventaire non certifié';
         caption.append(label,count);group.append(caption);
         const body=document.createElement('div');body.className='dev-group-content';
-        if(names.length&&selected.length===0){
-          const empty=document.createElement('div');empty.className='dev-empty';
-          empty.textContent='Aucune opération recensée pour cette commune dans notre relevé incomplet. Consulte le site officiel du lotisseur pour vérifier ses offres.';
-          body.append(empty);
-        }
+        const diagnosis=document.createElement('p');diagnosis.className='dev-empty';
+        diagnosis.textContent=checked
+          ?'Catalogue complet rapproché du site officiel le '+
+              new Date(checked.checkedAt).toLocaleString('fr-FR')+
+              '. Les lots libres, vendus ou optionnés ne sont pas vérifiés par cette étape.'
+          :scan?.status==='incomplete'
+              ?'ATTENTION : le site officiel et le collecteur ne donnent pas le même nombre de programmes. Inventaire incomplet, ne pas utiliser les compteurs.'
+              :scan?.status==='unavailable'
+                ?'Contrôle officiel impossible lors du dernier passage. Informations historiques uniquement.'
+                :'Inventaire de référence non exhaustif : vérification automatique complète indisponible ou non encore effectuée.';
+        body.append(diagnosis);
         if(!items.length){
-          const p=document.createElement('p');p.className='dev-empty';
-          p.textContent='Inventaire incomplet : programmes détaillés non encore référencés. Ouvre le site du lotisseur pour consulter son offre réelle.';
-          body.append(p);
+          const none=document.createElement('p');none.className='dev-empty';
+          none.textContent='Aucune fiche dans notre relevé. Cela ne signifie PAS que le lotisseur n’a pas de terrain.';
+          body.append(none);
+        }
+        if(names.length&&!selected.length){
+          const none=document.createElement('p');none.className='dev-empty';
+          none.textContent='Aucune offre confirmée dans le relevé pour cette commune. Vérifie les offres officielles.';
+          body.append(none);
         }
         for(const program of items){
           const panel=document.createElement('details');panel.className='dev-program';
-          // Le lecteur peut ouvrir toutes les opérations; aucune validation à effectuer.
           const summary=document.createElement('summary');
-          const title=document.createElement('span');title.textContent=program.name;
-          const town=document.createElement('span');town.className='program-city';town.textContent=program.city+' (37)';
-          const availability=document.createElement('span');availability.className='program-count';
-          availability.textContent=Number.isFinite(program.remaining)
-            ?program.remaining+' · '+(program.countLabel||'lots indiqués sur le site')
-            :Number.isFinite(program.totalLots)
-              ?program.totalLots+' · total indiqué (reste à vendre non connu)'
-              :'Quantité à vérifier sur le site';
-          summary.append(title,town,availability);
+          const title=document.createElement('span');title.textContent=program.name||'Terrain à consulter';
+          const town=document.createElement('span');town.className='program-city';
+          town.textContent=(program.city||'Commune à vérifier')+' (37)';
+          const stock=document.createElement('span');stock.className='program-count';
+          stock.textContent=program.sourceVerified
+            ?'Programme trouvé dans le catalogue officiel · stocks à vérifier'
+            :'Référence historique · stocks et présence à vérifier';
+          summary.append(title,town,stock);
           const details=document.createElement('div');details.className='program-body';
-          const surface=document.createElement('p');surface.textContent=areaRange(program);details.append(surface);
-          const price=document.createElement('p');
-          price.textContent=program.priceFrom?'Prix annoncés dès '+fmt(program.priceFrom)+' €':
-            program.pricePerM2From?'À partir de '+fmt(program.pricePerM2From)+' €/m²':'Prix à voir sur la fiche';
-          details.append(price);
-          if(program.note){
-            const note=document.createElement('p');note.textContent='Attention : '+program.note;details.append(note);
+          const caution=document.createElement('p');
+          caution.textContent='IMPORTANT : les nombres, prix et statuts ci-dessous proviennent du relevé daté, pas du contrôle horaire du stock.';
+          details.append(caution);
+          if(program.surfaceMin&&program.surfaceMax){
+            const p=document.createElement('p');
+            p.textContent='Surfaces relevées : '+fmt(program.surfaceMin)+' à '+fmt(program.surfaceMax)+' m²';
+            details.append(p);
           }
+          if(program.priceFrom){
+            const p=document.createElement('p');
+            p.textContent='Ancien prix indicatif dès '+fmt(program.priceFrom)+' € (à confirmer)';
+            details.append(p);
+          }
+          if(program.note){const p=document.createElement('p');p.textContent=program.note;details.append(p)}
           if(Array.isArray(program.lots)&&program.lots.length){
-            const lotsTitle=document.createElement('p');
-            lotsTitle.style.fontWeight='850';
-            lotsTitle.textContent=program.lots.length+' lot(s) documenté(s) ci-dessous (relevé, non mis à jour en temps réel) :';
-            details.append(lotsTitle);
+            const p=document.createElement('p');
+            p.textContent='Détail de '+program.lots.length+' lots dans l’ancien relevé (NON ACTUALISÉ) :';
+            details.append(p);
             for(const lot of program.lots){
-              const row=document.createElement('div');row.className='lot-row';
-              const first=document.createElement('span');first.textContent='Lot '+lot.number+' · '+fmt(lot.surface)+' m² · '+fmt(lot.price)+' €';
-              const second=document.createElement('span');second.textContent='Statut indiqué : '+lot.status;
-              row.append(first,second);details.append(row);
+              const p=document.createElement('p');
+              p.textContent='Lot '+lot.number+' · '+fmt(lot.surface)+' m² · '+fmt(lot.price)+
+                ' € · ancien statut : '+lot.status;
+              details.append(p);
             }
-          }else{
-            const p=document.createElement('p');p.textContent='Détail des lots non accessible dans ce relevé : consulter l’offre officielle.';details.append(p);
           }
-          details.append(external(program.url,'Voir ce lotissement sur le site officiel ↗'));
+          details.append(external(program.url,'Vérifier les lots sur le site officiel ↗'));
           panel.append(summary,details);body.append(panel);
         }
-        body.append(external(dev.url,'Tous les programmes de '+dev.name+' ↗'));
-        for(const city of names){
-          body.append(external(linkFor([city],dev.domain),'Recherche complémentaire '+city+' ↗'));
-        }
+        body.append(external(dev.url,'Ouvrir le catalogue officiel de '+dev.name+' ↗'));
+        for(const city of names)body.append(external(linkFor([city],dev.domain),'Chercher '+city+' sur ce site ↗'));
         group.append(body);root.append(group);
       }
       const active=el('developerAccordion');
-      if(active)active.querySelector('summary span:first-child').textContent=names.length
-        ?(matchedDevelopers.length?'🏘 Lotisseurs · '+matchedDevelopers.length+' repéré(s) ici':'🏘 Lotisseurs · inventaire incomplet')
-        :'🏘 Lotisseurs · '+DEVELOPERS.length+' partenaires';
+      if(active)active.querySelector('summary span:first-child').textContent=
+        '🏘 Lotisseurs · '+checkedDevelopers.length+' catalogue(s) contrôlé(s)';
+    }
+    async function updateOfficialCatalogChecks(){
+      // Lire directement la branche GitHub pour ne pas dépendre du délai de déploiement Pages.
+      // Une indisponibilité réseau n'est jamais interprétée comme « zéro terrain ».
+      const url='https://raw.githubusercontent.com/manuelbotelho37-commits/terrainscope/main/lotisseurs-live.json?t='+Date.now();
+      try{
+        const response=await fetch(url,{cache:'no-store'});
+        if(!response.ok)throw Error('HTTP '+response.status);
+        const data=await response.json();
+        if(data?.schema!==1||!data.developers||typeof data.developers!=='object')throw Error('Format du rapport invalide');
+        window.TERRAIN_LOTISSEURS_LIVE=data;
+      }catch(err){
+        window.TERRAIN_LOTISSEURS_LIVE={
+          developers:{},networkError:true
+        };
+      }
+      displayDevelopers(lastSearch?.cities||[]);
     }
     function getPrice(s){
       // Prix suivi du symbole €, à l'exclusion des prix par m².
@@ -832,6 +888,7 @@
     });
     renderCities();
     displayDevelopers();
+    updateOfficialCatalogChecks();
     // L'ancien système de validation manuelle a été supprimé : ne plus l'appeler.
     if(googleConfigured)loadGoogleEngine();
     if('serviceWorker' in navigator && location.protocol==='https:')navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
