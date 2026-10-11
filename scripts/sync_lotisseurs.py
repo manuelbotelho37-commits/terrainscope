@@ -70,6 +70,12 @@ def extract_villadim(html: str) -> dict:
         match = re.search(r"/terrains/([^/]+)/([^/]+)$", url, re.I)
         if not match:
             continue
+        # Le menu Villadim contient des programmes de toute la France.
+        # Les fiches départementales sont explicitement libellées "(37)".
+        # Ne jamais mélanger les liens d'autres départements au compteur 37.
+        label_text = a.get_text(" ", strip=True)
+        if not re.search(r"\(\s*37\s*\)\s*$", label_text):
+            continue
         city, slug = match.groups()
         links[url] = {"url": url, "city": city.replace("-", " ").title(),
                       "label": slug.replace("-", " ").title()}
@@ -163,13 +169,13 @@ def test():
     assert extract_afedim(afedim.replace("2 biens", "4 biens"))["status"] == "incomplete"
     assert extract_afedim("<p>0 biens disponibles</p>")["status"] == "incomplete"
     villadim = '<p>2 programmes disponibles</p>' + ''.join(
-        f'<a href="/terrains/{city}/{slug}">{slug}</a>' for city, slug in
+        f'<a href="/terrains/{city}/{slug}">{slug} (37)</a>' for city, slug in
         [("monnaie", "les-terrasses-de-bel-r"), ("pernay", "la-cle-des-champs")])
     assert extract_villadim(villadim)["status"] == "verified"
     assert extract_villadim(villadim.replace("2 programmes", "11 programmes"))["status"] == "incomplete"
     assert extract_villadim("<p>Chargement des programmes…</p>")["status"] == "incomplete"
     # Une source dupliquant des liens ne doit jamais faire monter le compteur.
-    assert extract_villadim(villadim + '<a href="/terrains/monnaie/les-terrasses-de-bel-r">doublon</a>')["found"] == 2
+    assert extract_villadim(villadim + '<a href="/terrains/monnaie/les-terrasses-de-bel-r">doublon (37)</a>')["found"] == 2
     assert extract_afedim(afedim + '<a href="/fr/achat-immobilier/annonces/programme/terrain/azay-sur-cher-37/015753/Fiche">doublon</a>')["found"] == 2
     assert all("lotsVerified" in extract_afedim(afedim) for _ in range(1))
     print("8 contrôles du moteur d'audit : OK")
