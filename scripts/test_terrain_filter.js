@@ -72,7 +72,7 @@ assert.match(html, /TerrainScope V38/,
   'Version cohérente V38');
 assert.match(html, /id="selectedCities"[^>]*><\/div><button id="lotisseursTop"[^>]*type="button">/,
   'Lotisseurs doit être juste sous les communes sélectionnées');
-assert.match(html, /id="lotisseursTop"[^>]*><\/button><button id="citySearchBtn"[^>]*type="submit">/,
+assert.match(html, /id="lotisseursTop"[^>]*>[^<]*<\/button><button id="citySearchBtn"[^>]*type="submit">/,
   'Voir les terrains doit rester directement à côté dans les commandes des communes');
 assert.equal((html.match(/id="lotisseursTop"/g)||[]).length,1,
   'Un seul bouton Lotisseurs');
