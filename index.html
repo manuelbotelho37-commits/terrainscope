@@ -261,7 +261,7 @@
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V27 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <footer class="foot">TerrainScope V28 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -443,19 +443,33 @@
           body.append(none);
         }
         for(const program of items){
+          const probe=Array.isArray(scan?.referenceChecks)
+            ?scan.referenceChecks.find(c=>sourceKey(c.url)===sourceKey(program.url)):null;
           const panel=document.createElement('details');panel.className='dev-program';
           const summary=document.createElement('summary');
           const title=document.createElement('span');title.textContent=program.name||'Terrain à consulter';
           const town=document.createElement('span');town.className='program-city';
           town.textContent=(program.city||'Commune à vérifier')+' (37)';
           const stock=document.createElement('span');stock.className='program-count';
-          stock.textContent=program.sourceVerified
-            ?'Programme trouvé dans le catalogue officiel · stocks à vérifier'
-            :'Référence historique · stocks et présence à vérifier';
+          stock.textContent=probe?.status==='reachable'&&probe.lotsVerified&&Number.isInteger(probe.freeLots)
+            ?probe.freeLots+' lot(s) LIBRE dans le tableau officiel · vérifié au dernier contrôle'
+            :probe?.status==='reachable'
+              ?'Fiche officielle accessible · stock individuel à vérifier'
+              :probe?.status==='not_found'
+                ?'Lien officiel en erreur 404 · disponibilité inconnue'
+                :probe?.status==='unavailable'
+                  ?'Site inaccessible lors du contrôle · disponibilité inconnue'
+                  :program.sourceVerified
+                    ?'Programme trouvé dans le catalogue officiel · stocks à vérifier'
+                    :'Référence historique · stocks et présence à vérifier';
           summary.append(title,town,stock);
           const details=document.createElement('div');details.className='program-body';
           const caution=document.createElement('p');
-          caution.textContent='IMPORTANT : les nombres, prix et statuts ci-dessous proviennent du relevé daté, pas du contrôle horaire du stock.';
+          caution.textContent=probe?.status==='reachable'&&probe.lotsVerified
+            ?'Le nombre de lots LIBRE est relevé automatiquement dans le tableau officiel. Il reste susceptible de changer depuis le dernier contrôle. Les autres prix et données restent historiques.'
+            :probe?.status==='unavailable'||probe?.status==='not_found'
+              ?'Le lien de cette fiche ne répond pas correctement au dernier contrôle. Cela ne prouve ni vente ni disparition du lotissement. Les informations ci-dessous sont anciennes.'
+              :'IMPORTANT : les nombres, prix et statuts ci-dessous proviennent du relevé daté, pas du contrôle horaire du stock.';
           details.append(caution);
           if(program.surfaceMin&&program.surfaceMax){
             const p=document.createElement('p');
@@ -468,7 +482,7 @@
             details.append(p);
           }
           if(program.note){const p=document.createElement('p');p.textContent=program.note;details.append(p)}
-          if(Array.isArray(program.lots)&&program.lots.length){
+          if(!(probe?.status==='reachable'&&probe.lotsVerified)&&Array.isArray(program.lots)&&program.lots.length){
             const p=document.createElement('p');
             p.textContent='Détail de '+program.lots.length+' lots dans l’ancien relevé (NON ACTUALISÉ) :';
             details.append(p);
