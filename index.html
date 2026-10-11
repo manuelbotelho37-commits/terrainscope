@@ -37,6 +37,17 @@
 #google-results .gsc-url-top {font-size:11px!important}
 #setupMain,#activateResults {margin:16px auto 4px;max-width:100%;white-space:normal}
 
+    /* Sources en accès direct : l'index Google n'est jamais le total du marché. */
+    .quick-sources{background:#f8fcf8;border:1px solid #cfe1d0;border-radius:17px;padding:17px;margin:0 0 16px}
+    .quick-sources h3{font-size:17px;color:#1f503c;margin:0 0 7px}
+    .quick-sources p{font-size:12px;line-height:1.55;color:#567166;margin:0 0 12px}
+    .quick-source-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .quick-source-links a{display:block;padding:12px;border-radius:11px;background:white;border:1px solid #cbdcce;color:#1e563f;font-size:12px;font-weight:800;text-decoration:none;line-height:1.5}
+    .quick-source-links a.main-source{background:#d3f3a3;border-color:#badf92;color:#153e2d}
+    .quick-source-links a small{display:block;font-size:11px;font-weight:500;color:#527461}
+    #google-results [data-terrain-kind="incertains"]{border-left:4px solid #d59b48!important}
+    #google-results .listing-caution{margin:0 0 8px;font-size:11px;font-weight:800;color:#81541d}
+    @media(max-width:520px){.quick-source-links{grid-template-columns:1fr}}
     /* Multi-communes, affichage client et espace professionnel */
     .city-small{font-size:11px;font-weight:400;color:#708587}.city-add{align-self:flex-start;border:1px solid #bfdccb;border-radius:9px;background:#f0faf0;color:#245c45;font-size:12px;font-weight:750;padding:8px 12px;margin-top:2px}
     .city-chips{display:flex;flex-wrap:wrap;gap:7px}.city-chip{display:inline-flex;align-items:center;gap:7px;color:#164632;background:#dcf3e3;border:1px solid #aed6b9;border-radius:30px;padding:4px 6px 4px 11px;font-size:12px;font-weight:750}.city-chip button{border:0;background:#ffffff9c;border-radius:30px;width:25px;height:25px;color:#23543e;font-size:17px;line-height:1}
@@ -44,7 +55,7 @@
     .professional-area{margin-left:auto;position:relative}.professional-area summary{cursor:pointer;list-style:none;color:#3c6255;background:#fff;border:1px solid #d9e6de;border-radius:9px;padding:10px 12px;font-size:12px;font-weight:800}.professional-area summary::-webkit-details-marker{display:none}.professional-area[open]{width:100%;margin-top:4px;padding:10px 12px 14px;background:#fff;border:1px solid #d9e6de;border-radius:12px}.professional-area[open] summary{border:0;padding:3px 0 10px}
     .professional-buttons{display:flex;flex-wrap:wrap;gap:8px}.view-btn{border:1px solid #d4e4d7;background:#f6f8f5;border-radius:9px;padding:10px 12px;font-size:12px;font-weight:750;color:#275246}.view-btn.active{background:#d3f3a3;border-color:#b4dd89}.pro-note{font-size:11px;line-height:1.55;color:#7c8d86;margin:10px 2px 0}.result-summary{color:#678077;font-size:12px;line-height:1.4;margin-bottom:8px}
     /* Le filtrage s'applique aux résultats organiques. Google gère ses annonces sponsorisées. */
-    body[data-result-mode="terrains"] #google-results .gsc-webResult.gsc-result:not([data-terrain-kind="terrains"]),
+    body[data-result-mode="terrains"] #google-results .gsc-webResult.gsc-result[data-terrain-kind="constructeurs"],
     body[data-result-mode="constructeurs"] #google-results .gsc-webResult.gsc-result:not([data-terrain-kind="constructeurs"]),
     body[data-result-mode="incertains"] #google-results .gsc-webResult.gsc-result:not([data-terrain-kind="incertains"]){display:none!important}
     @media(max-width:520px){.results-toolbar{flex-direction:column;align-items:stretch}.professional-area{margin-left:0}.city-add{width:100%}}
@@ -119,22 +130,22 @@
     <section class="terrain-counter" id="terrainCounter" role="status" aria-live="polite" aria-atomic="true">
       <div class="counter-primary">
         <span class="counter-icon" aria-hidden="true">⌂</span>
-        <div><span class="counter-number" id="terrainCount">—</span><span class="counter-label">annonces potentielles hors constructeurs</span></div>
+        <div><span class="counter-number" id="terrainCount">—</span><span class="counter-label">pistes trouvées sur Google</span></div>
       </div>
       <div class="counter-details">
         <span id="countDescription">Lance une recherche pour compter les annonces.</span>
         <span id="countBreakdown" hidden></span><button id="showUncertainFromCounter" type="button" class="setup-link" hidden>Voir les annonces à vérifier →</button>
-        <small>Ce nombre inclut les pistes terrains et les annonces à vérifier, hors constructeurs détectés. Aucune annonce n’est automatiquement validée.</small>
+        <small>Ce chiffre concerne uniquement les résultats affichés par Google, pas l’ensemble des terrains disponibles sur Le Bon Coin ou ailleurs.</small>
       </div>
     </section>
     <div class="results-toolbar">
-      <span class="customer-mode">✓ Terrains repérés · constructeurs identifiés à part</span>
+      <span class="customer-mode">✓ Pistes visibles immédiatement · annonces à vérifier</span>
       <span class="price-order">↗ Prix croissant sur les annonces trouvées</span>
       <span class="price-order" title="Les analyses locales ne consomment aucun crédit d’hébergement.">Recherche gratuite · analyse sur ce téléphone</span>
       <details id="professionalArea" class="professional-area">
         <summary>🔒 Espace professionnel · annonces à contrôler</summary>
         <div class="professional-buttons">
-          <button type="button" id="showTerrains" class="view-btn active" aria-pressed="true">Pistes terrains</button>
+          <button type="button" id="showTerrains" class="view-btn active" aria-pressed="true">Toutes les pistes hors constructeurs</button>
           <button type="button" id="showBuilders" class="view-btn" aria-pressed="false">Annonces constructeurs</button>
           <button type="button" id="showUncertain" class="view-btn" aria-pressed="false">À vérifier <span id="uncertainCount" class="tab-count"></span></button>
         </div>
@@ -144,9 +155,9 @@
       </details>
     </div>
     <p id="criteriaText" class="criteria-text" hidden></p><div class="content-grid">
-      <section class="results" id="mainResults" aria-live="polite">
+      <section class="results" id="mainResults" aria-live="polite"><section id="quickSources" class="quick-sources" hidden><h3>Consulter les annonces sur les sites immobiliers</h3><p>Accès direct aux recherches par commune. Google peut ne pas trouver des terrains pourtant disponibles : vérifie aussi les portails.</p><div id="quickSourceLinks" class="quick-source-links"></div></section>
         <div class="box placeholder" id="placeholder"><div class="bigicon" aria-hidden="true">✓</div><h3>Les annonces directement ici</h3><p>Choisis une ou plusieurs communes et lance la recherche. Les annonces apparaîtront ci-dessous, avec leurs liens d’origine. Les constructeurs identifiés sont séparés.</p><button id="setupMain" class="search" type="button">Paramètres du moteur</button></div><section id="approvedSelection" class="approved-selection" hidden><h3>Ma sélection de terrains vérifiés</h3><div id="approvedCards" class="approved-cards" aria-live="polite"></div></section>
-        <div id="csePanel" class="box cse-holder" hidden><div id="cseHint" class="cse-hint">Terrains repérés dans l’index de Google. Vérifie toujours la commune et le vendeur avant de présenter une annonce à un client. Google peut également afficher des publicités.</div><p id="resultSummary" class="result-summary" aria-live="polite"></p><div id="google-results"></div></div>
+        <div id="csePanel" class="box cse-holder" hidden><div id="cseHint" class="cse-hint">Résultats Google non exhaustifs : les annonces à vérifier apparaissent également ici. Contrôle la commune, le vendeur et la disponibilité avant présentation au client.</div><p id="resultSummary" class="result-summary" aria-live="polite"></p><div id="google-results"></div></div>
       </section>
       <aside class="rail" id="professionalSources" aria-label="Sources complémentaires non vérifiées">
         <div class="box"><h3>Lotisseurs &amp; aménageurs</h3><p class="caption">Les liens ouvrent directement les offres de terrains. Lorsqu’un filtre de ville officiel est absent, utilise le lien Google ciblé sur la commune.</p><div id="developers"></div></div>
@@ -154,7 +165,7 @@
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V13 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <footer class="foot">TerrainScope V14 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -209,7 +220,7 @@
     const query = cities => {
       const names=(Array.isArray(cities)?cities:[cities]).filter(Boolean).map(s=>'"'+String(s).replace(/"/g,'')+'"');
       const places=names.length>1?'('+names.join(' OR ')+')':(names[0]||'');
-      return '"terrain" '+places+' ("à vendre" OR "constructible" OR "à bâtir")';
+      return 'terrain '+places;
     };
     const googleUrl = q => 'https://www.google.com/search?hl=fr&q='+encodeURIComponent(q);
     const linkFor=(cities,domain)=>googleUrl(query(cities)+' site:'+domain);
@@ -319,6 +330,10 @@
       node.dataset.terrainKind=kind;
       node.dataset.terrainPrice=String(getPrice(textContent)??'');
       if(!node.querySelector('.terrain-meta'))enhanceResult(node);
+      let caution=node.querySelector('.listing-caution');
+      if(!caution){caution=document.createElement('div');caution.className='listing-caution';node.prepend(caution)}
+      caution.textContent=kind==='constructeurs'?'Constructeur détecté · offre séparée':
+        kind==='incertains'?'Piste à vérifier · commune ou vendeur non confirmé':'Piste terrain · vendeur et disponibilité à contrôler';
       return kind;
     }
     function refreshResultMode(){
@@ -327,7 +342,7 @@
         const b=el(id);b.classList.toggle('active',resultMode===m);b.setAttribute('aria-pressed',String(resultMode===m));
       }
       el('proNotice').textContent=resultMode==='terrains'
-        ?'Pistes NON vérifiées. Ouvre la fiche originale et vérifie qui propose le terrain avant validation.'
+        ?'Toutes les pistes hors constructeurs détectés, y compris les incertaines. Vérifie sur chaque annonce avant présentation.'
         :resultMode==='constructeurs'?'Annonces de constructeurs : isolées de la sélection client.'
         :'Ces annonces présentent une incertitude sur la commune, le vendeur ou la nature du bien. Elles ne sont jamais publiées dans la sélection client sans contrôle.';
     }
@@ -365,7 +380,7 @@
     }
     function renderReviewCards(nodes){
       const root=el('reviewCards');root.replaceChildren();
-      const items=nodes.map(detailsOf).filter(Boolean).filter(d=>d.kind===resultMode);
+      const items=nodes.map(detailsOf).filter(Boolean).filter(d=>resultMode==='terrains'?d.kind!=='constructeurs':d.kind===resultMode);
       items.sort((a,b)=>(a.price??Infinity)-(b.price??Infinity)||a.title.localeCompare(b.title,'fr'));
       if(!items.length){const p=document.createElement('p');p.className='pro-note';p.textContent='Aucun résultat de cette catégorie sur la page Google actuelle.';root.append(p);return}
       for(const d of items){
@@ -440,19 +455,17 @@
           if(current[i]&&current[i]!==sorted[i])parent.insertBefore(sorted[i],current[i]);
         }
       }
-      const active=counts[resultMode]||0;
       const countTotal=counts.terrains+counts.constructeurs+counts.incertains;
       const potentialCount=counts.terrains+counts.incertains;
       el('terrainCount').textContent=String(potentialCount);
       el('countDescription').textContent=potentialCount
-        ?counts.terrains+' piste(s) terrain affichée(s) · '+counts.incertains+' annonce(s) à vérifier dans l’espace professionnel.'
-        :countTotal?counts.constructeurs+' annonce(s) de constructeur(s) détectée(s), aucune piste terrain indépendante à afficher.'
-          :'Aucun résultat affiché par Google pour cette recherche. Utilise les liens des sites à droite.';
+        ?potentialCount+' piste(s) visibles, dont '+counts.incertains+' à vérifier. Consulte aussi Le Bon Coin : Google ne trouve pas tout.'
+        :'Aucune piste dans les résultats Google actuels. Cela ne signifie PAS zéro terrain disponible : ouvre les recherches par portail juste en dessous.';
       el('showUncertainFromCounter').hidden=counts.incertains===0;
-      el('statusBadge').textContent=countTotal+' annonce(s) analysée(s)';
-      el('resultSummary').textContent=counts.terrains+' pistes terrains · '+counts.constructeurs+' constructeurs suspectés · '+counts.incertains+' à vérifier (page Google affichée)';
+      el('statusBadge').textContent=countTotal+' résultat(s) Google analysé(s)';
+      el('resultSummary').textContent=potentialCount+' pistes affichées (dont '+counts.incertains+' à vérifier) · '+counts.constructeurs+' constructeurs détectés · page Google uniquement';
       el('countBreakdown').hidden=false;
-      el('countBreakdown').textContent=countTotal+' annonces distinctes repérées : '+counts.terrains+' pistes terrains, '+counts.constructeurs+' constructeurs, '+counts.incertains+' à vérifier. Les doublons sont ignorés.';
+      el('countBreakdown').textContent=countTotal+' résultats distincts sur cette page Google ; '+counts.constructeurs+' constructeur(s) séparés. Les autres portails doivent être consultés aussi.';
       el('uncertainCount').textContent=counts.incertains?'('+counts.incertains+')':'';
       renderReviewCards(uniqueNodes);renderApprovedCards();
     }
@@ -486,6 +499,22 @@
       if(attempt<20){setTimeout(()=>performGoogleSearch(cities,attempt+1),350)}
       else{el('statusBadge').textContent='Moteur non chargé';el('terrainCount').textContent='—';el('countDescription').textContent='Impossible de compter : moteur Google non chargé.';el('csePanel').hidden=false;el('cseHint').textContent='Le moteur ne répond pas. Vérifiez l’identifiant CX, votre connexion et les paramètres Google. Les liens par site restent utilisables.'}
     }
+    function updateQuickSources(cities){
+      const root=el('quickSourceLinks');root.replaceChildren();
+      const makeLink=(label,url,main,help)=>{
+        const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';
+        if(main)a.className='main-source';
+        a.append(document.createTextNode(label+' ↗'));
+        const small=document.createElement('small');small.textContent=help;a.append(small);root.append(a);
+      };
+      for(const city of cities){
+        makeLink('Le Bon Coin · '+city,leboncoinUrl(city),true,'Recherche directement sur Le Bon Coin');
+        makeLink('SeLoger · '+city,linkFor([city],'seloger.com'),false,'Recherche Google ciblée sur SeLoger');
+        makeLink('Bien’ici · '+city,linkFor([city],'bienici.com'),false,'Recherche Google ciblée sur Bien’ici');
+      }
+      makeLink('Tous les portails · Google',googleUrl(query(cities)),false,'Recherche générale supplémentaire');
+      el('quickSources').hidden=false;
+    }
     function handleSearch(e){
       e?.preventDefault();
       // Un nom encore saisi dans le champ est ajouté avant la recherche.
@@ -496,6 +525,7 @@
       lastSearch={cities,surface,budget};
       resultMode='terrains';refreshResultMode();el('professionalArea').open=false;
       displayDevelopers(cities);
+      updateQuickSources(cities);
       el('sectionTitle').textContent='Terrains · '+cities.join(', ');
       el('criteriaText').hidden=false;
       el('criteriaText').textContent='Communes : '+cities.join(' · ')+' · Surface minimale : '+(surface?fmt(surface)+' m²':'non précisée')+' · Budget maximal : '+(budget?fmt(budget)+' €':'non précisé')+' — critères indicatifs selon les extraits.';
