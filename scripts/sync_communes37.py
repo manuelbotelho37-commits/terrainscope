@@ -27,11 +27,16 @@ def main():
         if len(code)!=5 or not code.startswith("37") or not name or code in codes:
             raise ValueError("Code INSEE invalide ou dupliqué")
         codes.add(code)
-        clean.append({"nom":name,"code":code})
+        postals=row.get("codesPostaux")
+        if not isinstance(postals,list) or not postals or any(
+                not isinstance(p,str) or len(p)!=5 or not p.startswith("37")
+                for p in postals):
+            raise ValueError("Codes postaux manquants ou invalides pour "+name)
+        clean.append({"nom":name,"code":code,"codesPostaux":sorted(set(postals))})
     # Sortie stable pour minimiser les commits inutiles.
     clean.sort(key=lambda c:(c["nom"].casefold(),c["code"]))
     OUT.write_text(json.dumps(clean,ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
-    print(f"OK : {len(clean)} communes officielles du 37, {len(codes)} codes INSEE uniques.")
+    print(f"OK : {len(clean)} communes officielles du 37 avec codes postaux, {len(codes)} codes INSEE uniques.")
 
 if __name__=="__main__":
     main()
