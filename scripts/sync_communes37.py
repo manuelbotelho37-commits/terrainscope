@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Récupère la liste officielle des communes de l'Indre-et-Loire.
+La publication GitHub est protégée contre les mises à jour concurrentes.
 Fail-closed: ne publie aucun index si le service est incomplet ou incohérent.
 """
 from datetime import datetime, timezone
