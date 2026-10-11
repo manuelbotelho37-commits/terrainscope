@@ -60,18 +60,18 @@
         <div id="csePanel" class="box cse-holder" hidden><div id="cseHint" class="cse-hint">Résultats issus de l'index de Google : l'affichage ne garantit ni l'exhaustivité ni la disponibilité des annonces.</div><div id="google-results"></div></div>
       </section>
       <aside class="rail" aria-label="Sources complémentaires">
-        <div class="box"><h3>Recherches par site</h3><p class="caption">Ouvrez les recherches ciblées sur les différents portails. Leboncoin s’ouvre directement dans son moteur de recherche. Les autres liens lancent une recherche Google ciblée sur le site concerné.</p><div id="sites"><p class="notice">Lancez une recherche pour activer les liens.</p></div><a href="#" id="allSites" class="general" hidden target="_blank" rel="noopener noreferrer">↗ Google · Tous les sites</a></div>
-        <div class="box"><h3>Lotisseurs &amp; aménageurs</h3><p class="caption">Les quatre sites officiels de terrains à bâtir. Après la recherche d'une commune, un lien ciblé vers les offres de chaque organisme apparaît.</p><div id="developers"></div></div>
+        <div class="box"><h3>Recherches par site</h3><p class="caption">Ouvrez les recherches ciblées sur les différents portails. Leboncoin s’ouvre directement dans son moteur de recherche. Les autres liens lancent une recherche Google ciblée sur le site concerné.</p><div id="sites"><p class="notice">Lancez une recherche pour activer les liens.</p></div><a href="#" id="allSites" class="general" hidden target="_blank" rel="noopener noreferrer">↗ Google · Recherche Web</a></div>
+        <div class="box"><h3>Lotisseurs &amp; aménageurs</h3><p class="caption">Les sites officiels de lotisseurs et aménageurs vérifiés. Après la recherche d'une commune, un lien ciblé vers les offres de chaque organisme apparaît.</p><div id="developers"></div></div>
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V4 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <footer class="foot">TerrainScope V5 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Activer la recherche groupée</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
     <p>La recherche par site est déjà disponible gratuitement. Pour afficher des résultats <strong>dans l'application</strong>, activez gratuitement Google Programmable Search Engine (version avec publicités).</p>
     <ol><li>Ouvrez <a href="https://programmablesearchengine.google.com/controlpanel/create" target="_blank" rel="noopener noreferrer">Créer un moteur de recherche Google ↗</a>.</li><li>Donnez-lui un nom, par exemple <strong>Recherche Terrains</strong>.</li><li>Dans « Sites à rechercher », ajoutez les domaines des portails qui vous intéressent, par exemple :</li></ol>
-    <div><span class="tag">leboncoin.fr</span><span class="tag">seloger.com</span><span class="tag">bienici.com</span><span class="tag">ouestfrance-immo.com</span><span class="tag">orpi.com</span><span class="tag">century21.fr</span><span class="tag">safti.fr</span><span class="tag">iadfrance.fr</span><span class="tag">villadim.fr</span><span class="tag">set.fr</span><span class="tag">afedim.fr</span><span class="tag">valtourainehabitat-vente.fr</span></div>
+    <div><span class="tag">leboncoin.fr</span><span class="tag">seloger.com</span><span class="tag">bienici.com</span><span class="tag">nos-terrains.com</span><span class="tag">lelievre-immobilier.com</span><span class="tag">iadfrance.fr</span><span class="tag">immonot.com</span><span class="tag">immobilier.notaires.fr</span><span class="tag">terrain-construction.com</span><span class="tag">paruvendu.fr</span><span class="tag">logic-immo.com</span><span class="tag">pap.fr</span><span class="tag">immobilier.lefigaro.fr</span><span class="tag">kazimo.fr</span><span class="tag">superimmo.com</span><span class="tag">ouestfrance-immo.com</span><span class="tag">idealista.fr</span><span class="tag">orpi.com</span><span class="tag">century21.fr</span><span class="tag">safti.fr</span><span class="tag">villadim.fr</span><span class="tag">set.fr</span><span class="tag">afedim.fr</span><span class="tag">valtourainehabitat-vente.fr</span></div>
     <p><button id="copyDomains" class="setup-link" type="button">Copier tous les domaines en une seule fois</button></p><ol start="4"><li>Créez le moteur Google et récupérez son <strong>identifiant du moteur de recherche</strong> (CX) dans « Code » ou « Paramètres ». Le moteur doit rechercher uniquement les sites indiqués.</li><li>Collez l’identifiant CX ci-dessous, puis enregistrez. La liste d’annonces sera alors intégrée à TerrainScope à chaque recherche.</li></ol>
     <label class="field" for="cx"><strong style="font-size:12px">Identifiant Google (CX)</strong></label><input id="cx" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="Ex. 0123456789abcdef0" aria-label="Identifiant du moteur Google">
     <div class="dialog-actions"><button id="saveCx" class="search" type="button">Enregistrer</button><button id="removeCx" class="light" type="button">Désactiver</button></div>
@@ -83,10 +83,14 @@
     // exclusivement via l'élément officiel Google PSE et les liens de recherche.
     const PORTALS = [
       ['Leboncoin','leboncoin.fr'],['SeLoger','seloger.com'],['Bien’ici','bienici.com'],
-      ['OuestFrance Immo','ouestfrance-immo.com'],['Orpi','orpi.com'],['Century 21','century21.fr'],
-      ['SAFTI','safti.fr'],['iad','iadfrance.fr'],['Immonot','immonot.com'],
-      ['Superimmo','superimmo.com'],['Terrain-Construction','terrain-construction.com'],
-      ['Villadim','villadim.fr'],['Groupe SET','set.fr'],
+      ['Nos-terrains','nos-terrains.com'],['Lelièvre Immobilier','lelievre-immobilier.com'],
+      ['IAD · terrains','iadfrance.fr'],['Immonot · notaires','immonot.com'],
+      ['Notaires de France','immobilier.notaires.fr'],['Terrain-Construction','terrain-construction.com'],
+      ['ParuVendu','paruvendu.fr'],['Logic-Immo','logic-immo.com'],['PAP','pap.fr'],
+      ['Figaro Immobilier','immobilier.lefigaro.fr'],['Kazimo','kazimo.fr'],
+      ['Superimmo','superimmo.com'],['Ouest-France Immo','ouestfrance-immo.com'],
+      ['Idealista','idealista.fr'],['Orpi','orpi.com'],['Century 21','century21.fr'],
+      ['SAFTI','safti.fr'],['Villadim','villadim.fr'],['Groupe SET','set.fr'],
       ['CM-CIC · AFEDIM','afedim.fr'],['Val Touraine Habitat','valtourainehabitat-vente.fr']
     ];
     // Les liens directs ci-dessous proviennent des pages officielles d'offres de terrains.
@@ -94,7 +98,8 @@
       {name:'Villadim', domain:'villadim.fr', url:'https://www.villadim.fr/terrains'},
       {name:'Groupe SET', domain:'set.fr', url:'https://set.fr/'},
       {name:'CM-CIC · Crédit Mutuel (AFEDIM)', domain:'afedim.fr', url:'https://www.afedim.fr/fr/acheter-un-terrain.html'},
-      {name:'Val Touraine Habitat', domain:'valtourainehabitat-vente.fr', url:'https://www.valtourainehabitat-vente.fr/acheter-un-terrain-a-batir/'}
+      {name:'Val Touraine Habitat', domain:'valtourainehabitat-vente.fr', url:'https://www.valtourainehabitat-vente.fr/acheter-un-terrain-a-batir/'},
+      {name:'Lelièvre Immobilier · aménagement', domain:'lelievre-immobilier.com', url:'https://www.lelievre-immobilier.com/terrains-a-vendre-indre-et-loire'}
     ];
     const CITIES = ['Chambray-lès-Tours','Tours','Joué-lès-Tours','Saint-Avertin','Saint-Cyr-sur-Loire','La Riche','Fondettes','Ballan-Miré','Montlouis-sur-Loire','Azay-sur-Cher','Véretz','Savonnières','Parçay-Meslay','Rochecorbon','Larçay','Esvres-sur-Indre','Montbazon','Veigné','Saint-Pierre-des-Corps','Amboise','Loches','Dolus-le-Sec','Azay-le-Rideau','Monts','Sorigny','Saint-Branchs','Luynes','Pernay','Notre-Dame-d’Oé','Chanceaux-sur-Choisille','Artannes-sur-Indre','Saint-Martin-le-Beau','Athée-sur-Cher','Monnaie','La Ville-aux-Dames','Bléré','Esvres','Langeais'];
     const el=id=>document.getElementById(id);
@@ -195,7 +200,7 @@
       }
       addSource('Leboncoin · recherche directe',leboncoinUrl(city));
       for(const [name,domain] of PORTALS){addSource('Google · '+name,linkFor(city,domain))}
-      const all=el('allSites');all.hidden=false;all.href=googleUrl(query(city)+' ('+PORTALS.slice(0,7).map(([,d])=>'site:'+d).join(' OR ')+')');
+      const all=el('allSites');all.hidden=false;all.href=googleUrl(query(city));
       if(googleConfigured){el('csePanel').hidden=false;if(engineLoaded)performGoogleSearch(city);else performGoogleSearch(city)}
       else{el('csePanel').hidden=true;}
       el('mainResults').querySelector('.fallback')?.remove();
