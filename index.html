@@ -293,7 +293,7 @@
     <button id="terrainUp" type="button" title="Retour en haut" aria-label="Retour aux critères de recherche">↑</button>
     <button id="terrainDown" type="button" title="Descendre" aria-label="Descendre dans les résultats">↓</button>
   </nav>
-  <footer class="foot">TerrainScope V39 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+  <footer class="foot">TerrainScope V40 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -601,7 +601,7 @@
       }
       const active=el('developerAccordion');
       if(active)active.querySelector('summary span:first-child').textContent=
-        '🏘 Lotisseurs · '+checkedDevelopers.length+' catalogue(s) contrôlé(s)';
+        '🏘 '+DEVELOPERS.length+' lotisseurs référencés · '+checkedDevelopers.length+' catalogues vérifiés';
     }
     async function updateOfficialCatalogChecks(){
       // Lire directement la branche GitHub pour ne pas dépendre du délai de déploiement Pages.
