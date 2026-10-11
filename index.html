@@ -224,7 +224,9 @@
     };
     const googleUrl = q => 'https://www.google.com/search?hl=fr&q='+encodeURIComponent(q);
     const linkFor=(cities,domain)=>googleUrl(query(cities)+' site:'+domain);
-    const leboncoinUrl=city=>'https://www.leboncoin.fr/recherche?'+new URLSearchParams({text:'terrain '+city,category:'9'}).toString();
+    const leboncoinUrl=city=>normalize(city)==='joue-les-tours'
+      ?'https://www.leboncoin.fr/cl/ventes_immobilieres/cp_joue-les-tours_37300/real_estate_type%3A3'
+      :'https://www.leboncoin.fr/recherche?'+new URLSearchParams({text:'terrain '+city,category:'9'}).toString();
     function displayDevelopers(cities=[]){
       const names=(Array.isArray(cities)?cities:[cities]).filter(Boolean);
       const root=el('developers');root.replaceChildren();
