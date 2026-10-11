@@ -1,17 +1,73 @@
 {
   "schema": 1,
-  "generatedAt": "2026-10-11T20:48:29+00:00",
+  "generatedAt": "2026-10-11T20:50:15+00:00",
   "notice": "Contrôle des catalogues, PAS des stocks de lots. Aucun lot libre, vendu ou optionné n'est certifié par ce fichier.",
   "developers": {
     "Villadim": {
-      "status": "incomplete",
+      "status": "verified",
       "expected": 11,
-      "found": 40,
-      "programs": [],
+      "found": 11,
+      "programs": [
+        {
+          "url": "https://villadim.fr/terrains/sainte-maure-de-touraine/le-cabernet",
+          "city": "Sainte Maure De Touraine",
+          "label": "Le Cabernet"
+        },
+        {
+          "url": "https://villadim.fr/terrains/montbazon/le-clos-de-la-breanderie",
+          "city": "Montbazon",
+          "label": "Le Clos De La Breanderie"
+        },
+        {
+          "url": "https://villadim.fr/terrains/athee-sur-cher/bono-la-gangnerie",
+          "city": "Athee Sur Cher",
+          "label": "Bono La Gangnerie"
+        },
+        {
+          "url": "https://villadim.fr/terrains/chambourg-sur-indre/le-grand-hélas-1",
+          "city": "Chambourg Sur Indre",
+          "label": "Le Grand Hélas 1"
+        },
+        {
+          "url": "https://villadim.fr/terrains/saint-laurent-en-gâtines/le-hameau-de-villeneuve",
+          "city": "Saint Laurent En Gâtines",
+          "label": "Le Hameau De Villeneuve"
+        },
+        {
+          "url": "https://villadim.fr/terrains/veigne/la-martinière",
+          "city": "Veigne",
+          "label": "La Martinière"
+        },
+        {
+          "url": "https://villadim.fr/terrains/azay-le-rideau/les-jardins-deleonore",
+          "city": "Azay Le Rideau",
+          "label": "Les Jardins Deleonore"
+        },
+        {
+          "url": "https://villadim.fr/terrains/chinon/le-bosquet-de-la-libourne",
+          "city": "Chinon",
+          "label": "Le Bosquet De La Libourne"
+        },
+        {
+          "url": "https://villadim.fr/terrains/pernay/le-champet-1",
+          "city": "Pernay",
+          "label": "Le Champet 1"
+        },
+        {
+          "url": "https://villadim.fr/terrains/monnaie/les-terrasses-de-bel-r",
+          "city": "Monnaie",
+          "label": "Les Terrasses De Bel R"
+        },
+        {
+          "url": "https://villadim.fr/terrains/villandry/les-glycines",
+          "city": "Villandry",
+          "label": "Les Glycines"
+        }
+      ],
       "method": "Catalogue Villadim 37 : ne valider que si les liens des fiches sont tous identifiés",
-      "message": "Inventaire non vérifié : nombre officiel absent ou lien(s) manquant(s).",
+      "message": "Inventaire des programmes cohérent avec le compteur officiel.",
       "lotsVerified": false,
-      "checkedAt": "2026-10-11T20:48:29+00:00",
+      "checkedAt": "2026-10-11T20:50:15+00:00",
       "source": "https://www.villadim.fr/programmes/indre-et-loire"
     },
     "CM-CIC · AFEDIM": {
@@ -43,7 +99,7 @@
       "method": "Index AFEDIM terrains Indre-et-Loire (total des programmes, pas des lots libres)",
       "message": "Inventaire des programmes cohérent avec le compteur officiel.",
       "lotsVerified": false,
-      "checkedAt": "2026-10-11T20:48:29+00:00",
+      "checkedAt": "2026-10-11T20:50:15+00:00",
       "source": "https://www.afedim.fr/fr/achat-immobilier/annonces/Terrain/Indre-et-Loire-France/surface-0-800-m2/budget-0-2000000-euros/rayon-0-km/Resultats"
     },
     "Groupe SET": {
