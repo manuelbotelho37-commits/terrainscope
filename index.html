@@ -139,13 +139,17 @@
 /* Commune : suggestions visibles sur le Galaxy Z Fold, au-dessus du formulaire. */
     #form .field:first-child{position:relative;z-index:30}
     #form .inwrap{position:relative;z-index:40}
-    #citySuggestions{z-index:5000;max-height:min(340px,45vh);overflow-y:auto;overscroll-behavior:contain;
-      background:#fff;box-shadow:0 16px 34px #112f3260;border:2px solid #9ccbb3;
-      border-radius:12px;top:calc(100% + 5px)}
+    #citySuggestions{position:relative!important;top:auto!important;left:auto!important;right:auto!important;
+      z-index:5000;max-height:min(340px,44vh);overflow-y:auto;overscroll-behavior:contain;
+      margin-top:6px;background:#fff;box-shadow:0 7px 19px #112f3224;border:2px solid #9ccbb3;
+      border-radius:12px;width:100%}
     #citySuggestions[hidden]{display:none!important}
     #citySuggestions .city-item{display:block;min-height:43px;line-height:1.45;padding:11px 12px;
       font-size:14px;font-weight:700;color:#1c4b37}
     #citySuggestions .city-item:focus,#citySuggestions .city-item:hover{background:#e4f4e2}
+    #citySuggestions .city-placeholder{padding:12px;color:#49645a;font-size:12px;line-height:1.5}
+    #citySuggestions .city-item{border-bottom:1px solid #edf3ef}
+    #citySuggestions .city-item:last-child{border-bottom:0}
     /* Un accès direct aux lotisseurs, dès l'accueil. */
     #lotisseursTop{background:#e8f5da;color:#214e35;border:1px solid #a9d39d;border-radius:10px;
       min-height:42px;padding:10px 13px;font-weight:850;font-size:13px;white-space:nowrap}
@@ -226,7 +230,7 @@
       <div class="section-top"><h2>Recherche de terrains</h2><span class="note">Sans historique de recherche</span></div>
       <form id="form">
         <div class="form">
-          <div class="field"><label for="city">Communes * <span class="city-small">— plusieurs communes possibles</span></label><div class="inwrap"><input id="city" autocomplete="off" type="text" placeholder="Tape une commune, puis sélectionne-la" aria-autocomplete="list" aria-controls="citySuggestions"><div id="citySuggestions" class="city-list" role="listbox" hidden></div></div><button type="button" id="addCity" class="city-add">+ Ajouter cette commune</button><div id="selectedCities" class="city-chips" aria-live="polite"></div><small class="city-help">Ajoute plusieurs communes avant de lancer la recherche. Appuie sur × pour en retirer une.</small></div>
+          <div class="field"><label for="city">Communes * <span class="city-small">— plusieurs communes possibles</span></label><div class="inwrap"><input id="city" autocomplete="off" type="text" placeholder="Commune d’Indre-et-Loire (ex. Monnaie)" aria-autocomplete="list" aria-expanded="false" aria-controls="citySuggestions" spellcheck="false"><div id="citySuggestions" class="city-list" role="listbox" hidden></div></div><button type="button" id="addCity" class="city-add">+ Ajouter cette commune</button><div id="selectedCities" class="city-chips" aria-live="polite"></div><small class="city-help">Ajoute plusieurs communes avant de lancer la recherche. Appuie sur × pour en retirer une.</small></div>
           <div class="field"><label for="surface">Surface mini (m²)</label><input id="surface" type="number" inputmode="numeric" min="0" step="1" placeholder="Ex. 500"></div>
           <div class="field"><label for="budget">Budget maxi (€)</label><input id="budget" type="number" inputmode="numeric" min="0" step="1000" placeholder="Ex. 120000"></div>
         </div>
@@ -261,7 +265,7 @@
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V28 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <footer class="foot">TerrainScope V29 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -299,6 +303,52 @@
       {name:'Lelièvre Immobilier',domain:'lelievre-immobilier.com',url:'https://www.lelievre-immobilier.com/terrains-a-vendre-indre-et-loire',type:'Terrains et programmes du département 37'}
     ];
     const CITIES = ['Chambray-lès-Tours','Tours','Joué-lès-Tours','Saint-Avertin','Saint-Cyr-sur-Loire','La Riche','Fondettes','Ballan-Miré','Montlouis-sur-Loire','Azay-sur-Cher','Véretz','Savonnières','Parçay-Meslay','Rochecorbon','Larçay','Esvres-sur-Indre','Montbazon','Veigné','Saint-Pierre-des-Corps','Amboise','Loches','Dolus-le-Sec','Azay-le-Rideau','Monts','Sorigny','Saint-Branchs','Luynes','Pernay','Notre-Dame-d’Oé','Chanceaux-sur-Choisille','Artannes-sur-Indre','Saint-Martin-le-Beau','Athée-sur-Cher','Monnaie','La Ville-aux-Dames','Bléré','Esvres','Langeais','Cheillé','Sainte-Maure-de-Touraine','Chambourg-sur-Indre','Saint-Laurent-en-Gâtines','Villandry','Chinon'];
+    // Annuaire officiel des communes du 37, mis en cache pour rester disponible
+    // lors des prochaines ouvertures et conserver les recherches hors connexion.
+    const CITY_CACHE_KEY='terrainscope-communes37-v1';
+    let ALL_CITIES=[...CITIES];
+    let cityIndexLoading=false;
+    let cityIndexLoaded=false;
+    const citySources=[
+      'https://geo.api.gouv.fr/departements/37/communes?fields=nom,code,codesPostaux&format=json',
+      'https://geo.api.gouv.fr/communes?codeDepartement=37&fields=nom,code,codesPostaux&format=json'
+    ];
+    function installCityIndex(values){
+      const names=[...new Set([...CITIES,...values.filter(v=>typeof v==='string')])];
+      if(names.length<200)return false;
+      ALL_CITIES=names.sort((a,b)=>a.localeCompare(b,'fr'));
+      cityIndexLoaded=true;
+      return true;
+    }
+    async function loadCompleteCityIndex(){
+      if(cityIndexLoading)return;
+      try{
+        const saved=JSON.parse(window.localStorage?.getItem(CITY_CACHE_KEY)||'null');
+        if(Array.isArray(saved?.names)&&installCityIndex(saved.names)){
+          if(typeof drawSuggestions==='function' && document.activeElement?.id==='city')drawSuggestions();
+        }
+      }catch(e){}
+      cityIndexLoading=true;
+      if(typeof drawSuggestions==='function'&&document.activeElement?.id==='city')drawSuggestions();
+      for(const endpoint of citySources){
+        try{
+          const controller=new AbortController();
+          const timeout=setTimeout(()=>controller.abort(),7000);
+          let response;
+          try{response=await fetch(endpoint,{signal:controller.signal,cache:'no-store'})}
+          finally{clearTimeout(timeout)}
+          if(!response.ok)continue;
+          const payload=await response.json();
+          if(!Array.isArray(payload))continue;
+          const entries=payload.filter(x=>x&&typeof x.nom==='string'&&typeof x.code==='string');
+          if(entries.length<200||!installCityIndex(entries.map(x=>x.nom)))continue;
+          try{window.localStorage?.setItem(CITY_CACHE_KEY,JSON.stringify({savedAt:Date.now(),names:entries.map(x=>x.nom)}))}catch(e){}
+          break;
+        }catch(e){}
+      }
+      cityIndexLoading=false;
+      if(typeof drawSuggestions==='function'&&document.activeElement?.id==='city')drawSuggestions();
+    }
     const el=id=>document.getElementById(id);
     const settingsStore=(()=>{try{const storage=window.localStorage;storage.getItem('terrainScopeCx');return storage}catch(e){return {getItem:()=>null,setItem:()=>{},removeItem:()=>{}}}})();
     const DEFAULT_CX = 'c051883a11ead4ffb'; // Moteur Google créé pour TerrainScope le 11/10/2026.
@@ -878,35 +928,55 @@
       cityInput.value='';el('citySuggestions').hidden=true;
       renderCities();return true;
     }
-    // Accents, espaces, apostrophes et traits d'union sont équivalents.
+    // Recherche tolérante aux accents, tirets, apostrophes et espaces.
     const citySearchKey=value=>normalize(value).replace(/[’'\-–—]/g,' ')
       .replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
     function matchingCities(value){
       const search=citySearchKey(value);
-      const options=CITIES.filter(city=>!selectedCities.some(x=>citySearchKey(x)===citySearchKey(city))&&
-        (!search||citySearchKey(city).includes(search)));
+      if(!search)return [];
+      const options=ALL_CITIES.filter(city=>
+        !selectedCities.some(x=>citySearchKey(x)===citySearchKey(city)) &&
+        citySearchKey(city).includes(search));
       return options.sort((a,b)=>{
         const aa=citySearchKey(a),bb=citySearchKey(b);
-        const pa=search&&aa.startsWith(search)?0:1;
-        const pb=search&&bb.startsWith(search)?0:1;
+        const pa=aa.startsWith(search)?0:1,pb=bb.startsWith(search)?0:1;
         return pa-pb||aa.localeCompare(bb,'fr');
       }).slice(0,12);
     }
     function drawSuggestions(){
-      const box=el('citySuggestions'),picks=matchingCities(cityInput.value);
+      const box=el('citySuggestions');
+      const input=cityInput.value;
+      const picks=matchingCities(input);
       box.replaceChildren();
-      for(const city of picks){
-        const btn=document.createElement('button');
-        btn.type='button';btn.className='city-item';btn.role='option';
-        btn.textContent=city;
-        btn.addEventListener('click',()=>{addCity(city);drawSuggestions();cityInput.focus()});
-        box.append(btn);
+      if(!citySearchKey(input)){
+        box.hidden=true;
+        cityInput.setAttribute('aria-expanded','false');
+        return;
       }
-      box.hidden=picks.length===0;
-      cityInput.setAttribute('aria-expanded',String(picks.length>0));
+      if(picks.length){
+        for(const city of picks){
+          const btn=document.createElement('button');
+          btn.type='button';btn.className='city-item';btn.role='option';
+          btn.textContent=city;
+          btn.addEventListener('click',()=>{addCity(city);cityInput.focus()});
+          box.append(btn);
+        }
+      }else{
+        const info=document.createElement('div');info.className='city-placeholder';
+        info.textContent=cityIndexLoading?'Chargement de toutes les communes…':
+          cityIndexLoaded?'Aucune commune correspondante dans le département 37.':
+            'Répertoire des communes indisponible. Tu peux ajouter le nom saisi.';
+        box.append(info);
+      }
+      box.hidden=false;
+      cityInput.setAttribute('aria-expanded','true');
     }
     cityInput.addEventListener('input',drawSuggestions);
-    cityInput.addEventListener('focus',drawSuggestions);
+    cityInput.addEventListener('compositionend',drawSuggestions);
+    cityInput.addEventListener('focus',()=>{
+      drawSuggestions();
+      if(!cityIndexLoaded&&!cityIndexLoading)loadCompleteCityIndex();
+    });
     cityInput.addEventListener('keydown',e=>{
       if(e.key==='Enter'){
         e.preventDefault();
@@ -927,6 +997,7 @@
       }
     });
     renderCities();
+    loadCompleteCityIndex();
     displayDevelopers();
     updateOfficialCatalogChecks();
     // L'ancien système de validation manuelle a été supprimé : ne plus l'appeler.
