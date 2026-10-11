@@ -56,7 +56,7 @@
   // Ne pas déduire qu'une fiche est active lorsque l'extrait ne dit rien.
   function previewSaysInactive(title,description){
     const text=normalized(title+' '+description);
-    return /\b(?:cette\s+annonce\s+est\s+desactivee|annonce\s+(?:desactivee|supprimee|retiree|expiree|indisponible)|annonce\s+n\s+est\s+plus\s+disponible|ce\s+bien\s+n\s+est\s+plus\s+disponible|bien\s+(?:deja\s+)?vendu|terrain\s+(?:deja\s+)?vendu|offre\s+terminee|cette\s+offre\s+n\s+est\s+plus\s+disponible)\b/.test(text);
+    return /\b(?:cette\s+annonce\s+est\s+desactivee|annonce\s+(?:desactivee|supprimee|retiree|expiree|indisponible)|annonce\s+n\s+est\s+plus\s+disponible|ce\s+bien\s+n\s+est\s+plus\s+disponible|bien\s+(?:a\s+deja\s+ete\s+|deja\s+)?vendu|terrain\s+(?:a\s+deja\s+ete\s+|deja\s+)?vendu|offre\s+terminee|cette\s+offre\s+n\s+est\s+plus\s+disponible)\b/.test(text);
   }
 
 
