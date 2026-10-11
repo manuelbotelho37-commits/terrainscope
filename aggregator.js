@@ -51,6 +51,15 @@
   };
   const sameUrl=(a,b)=>canonicalListingUrl(a)===canonicalListingUrl(b);
 
+  // L'index Google est en retard sur les changements d'annonces.
+  // Exclure un résultat uniquement si l'EXTRAIT annonce explicitement sa désactivation.
+  // Ne pas déduire qu'une fiche est active lorsque l'extrait ne dit rien.
+  function previewSaysInactive(title,description){
+    const text=normalized(title+' '+description);
+    return /\b(?:cette\s+annonce\s+est\s+desactivee|annonce\s+(?:desactivee|supprimee|retiree|expiree|indisponible)|annonce\s+n\s+est\s+plus\s+disponible|ce\s+bien\s+n\s+est\s+plus\s+disponible|bien\s+(?:deja\s+)?vendu|terrain\s+(?:deja\s+)?vendu|offre\s+terminee|cette\s+offre\s+n\s+est\s+plus\s+disponible)\b/.test(text);
+  }
+
+
   // Seules les annonces INDIVIDUELLES de terrain sont montrées au client.
   // Une page de conseiller, un catalogue ou une maison ayant un jardin n'est pas un terrain à bâtir.
   function isIndividualLandListing(title,url){
@@ -125,7 +134,7 @@
     if(!url||!/^https?:/.test(url))return null;
     const title=(a.textContent||'Terrain à bâtir').replace(/\s+/g,' ').trim();
     const description=(node.querySelector('.gs-snippet')?.textContent||'').replace(/\s+/g,' ').trim();
-    if(!title)return null;
+    if(!title||previewSaysInactive(title,description))return null;
     const kind=classifyResult(node);
     if(kind!=='terrains'||node.dataset.clientHidden==='true')return null;
     if(node.dataset.locationStatus!=='match'||!isIndividualLandListing(title,url))return null;
@@ -173,8 +182,9 @@
     state.page=Math.min(state.page,pagesCount);
     const status=state.active?'Recherche en cours · '+SOURCES[state.stage]?.name:
       'Recherche Google terminée';
-    summary.textContent=number+' terrain(s) distinct(s) repéré(s) · '+state.duplicates+
-      ' doublon(s) regroupé(s) · '+status;
+    summary.textContent=number+' lien(s) de terrain repéré(s) dans Google · '+state.duplicates+
+      ' doublon(s) regroupé(s) · '+status+
+      ' · Annonces NON vérifiées sur les sites vendeurs';
     out.replaceChildren();
     if(!number){
       const p=document.createElement('p');p.className='unique-empty';
@@ -195,21 +205,23 @@
       const details=document.createElement('p');details.className='unique-details';
       details.textContent=[item.city||'Localisation à confirmer',
         item.area?areaText(item.area):'Surface à consulter'].join(' · ');
+      const freshness=document.createElement('p');freshness.className='unique-freshness';
+      freshness.textContent='Lien issu de Google · annonce peut être désactivée · disponibilité à vérifier';
       const actions=document.createElement('div');actions.className='unique-actions';
-      actions.append(cardLink(item.url,'Voir ce terrain ↗','unique-open'));
+      actions.append(cardLink(item.url,'Vérifier cette annonce ↗','unique-open'));
       if(item.otherLinks.length){
         const count=document.createElement('span');count.className='unique-shared';
         count.textContent='Aussi publié sur '+[...new Set(item.otherLinks.map(x=>x.source))].join(', ');
         actions.append(count);
       }
-      card.append(header,title,details,actions);
+      card.append(header,title,details,freshness,actions);
       out.append(card);
     }
     pages.replaceChildren();
     pages.hidden=pagesCount<=1;
     if(pagesCount<=1)return;
     const title=document.createElement('div');title.className='unique-page-label';
-    title.textContent='Page '+state.page+' sur '+pagesCount+' · '+number+' terrains distincts repérés';
+    title.textContent='Page '+state.page+' sur '+pagesCount+' · '+number+' liens à vérifier';
     pages.append(title);
     const buttons=document.createElement('div');buttons.className='unique-page-buttons';
     function button(text,page){
@@ -310,6 +322,6 @@
     const serial=state.serial;
     setTimeout(()=>capture(serial),320);
   }
-  window.TerrainAggregator={search,onRendered,resume:()=>{if(state.active)startStage()},isIndividualLandListing};
+  window.TerrainAggregator={search,onRendered,resume:()=>{if(state.active)startStage()},isIndividualLandListing,previewSaysInactive};
   draw();
 })();
