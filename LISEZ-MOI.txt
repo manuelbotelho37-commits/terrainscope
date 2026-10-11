@@ -1,0 +1,16 @@
+TERRAINSCOPE V3 — INSTALLATION ET UTILISATION
+
+1. Pour essayer l’application sur ordinateur, ouvrir index.html dans Chrome ou Edge.
+2. Pour l’installer sur votre Samsung en tant qu’application, publier les fichiers du dossier à la racine d’un dépôt GitHub Pages (index.html, manifest.webmanifest, service-worker.js, icon-192.png et icon-512.png).
+3. Dans le navigateur de votre téléphone, ouvrir l’adresse https://VOTRE-COMPTE.github.io/NOM-DU-DEPOT/ puis menu ⋮ > Ajouter à l’écran d’accueil > Installer.
+4. Choisir une ville (ou taper son code postal), une surface mini et un budget maximal, puis cliquer sur « Rechercher les terrains ».
+5. Utiliser « Leboncoin · recherche directe », Google par site, et les liens des lotisseurs. Une nouvelle recherche remplace la précédente.
+6. Pour avoir une liste de résultats affichée dans l’application, ouvrir « Moteur gratuit », créer un Google Programmable Search Engine et entrer son identifiant CX.
+
+LIMITES IMPORTANTES
+- Sans identifiant Google, l’application ne collecte pas d’annonces : elle fournit des liens de recherche.
+- Avec Google, les annonces proviennent de son index (et non d’un accès en temps réel à tous les portails) ; certaines annonces peuvent manquer, être obsolètes ou s’afficher avec des informations incomplètes.
+- Les critères de prix et de surface signalent uniquement les annonces hors critères quand les données sont lisibles. Ils ne garantissent pas un filtrage rigoureux sur chaque portail.
+- L’application n’enregistre pas les communes, budgets, surfaces, annonces ni historique de recherche. Seul l’identifiant Google CX est enregistré dans le stockage local du navigateur si vous l’avez configuré.
+- Pas de frais imposés par l’application ; certains services tiers peuvent appliquer leurs propres conditions.
+- Le service worker garde uniquement des fichiers de l’application hors ligne, pas les résultats.

@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#102b32">
+  <meta name="description" content="Recherche ponctuelle de terrains à bâtir sur plusieurs portails immobiliers, avec ouverture des annonces originales.">
+  <meta name="color-scheme" content="light">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>TerrainScope · Recherche de terrains</title>
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#142b34;background:#f4f6f3;font-synthesis:none}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-height:100vh}button,input{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.58}a{color:inherit}
+    .top{background:linear-gradient(115deg,#0c2930 0%,#13413f 63%,#266555 100%);color:#fff;padding:20px 0 88px;overflow:hidden;position:relative}
+    .top:before,.top:after{content:"";border:1px solid #ffffff15;position:absolute;width:420px;height:420px;border-radius:50%;right:-150px;top:45px;pointer-events:none}.top:after{width:290px;height:290px;right:-80px;top:115px}
+    .wrap{width:min(1050px,calc(100% - 32px));margin:auto;position:relative;z-index:1}.nav{display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:-.5px;font-size:21px}.logo{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:#e8fbcd;color:#123931;font-size:22px;box-shadow:0 5px 14px #061b1b40}.nav-actions{display:flex;gap:8px}.btn-ghost{border:1px solid #ffffff45;background:#ffffff10;color:#fff;border-radius:12px;padding:11px 14px;font-weight:650}.btn-ghost:hover{background:#ffffff20}
+    .intro{padding-top:49px;max-width:670px}.eyebrow{font-size:11px;color:#b2e6c6;letter-spacing:2px;font-weight:800;text-transform:uppercase}.intro h1{font-size:clamp(32px,5vw,52px);line-height:1.11;letter-spacing:-1.8px;margin:14px 0 15px}.intro p{color:#c6dfda;line-height:1.65;margin:0;font-size:15px}
+    main{margin-top:-53px;padding-bottom:55px;position:relative}.panel{background:#fff;box-shadow:0 12px 40px #19343b14;border:1px solid #e5ebe7;border-radius:22px;padding:25px}.section-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}.section-top h2{font-size:18px;margin:0;letter-spacing:-.3px}.note{color:#6c8188;font-size:12px}.form{display:grid;grid-template-columns:minmax(0,2.4fr) 1fr 1fr;gap:14px}.field{display:flex;flex-direction:column;gap:8px;min-width:0}.field label{color:#566a70;font-weight:700;font-size:12px}.inwrap{position:relative}.field input{border:1px solid #dbe4e2;background:#fbfcfb;border-radius:12px;outline:none;height:49px;width:100%;padding:0 14px;color:#17383c;font-size:14px}.field input:focus{border-color:#397c65;box-shadow:0 0 0 3px #9ad9b530}.field input::placeholder{color:#9daeb0}.city-list{position:absolute;z-index:7;top:calc(100% + 4px);left:0;right:0;background:#fff;box-shadow:0 12px 22px #17343a22;border:1px solid #e4eeeb;border-radius:12px;padding:5px;max-height:180px;overflow:auto}.city-list[hidden]{display:none}.city-item{width:100%;text-align:left;padding:9px 12px;background:none;border:0;border-radius:8px;font-size:13px}.city-item:hover{background:#eaf3ee}
+    .actions{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:20px}.search{background:#d3f3a3;color:#193c2a;border:0;border-radius:12px;padding:14px 25px;font-weight:800;min-height:48px;box-shadow:0 4px 10px #4e824321}.search:hover{background:#c4ea8a}.light{border:1px solid #d5e3da;border-radius:12px;padding:13px 16px;background:#fff;color:#24413e;font-weight:700}.light:hover{background:#f6faf6}.mini-note{font-size:12px;color:#73858a;max-width:480px;line-height:1.5}
+    .status-row{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin:26px 1px 13px}.status-row h2{margin:0;font-size:20px;letter-spacing:-.5px}.status-pill{border:1px solid #dfebe6;color:#526e66;font-size:12px;background:#edf6f0;border-radius:99px;padding:7px 12px;font-weight:750}.content-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px}.results,.rail{min-width:0}.box{background:#fff;border-radius:18px;border:1px solid #e5ebe7;padding:21px;box-shadow:0 5px 20px #16313708}.box h3{margin:0 0 8px;font-size:16px}.box p{margin:0;color:#77888b;font-size:13px;line-height:1.6}.placeholder{text-align:center;padding:42px 22px}.placeholder .bigicon{width:62px;height:62px;background:#e8f1e8;margin:0 auto 16px;border-radius:19px;display:grid;place-items:center;font-size:29px}.placeholder h3{font-size:19px;color:#294640;margin:0 0 8px}.placeholder p{max-width:460px;margin:auto}
+    .rail .box + .box{margin-top:14px}.rail h3{font-size:15px;margin-bottom:11px}.rail .caption{font-size:12px;line-height:1.6;color:#7c8c88}.source{display:flex;align-items:center;text-decoration:none;gap:9px;padding:12px 10px;border:1px solid #e1eae5;border-radius:11px;margin-top:8px;background:#fcfdfb;font-weight:750;font-size:13px;color:#304c49;transition:all .15s}.source:hover{background:#eff8ed;border-color:#bad9c3}.dot{width:9px;height:9px;border-radius:50%;background:#68a98c;flex-shrink:0}.arrow{margin-left:auto;color:#97a9a3}.general{display:block;text-align:center;border-radius:11px;padding:13px 10px;background:#eaf2ed;border:1px solid #d6e4d8;color:#235348;text-decoration:none;font-weight:750;margin-top:12px;font-size:13px}.general:hover{background:#dcebdd}.notice{margin-top:13px;font-size:12px;line-height:1.65;color:#758780}.setup-link{margin-top:13px;background:none;border:0;padding:0;font-weight:750;text-decoration:underline;color:#236b51;cursor:pointer;font-size:12px}.criteria-text{margin:0 2px 13px;color:#5c7670;font-size:13px;line-height:1.45}.tiny{font-size:11px;color:#7b8b88;line-height:1.6}
+    .partner{display:flex;flex-direction:column;gap:7px;border:1px solid #e1eae5;border-radius:11px;padding:11px 12px;margin-top:9px;background:#fcfdfb}.partner-name{font-weight:800;font-size:13px;color:#254b43}.partner-link{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#216549;text-decoration:none;font-weight:700;font-size:12px;padding:6px 0}.partner-link:hover{text-decoration:underline}.partner-search{color:#43646a}.partner-search[hidden]{display:none}
+    .cse-holder{padding:18px;min-height:95px}.cse-helper{font-size:12px;color:#6c8080;margin-bottom:13px}.cse-hint{background:#edf7ef;color:#326451;border:1px solid #d5e9d8;border-radius:11px;padding:10px 13px;font-size:12px;line-height:1.5;margin-bottom:12px}.cse-holder .gsc-control-cse{padding:0!important;border:0!important;background:transparent!important}.cse-holder .gsc-webResult.gsc-result,.cse-holder .gsc-result{border:1px solid #e5ebe7!important;border-radius:12px!important;margin-bottom:12px!important;padding:16px!important;background:#fff!important}.cse-holder .gs-title{font-size:16px!important}.cse-holder .gs-snippet{line-height:1.55!important}.cse-holder .terrain-meta{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 10px}.cse-holder .terrain-chip{padding:6px 10px;border-radius:8px;background:#e9f3eb;color:#23533d;font-size:12px;font-weight:800}.cse-holder .terrain-chip.unknown{background:#f3f5f3;color:#6b7a75}.cse-holder .terrain-chip.warning{background:#fff0e7;color:#935127}
+    .modal{position:fixed;inset:0;background:#071b20b8;z-index:20;display:none;align-items:center;justify-content:center;padding:14px}.modal.show{display:flex}.dialog{max-width:570px;width:100%;max-height:90vh;overflow-y:auto;padding:26px;border-radius:20px;background:#fff;box-shadow:0 30px 75px #10202065}.dialog-head{display:flex;gap:15px;align-items:center;justify-content:space-between}.dialog h2{margin:0;font-size:21px}.close{background:#edf1ed;border:0;border-radius:9px;height:37px;width:37px;font-size:19px}.dialog p,.dialog li{font-size:13px;color:#647877;line-height:1.65}.dialog ol{padding-left:20px}.dialog a{color:#166a51;font-weight:750}.dialog input{height:46px;width:100%;border-radius:10px;border:1px solid #cedcd3;padding:0 13px}.dialog small{color:#789089}.dialog-actions{display:flex;gap:9px;margin-top:18px;flex-wrap:wrap}.dialog-actions button{flex:1}.tag{display:inline-block;padding:6px 9px;border-radius:8px;background:#edf7ef;color:#27604a;font-size:12px;margin:3px 3px 0 0}.foot{border-top:1px solid #dfe8e3;text-align:center;color:#889b99;padding:23px 0;font-size:12px;line-height:1.7}
+    @media(max-width:800px){.content-grid{grid-template-columns:1fr}.rail{display:grid;grid-template-columns:1fr 1fr;gap:13px}.rail .box + .box{margin-top:0}.form{grid-template-columns:1fr 1fr}.form .field:first-child{grid-column:span 2}.top{padding-bottom:76px}}
+    @media(max-width:520px){.wrap{width:calc(100% - 25px)}.top{padding-top:15px;padding-bottom:72px}.intro{padding-top:33px}.intro h1{font-size:33px}.panel{padding:18px;border-radius:16px}.form{grid-template-columns:1fr 1fr;gap:10px}.field input{font-size:14px;padding-left:10px}.form .field:first-child{grid-column:span 2}.actions{align-items:stretch}.actions>button{width:100%}.mini-note{text-align:center}.rail{display:block}.rail .box + .box{margin-top:14px}.brand{font-size:19px}.nav-actions .btn-ghost{font-size:12px;padding:9px 10px}.section-top{align-items:flex-start}.top:before{right:-300px}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <header class="top"><div class="wrap">
+    <div class="nav"><div class="brand"><div class="logo" aria-hidden="true">⌂</div><span>TerrainScope</span></div><div class="nav-actions"><button class="btn-ghost" id="settingsBtn" type="button">⚙ Moteur gratuit</button></div></div>
+    <div class="intro"><div class="eyebrow">Outil de recherche foncière</div><h1>Chercher un terrain.<br>Comparer les sources.</h1><p>Recherchez des terrains à bâtir par commune, comparez les sites immobiliers et ouvrez les annonces originales. Aucun historique de recherche n’est conservé.</p></div>
+  </div></header>
+  <main class="wrap">
+    <section class="panel" aria-label="Formulaire de recherche">
+      <div class="section-top"><h2>Votre recherche</h2><span class="note">Sans historique de recherche</span></div>
+      <form id="form">
+        <div class="form">
+          <div class="field"><label for="city">Commune *</label><div class="inwrap"><input id="city" autocomplete="off" type="text" required placeholder="Ex. Chambray-lès-Tours" aria-autocomplete="list" aria-controls="citySuggestions"><div id="citySuggestions" class="city-list" role="listbox" hidden></div></div></div>
+          <div class="field"><label for="surface">Surface mini (m²)</label><input id="surface" type="number" inputmode="numeric" min="0" step="1" placeholder="Ex. 500"></div>
+          <div class="field"><label for="budget">Budget maxi (€)</label><input id="budget" type="number" inputmode="numeric" min="0" step="1000" placeholder="Ex. 120000"></div>
+        </div>
+        <div class="actions"><button class="search" type="submit">⌕ &nbsp;Rechercher les terrains</button><button class="light" id="resetBtn" type="button">Effacer</button><span class="mini-note">Recherche ponctuelle : les résultats précédents sont remplacés à chaque demande.</span></div>
+      </form>
+    </section>
+    <div class="status-row"><h2 id="sectionTitle">Résultats de recherche</h2><span id="statusBadge" class="status-pill" role="status">Prêt à rechercher</span></div>
+    <p id="criteriaText" class="criteria-text" hidden></p><div class="content-grid">
+      <section class="results" id="mainResults" aria-live="polite">
+        <div class="box placeholder" id="placeholder"><div class="bigicon" aria-hidden="true">⌕</div><h3>Choisissez une commune</h3><p>Les liens vers les sites de terrains fonctionnent immédiatement. L’affichage des annonces directement ici nécessite un moteur Google programmable.</p></div>
+        <div id="csePanel" class="box cse-holder" hidden><div id="cseHint" class="cse-hint">Résultats issus de l'index de Google : l'affichage ne garantit ni l'exhaustivité ni la disponibilité des annonces.</div><div id="google-results"></div></div>
+      </section>
+      <aside class="rail" aria-label="Sources complémentaires">
+        <div class="box"><h3>Recherches par site</h3><p class="caption">Ouvrez les recherches ciblées sur les différents portails. Leboncoin s’ouvre directement dans son moteur de recherche. Les autres liens lancent une recherche Google ciblée sur le site concerné.</p><div id="sites"><p class="notice">Lancez une recherche pour activer les liens.</p></div><a href="#" id="allSites" class="general" hidden target="_blank" rel="noopener noreferrer">↗ Google · Tous les sites</a></div>
+        <div class="box"><h3>Lotisseurs &amp; aménageurs</h3><p class="caption">Les quatre sites officiels de terrains à bâtir. Après la recherche d'une commune, un lien ciblé vers les offres de chaque organisme apparaît.</p><div id="developers"></div></div>
+        <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
+      </aside>
+    </div>
+    <footer class="foot">TerrainScope V3 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+  </main>
+  <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
+    <div class="dialog-head"><h2 id="dialogTitle">Activer la recherche groupée</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
+    <p>La recherche par site est déjà disponible gratuitement. Pour afficher des résultats <strong>dans l'application</strong>, activez gratuitement Google Programmable Search Engine (version avec publicités).</p>
+    <ol><li>Ouvrez <a href="https://programmablesearchengine.google.com/controlpanel/create" target="_blank" rel="noopener noreferrer">Créer un moteur de recherche Google ↗</a>.</li><li>Donnez-lui un nom, par exemple <strong>Recherche Terrains</strong>.</li><li>Dans « Sites à rechercher », ajoutez les domaines des portails qui vous intéressent, par exemple :</li></ol>
+    <div><span class="tag">leboncoin.fr</span><span class="tag">seloger.com</span><span class="tag">bienici.com</span><span class="tag">ouestfrance-immo.com</span><span class="tag">orpi.com</span><span class="tag">century21.fr</span><span class="tag">safti.fr</span><span class="tag">iadfrance.fr</span><span class="tag">villadim.fr</span><span class="tag">set.fr</span><span class="tag">afedim.fr</span><span class="tag">valtourainehabitat-vente.fr</span></div>
+    <ol start="4"><li>Créez le moteur et récupérez son <strong>identifiant du moteur de recherche</strong> (CX) dans ses paramètres / le code d'intégration.</li><li>Collez uniquement cet identifiant ci-dessous, puis enregistrez.</li></ol>
+    <label class="field" for="cx"><strong style="font-size:12px">Identifiant Google (CX)</strong></label><input id="cx" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="Ex. 0123456789abcdef0" aria-label="Identifiant du moteur Google">
+    <div class="dialog-actions"><button id="saveCx" class="search" type="button">Enregistrer</button><button id="removeCx" class="light" type="button">Désactiver</button></div>
+    <p><small>La version gratuite peut comporter des publicités et être soumise à des restrictions Google. L'identifiant est conservé localement sur cet appareil ; aucune annonce ni historique de recherche n'est stocké par TerrainScope. Google et les sites consultés appliquent leurs propres règles de traitement des recherches.</small></p>
+  </div></div>
+  <script>
+    'use strict';
+    // Le prototype n'utilise aucune API non autorisée. Les résultats sont obtenus
+    // exclusivement via l'élément officiel Google PSE et les liens de recherche.
+    const PORTALS = [
+      ['Leboncoin','leboncoin.fr'],['SeLoger','seloger.com'],['Bien’ici','bienici.com'],
+      ['OuestFrance Immo','ouestfrance-immo.com'],['Orpi','orpi.com'],['Century 21','century21.fr'],
+      ['SAFTI','safti.fr'],['iad','iadfrance.fr'],['Immonot','immonot.com'],
+      ['Superimmo','superimmo.com'],['Terrain-Construction','terrain-construction.com'],
+      ['Villadim','villadim.fr'],['Groupe SET','set.fr'],
+      ['CM-CIC · AFEDIM','afedim.fr'],['Val Touraine Habitat','valtourainehabitat-vente.fr']
+    ];
+    // Les liens directs ci-dessous proviennent des pages officielles d'offres de terrains.
+    const DEVELOPERS = [
+      {name:'Villadim', domain:'villadim.fr', url:'https://www.villadim.fr/terrains'},
+      {name:'Groupe SET', domain:'set.fr', url:'https://set.fr/'},
+      {name:'CM-CIC · Crédit Mutuel (AFEDIM)', domain:'afedim.fr', url:'https://www.afedim.fr/fr/acheter-un-terrain.html'},
+      {name:'Val Touraine Habitat', domain:'valtourainehabitat-vente.fr', url:'https://www.valtourainehabitat-vente.fr/acheter-un-terrain-a-batir/'}
+    ];
+    const CITIES = ['Chambray-lès-Tours','Tours','Joué-lès-Tours','Saint-Avertin','Saint-Cyr-sur-Loire','La Riche','Fondettes','Ballan-Miré','Montlouis-sur-Loire','Azay-sur-Cher','Véretz','Savonnières','Parçay-Meslay','Rochecorbon','Larçay','Esvres-sur-Indre','Montbazon','Veigné','Saint-Pierre-des-Corps','Amboise','Loches','Dolus-le-Sec','Azay-le-Rideau','Monts','Sorigny','Saint-Branchs','Luynes','Pernay','Notre-Dame-d’Oé','Chanceaux-sur-Choisille','Artannes-sur-Indre','Saint-Martin-le-Beau','Athée-sur-Cher','Monnaie','La Ville-aux-Dames','Bléré','Esvres','Langeais'];
+    const el=id=>document.getElementById(id);
+    const settingsStore=(()=>{try{const storage=window.localStorage;storage.getItem('terrainScopeCx');return storage}catch(e){return {getItem:()=>null,setItem:()=>{},removeItem:()=>{}}}})();
+    let googleConfigured = Boolean(settingsStore.getItem('terrainScopeCx'));
+    let engineLoaded = false;
+    let lastSearch = null;
+    const clean = v=>String(v||'').trim().replace(/\s+/g,' ');
+    const normalize = t=>clean(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    const fmt = v=>new Intl.NumberFormat('fr-FR').format(v);
+    const query = city => '"terrain" "'+city+'" ("à vendre" OR "constructible")';
+    const googleUrl = q => 'https://www.google.com/search?hl=fr&q='+encodeURIComponent(q);
+    const linkFor=(city,domain)=>googleUrl(query(city)+' site:'+domain);
+    const leboncoinUrl=city=>'https://www.leboncoin.fr/recherche?'+new URLSearchParams({text:'terrain '+city,category:'9'}).toString();
+    function displayDevelopers(city=''){
+      const root=el('developers');root.replaceChildren();
+      for(const dev of DEVELOPERS){
+        const box=document.createElement('div');box.className='partner';
+        const title=document.createElement('span');title.className='partner-name';title.textContent=dev.name;
+        const official=document.createElement('a');official.className='partner-link';official.href=dev.url;official.target='_blank';official.rel='noopener noreferrer';official.textContent='Offres officielles ↗';
+        const search=document.createElement('a');search.className='partner-link partner-search';search.hidden=!city;
+        if(city){search.href=linkFor(city,dev.domain);search.target='_blank';search.rel='noopener noreferrer';search.textContent='Terrains à '+city+' ↗'}
+        box.append(title,official,search);root.append(box);
+      }
+    }
+    function getPrice(s){
+      // Prix suivi du symbole €, à l'exclusion des prix par m².
+      const candidates=[...s.matchAll(/\b(\d{1,3}(?:[ \u00a0\u202f.]\d{3})+|\d{4,7})\s*€/g)];
+      for (const c of candidates){ const n=Number(c[1].replace(/[^\d]/g,''));
+        if(n>=1000 && n<=5000000 && !/^\s*(?:\/|par\s+|au\s+)m(?:²|2)/i.test(s.slice(c.index+c[0].length,c.index+c[0].length+16))) return n;
+      }
+      return null;
+    }
+    function getArea(s){
+      const match=s.match(/\b(\d{2,5}(?:[.,]\d+)?)\s*m(?:²|2|ètres carrés)(?=\s|$|[.,);])/i);
+      if(!match)return null;
+      const n=Number(match[1].replace(',','.'));
+      return n>=30 && n<=100000 ? n : null;
+    }
+    function enhanceResult(node){
+      if(node.querySelector('.terrain-meta'))return;
+      const heading=node.querySelector('a.gs-title')?.textContent||'';
+      const snippet=node.querySelector('.gs-snippet')?.textContent||'';
+      const content=heading+' '+snippet;
+      if(!content.trim())return;
+      const area=getArea(content),price=getPrice(content);
+      const meta=document.createElement('div');meta.className='terrain-meta';
+      function badge(str,extra=''){const p=document.createElement('span');p.className='terrain-chip '+extra;p.textContent=str;meta.appendChild(p)}
+      badge(area!==null ? '◻ '+fmt(area)+' m² (repéré)' : 'Surface non trouvée',''+(area===null?'unknown':''));
+      badge(price!==null ? '€ '+fmt(price)+' € (repéré)' : 'Prix non trouvé',price===null?'unknown':'');
+      if(lastSearch?.surface && area!==null && area<lastSearch.surface)badge('Sous la surface demandée','warning');
+      if(lastSearch?.budget && price!==null && price>lastSearch.budget)badge('Au-dessus du budget','warning');
+      node.prepend(meta);
+    }
+    function onGoogleResults(name,q,promotions,nodes){
+      (nodes||[]).forEach(enhanceResult);
+      const count=(nodes||[]).length;
+      el('statusBadge').textContent=count?count+' résultat(s) sur cette page':'Aucun résultat sur cette page';
+    }
+    function loadGoogleEngine(){
+      const cx=settingsStore.getItem('terrainScopeCx');if(!cx)return;
+      googleConfigured=true;
+      window.__gcse={parsetags:'onload',searchCallbacks:{web:{rendered:onGoogleResults}}};
+      const root=el('google-results');root.innerHTML='';
+      const div=document.createElement('div');div.className='gcse-searchresults-only';
+      div.dataset.gname='terrains';div.dataset.autoSearchOnLoad='false';div.dataset.linktarget='_blank';
+      root.appendChild(div);
+      const s=document.createElement('script');s.async=true;s.src='https://cse.google.com/cse.js?cx='+encodeURIComponent(cx);
+      s.onload=()=>{engineLoaded=true;if(lastSearch)performGoogleSearch(lastSearch.city)};
+      s.onerror=()=>{el('statusBadge').textContent='Moteur Google indisponible';el('csePanel').hidden=false;el('cseHint').textContent='Chargement du moteur impossible. Utilisez les recherches par site à droite.'};
+      document.head.appendChild(s);
+    }
+    function performGoogleSearch(city,attempt=0){
+      const g=window.google?.search?.cse?.element?.getElement?.('terrains');
+      if(g){el('csePanel').hidden=false;el('placeholder').hidden=true;el('statusBadge').textContent='Recherche Google lancée';g.execute(query(city));return}
+      if(attempt<20){setTimeout(()=>performGoogleSearch(city,attempt+1),350)}
+      else{el('statusBadge').textContent='Moteur non chargé';el('csePanel').hidden=false;el('cseHint').textContent='Le moteur ne répond pas. Vérifiez l’identifiant CX, votre connexion et les paramètres Google. Les liens par site restent utilisables.'}
+    }
+    function handleSearch(e){
+      e?.preventDefault();const city=clean(el('city').value);
+      if(!city){el('city').focus();return}
+      const surface=Number(el('surface').value)||0,budget=Number(el('budget').value)||0;
+      lastSearch={city,surface,budget};
+      displayDevelopers(city);
+      el('sectionTitle').textContent='Terrains · '+city;
+      el('criteriaText').hidden=false;
+      el('criteriaText').textContent='Commune : '+city+' · Surface minimale : '+(surface?fmt(surface)+' m²':'non précisée')+' · Budget maximal : '+(budget?fmt(budget)+' €':'non précisé')+' — critères indicatifs selon les sites.';
+      el('statusBadge').textContent=googleConfigured?'Recherche en cours…':'Accès aux sites prêts';
+      el('placeholder').hidden=true;
+      el('citySuggestions').hidden=true;
+      const links=el('sites');links.replaceChildren();
+      function addSource(name,url){
+        const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.className='source';
+        const d=document.createElement('span');d.className='dot';
+        const label=document.createElement('span');label.textContent=name;
+        const arrow=document.createElement('span');arrow.className='arrow';arrow.textContent='↗';
+        a.append(d,label,arrow);links.append(a);
+      }
+      addSource('Leboncoin · recherche directe',leboncoinUrl(city));
+      for(const [name,domain] of PORTALS){addSource('Google · '+name,linkFor(city,domain))}
+      const all=el('allSites');all.hidden=false;all.href=googleUrl(query(city)+' ('+PORTALS.slice(0,7).map(([,d])=>'site:'+d).join(' OR ')+')');
+      if(googleConfigured){el('csePanel').hidden=false;if(engineLoaded)performGoogleSearch(city);else performGoogleSearch(city)}
+      else{el('csePanel').hidden=true;}
+      el('mainResults').querySelector('.fallback')?.remove();
+      if(!googleConfigured){const box=document.createElement('div');box.className='box placeholder fallback';box.innerHTML='<div class="bigicon" aria-hidden="true">↗</div><h3>Recherches prêtes pour '+escapeHtml(city)+'</h3><p>Ouvrez la recherche directe Leboncoin ou les autres sources ci-contre. La liste d’annonces intégrée nécessite une configuration Google. Aucune annonce n’est inventée.</p>';el('mainResults').appendChild(box)}
+      el('mainResults').scrollIntoView({behavior:'smooth',block:'start'});
+    }
+    function escapeHtml(v){return v.replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+    function openModal(){el('cx').value=settingsStore.getItem('terrainScopeCx')||'';el('modal').classList.add('show')}
+    function closeModal(){el('modal').classList.remove('show')}
+    el('settingsBtn').onclick=openModal;el('settingsBtn2').onclick=openModal;el('closeBtn').onclick=closeModal;
+    el('modal').addEventListener('click',e=>{if(e.target===el('modal'))closeModal()});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+    el('saveCx').onclick=()=>{
+      const cx=clean(el('cx').value);
+      if(!/^[a-zA-Z0-9:_-]{8,100}$/.test(cx)){alert('Identifiant CX non valide. Copiez uniquement l’identifiant Google, sans URL ni guillemets.');return}
+      settingsStore.setItem('terrainScopeCx',cx);location.reload();
+    };
+    el('removeCx').onclick=()=>{settingsStore.removeItem('terrainScopeCx');location.reload()};
+    el('form').addEventListener('submit',handleSearch);
+    el('resetBtn').addEventListener('click',()=>{location.reload()});
+    const cityInput=el('city');
+    cityInput.addEventListener('input',()=>{
+      const s=normalize(cityInput.value),box=el('citySuggestions');box.replaceChildren();
+      const picks=s.length>=2?CITIES.filter(c=>normalize(c).includes(s)).slice(0,7):[];
+      for(const city of picks){const btn=document.createElement('button');btn.type='button';btn.className='city-item';btn.role='option';btn.textContent=city;btn.onclick=()=>{cityInput.value=city;box.hidden=true};box.appendChild(btn)}
+      box.hidden=!picks.length;
+    });
+    document.addEventListener('click',e=>{if(!cityInput.parentElement.contains(e.target))el('citySuggestions').hidden=true});
+    displayDevelopers();
+    if(googleConfigured)loadGoogleEngine();
+    if('serviceWorker' in navigator && location.protocol==='https:')navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+  </script>
+</body>
+</html>
