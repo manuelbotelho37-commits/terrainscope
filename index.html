@@ -486,7 +486,8 @@
       }
       const countTotal=counts.terrains+counts.constructeurs+counts.incertains;
       const potentialCount=counts.terrains+counts.incertains-counts.ecartees;
-      el('terrainCount').textContent=String(potentialCount);
+      // Ne jamais laisser croire qu'un zéro Google équivaut à zéro terrain sur le marché.
+      el('terrainCount').textContent=potentialCount?String(potentialCount):'—';
       el('countDescription').textContent=potentialCount
         ?potentialCount+' piste(s) parmi les résultats Google, triées par source. '+counts.ecartees+' page(s) mixtes ou catalogues écartées. Vérifie directement Le Bon Coin, SeLoger, Bien’ici et IAD.'
         :'Aucune piste individuelle fiable dans les résultats Google actuels. Ce n’est PAS une absence de terrains : utilise les cinq sources prioritaires juste en dessous.';
@@ -539,7 +540,13 @@
       };
       // Sources classées en premier, puis communes : l'ordre reste exact pour les recherches multiples.
       for(const city of cities)makeLink('1 · Le Bon Coin · '+city,leboncoinUrl(city),true,'Ouvre les annonces sur Le Bon Coin');
-      for(const city of cities)makeLink('2 · SeLoger · '+city,linkFor([city],'seloger.com'),false,'Recherche ciblée SeLoger via Google');
+      for(const city of cities){
+        const direct=normalize(city)==='joue-les-tours'
+          ?'https://www.seloger.com/recherche/achat/terrain/centre-val-de-loire/joue-les-tours-37300/ad08fr14648'
+          :linkFor([city],'seloger.com');
+        makeLink('2 · SeLoger · '+city,direct,false,normalize(city)==='joue-les-tours'
+          ?'Page SeLoger des terrains à Joué-lès-Tours':'Recherche Google ciblée sur SeLoger');
+      }
       for(const city of cities)makeLink('3 · Bien’ici · '+city,linkFor([city],'bienici.com'),false,'Recherche ciblée Bien’ici via Google');
       for(const city of cities){
         const direct=normalize(city)==='joue-les-tours'
