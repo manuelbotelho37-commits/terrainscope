@@ -46,6 +46,17 @@
     body[data-result-mode="constructeurs"] #google-results .gsc-webResult.gsc-result:not([data-terrain-kind="constructeurs"]),
     body[data-result-mode="incertains"] #google-results .gsc-webResult.gsc-result:not([data-terrain-kind="incertains"]){display:none!important}
     @media(max-width:520px){.results-toolbar{flex-direction:column;align-items:stretch}.professional-area{margin-left:0}.city-add{width:100%}}
+
+    /* Compteur visible côté client : ne prétend pas dénombrer toutes les annonces du Web. */
+    .terrain-counter{display:flex;align-items:center;gap:20px;margin:0 2px 15px;background:#fff;border:1px solid #dbe9db;border-radius:17px;padding:17px 20px;box-shadow:0 4px 20px #17362b0a}
+    .counter-primary{display:flex;align-items:center;gap:12px;min-width:218px}
+    .counter-icon{height:43px;width:43px;display:grid;place-items:center;background:#e3f6db;border-radius:12px;color:#245840;font-weight:850;font-size:25px}
+    .counter-number{display:block;font-size:32px;font-weight:900;line-height:1.1;color:#173e32;font-variant-numeric:tabular-nums}
+    .counter-label{display:block;font-size:14px;font-weight:800;color:#27533e}
+    .counter-details{display:flex;flex-direction:column;gap:4px;line-height:1.4;color:#406052;font-size:12px}
+    .counter-details small{color:#78887e;font-size:11px}
+    #countBreakdown{font-weight:700}
+    @media(max-width:520px){.terrain-counter{align-items:flex-start;flex-direction:column;gap:8px;padding:16px}.counter-primary{min-width:0}.counter-number{font-size:30px}}
 </style>
 </head>
 <body>
@@ -66,6 +77,17 @@
       </form>
     </section>
     <div class="status-row"><h2 id="sectionTitle">Résultats de recherche</h2><span id="statusBadge" class="status-pill" role="status">Prêt à rechercher</span></div>
+    <section class="terrain-counter" id="terrainCounter" role="status" aria-live="polite" aria-atomic="true">
+      <div class="counter-primary">
+        <span class="counter-icon" aria-hidden="true">⌂</span>
+        <div><span class="counter-number" id="terrainCount">—</span><span class="counter-label">terrains trouvés</span></div>
+      </div>
+      <div class="counter-details">
+        <span id="countDescription">Lance une recherche pour compter les annonces.</span>
+        <span id="countBreakdown" hidden></span>
+        <small>Comptage des résultats indexés affichés sur cette page uniquement, pas de toutes les annonces en vente.</small>
+      </div>
+    </section>
     <div class="results-toolbar">
       <span class="customer-mode">✓ Terrains — présentation client</span>
       <span class="price-order">↗ Prix du moins cher au plus cher (sur la page)</span>
@@ -90,7 +112,7 @@
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
     </div>
-    <footer class="foot">TerrainScope V7 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+    <footer class="foot">TerrainScope V8 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -237,8 +259,15 @@
         }
       }
       const active=counts[resultMode]||0;
+      const countTotal=counts.terrains+counts.constructeurs+counts.incertains;
       el('statusBadge').textContent=active+' résultat(s) — '+(resultMode==='terrains'?'terrains':resultMode==='constructeurs'?'constructeurs':'à vérifier');
       el('resultSummary').textContent=counts.terrains+' terrains · '+counts.constructeurs+' annonces constructeurs · '+counts.incertains+' à vérifier (sur cette page)';
+      el('terrainCount').textContent=String(counts.terrains);
+      el('countDescription').textContent=countTotal===0
+        ?'Aucun terrain repéré parmi les résultats affichés.'
+        :counts.terrains===1?'1 terrain repéré sur la page affichée.':counts.terrains+' terrains repérés sur la page affichée.';
+      el('countBreakdown').hidden=false;
+      el('countBreakdown').textContent=countTotal+' résultats analysés · '+counts.constructeurs+' constructeurs · '+counts.incertains+' à vérifier.';
     }
     function scheduleResultReview(){
       if(reviewSchedule)return;reviewSchedule=true;
@@ -261,14 +290,14 @@
       root.appendChild(div);
       const s=document.createElement('script');s.async=true;s.src='https://cse.google.com/cse.js?cx='+encodeURIComponent(cx);
       s.onload=()=>{engineLoaded=true;if(lastSearch)performGoogleSearch(lastSearch.cities)};
-      s.onerror=()=>{el('statusBadge').textContent='Moteur Google indisponible';el('csePanel').hidden=false;el('cseHint').textContent='Chargement du moteur impossible. Utilisez les recherches par site à droite.'};
+      s.onerror=()=>{el('statusBadge').textContent='Moteur Google indisponible';el('terrainCount').textContent='—';el('countDescription').textContent='Impossible de compter : moteur Google indisponible.';el('csePanel').hidden=false;el('cseHint').textContent='Chargement du moteur impossible. Utilisez les recherches par site à droite.'};
       document.head.appendChild(s);
     }
     function performGoogleSearch(cities,attempt=0){
       const g=window.google?.search?.cse?.element?.getElement?.('terrains');
       if(g){el('csePanel').hidden=false;el('placeholder').hidden=true;el('statusBadge').textContent='Recherche Google lancée';g.execute(query(cities));return}
       if(attempt<20){setTimeout(()=>performGoogleSearch(cities,attempt+1),350)}
-      else{el('statusBadge').textContent='Moteur non chargé';el('csePanel').hidden=false;el('cseHint').textContent='Le moteur ne répond pas. Vérifiez l’identifiant CX, votre connexion et les paramètres Google. Les liens par site restent utilisables.'}
+      else{el('statusBadge').textContent='Moteur non chargé';el('terrainCount').textContent='—';el('countDescription').textContent='Impossible de compter : moteur Google non chargé.';el('csePanel').hidden=false;el('cseHint').textContent='Le moteur ne répond pas. Vérifiez l’identifiant CX, votre connexion et les paramètres Google. Les liens par site restent utilisables.'}
     }
     function handleSearch(e){
       e?.preventDefault();
@@ -284,6 +313,9 @@
       el('criteriaText').hidden=false;
       el('criteriaText').textContent='Communes : '+cities.join(' · ')+' · Surface minimale : '+(surface?fmt(surface)+' m²':'non précisée')+' · Budget maximal : '+(budget?fmt(budget)+' €':'non précisé')+' — critères indicatifs selon les extraits.';
       el('resultSummary').textContent='';
+      el('terrainCount').textContent=googleConfigured?'…':'—';
+      el('countDescription').textContent=googleConfigured?'Recherche et comptage en cours…':'Le moteur de recherche n’est pas activé.';
+      el('countBreakdown').textContent='';el('countBreakdown').hidden=true;
       el('statusBadge').textContent=googleConfigured?'Recherche en cours…':'Accès aux sites prêts';
       el('placeholder').hidden=true;
       el('citySuggestions').hidden=true;
