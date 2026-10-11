@@ -34,7 +34,12 @@ jobs:
           git add communes-37.json
           if ! git diff --cached --quiet; then
             git commit -m "data: mettre à jour l'annuaire officiel des communes du 37 [skip ci]"
-            git push
+            for attempt in 1 2 3; do
+              git pull --rebase origin main
+              if git push; then exit 0; fi
+              sleep 3
+            done
+            exit 1
           else
             echo "La liste officielle n'a pas changé"
           fi
