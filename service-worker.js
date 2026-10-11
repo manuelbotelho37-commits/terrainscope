@@ -1,5 +1,5 @@
 // TerrainScope : cache limité à ses propres fichiers (même origine que d'autres apps).
-const CACHE = 'terrainscope-v27-shell';
+const CACHE = 'terrainscope-v28-shell';
 const PREFIX = 'terrainscope-';
 const FILES = ['./', './index.html', './aggregator.js', './lotisseurs-data.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 const PATHS = new Set(FILES.map(path => new URL(path, self.registration.scope).pathname));
