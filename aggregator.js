@@ -183,7 +183,7 @@
       const b=document.createElement('button');b.type='button';b.textContent=text;
       b.disabled=page===state.page;b.className=page===state.page?'active':'';
       if(b.disabled)b.setAttribute('aria-current','page');
-      b.onclick=()=>{state.page=page;draw();get('uniquePanel').scrollIntoView({behavior:'smooth',block:'start'})};
+      b.onclick=()=>{state.page=page;draw();get('uniquePanel').scrollIntoView({behavior:'instant',block:'start'})};
       buttons.append(b);
     }
     if(state.page>1)button('←',state.page-1);
