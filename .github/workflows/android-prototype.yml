@@ -6,6 +6,11 @@ on:
     paths:
       - 'android-app/**'
       - '.github/workflows/android-prototype.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'android-app/**'
+      - '.github/workflows/android-prototype.yml'
   workflow_dispatch:
 
 permissions:
@@ -24,6 +29,9 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+
+      - name: Tester l'extraction HTML et JSON-LD
+        run: node android-app/tests/ExtractorSmokeTest.cjs
 
       - name: Tester le tri et les doublons sans Android
         run: |
