@@ -259,7 +259,7 @@
     const srcset = picture?.getAttribute?.("srcset") || "";
     const firstSrcset = srcset ? srcset.split(",")[0].trim().split(/\s+/)[0] : "";
     add({title, url:linked.href, description:text, price, area, seller, address, lot,
-      location:locationText, imageUrl:lazySource || firstSrcset});
+      location:locationText, imageUrl:photoUrl(lazySource) || photoUrl(firstSrcset)});
   }
   // Navigation paginée si et seulement si le portail propose un véritable
   // lien « suivant ». Ne pas suivre une publicité ni un autre site.
