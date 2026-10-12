@@ -23,7 +23,7 @@ function extract(host, city, jsonDocuments = [], cards = [], pageText = "23 anno
   const context = {
     document, window: { __terrainScopeRequestedCity: city,
       __terrainScopeRequestedPostal: city === "Monnaie" ? "37380" : city === "Tours" ? "37000" : "",
-      __terrainScopeKnownCities: ["Monnaie", "Crotelles", "Tours", "Veigné", "Chanceaux-sur-Choisille"] },
+      __terrainScopeKnownCities: ["Monnaie", "Crotelles", "Tours", "Joué-lès-Tours", "Chambray-lès-Tours", "Veigné", "Chanceaux-sur-Choisille"] },
     location: { hostname: host, href: "https://" + host + "/recherche/achat/" },
     URL
   };
@@ -260,6 +260,37 @@ const searchPageAsJSON = extract("www.seloger.com","Monnaie",[{
   offers:{price:"90000"}
 }]);
 check(searchPageAsJSON.retrieved===0,"Le titre d'une page de recherche ne constitue pas une fiche terrain");
+
+const wrongTours = extract("www.bienici.com","Tours",[{
+  itemListElement:[{item:{
+    name:"Terrain constructible à Joué-lès-Tours",
+    description:"Terrain viabilisé à Joué-lès-Tours, proche Tours centre",
+    url:"https://www.bienici.com/annonce/vente/terrain-joue-les-tours",
+    address:{addressLocality:"Joué-lès-Tours",postalCode:"37300"},
+    offers:{price:"98000"}
+  }}]
+}]);
+check(wrongTours.retrieved===1 && !wrongTours.listings[0].cityConfirmed,
+  "Joué-lès-Tours ne doit pas apparaître dans les terrains confirmés de Tours");
+const wrongToursWithoutLocation = extract("www.bienici.com","Tours",[{
+  itemListElement:[{item:{
+    name:"Terrain à Joué-lès-Tours, Tours (37) proche",
+    url:"https://www.bienici.com/annonce/vente/terrain-non-localise-joue",
+    offers:{price:"98000"}
+  }}]
+}]);
+check(!wrongToursWithoutLocation.listings[0].cityConfirmed,
+  "Une commune qui contient Tours dans son nom reste distincte sans adresse");
+const toursConfirmed = extract("www.bienici.com","Tours",[{
+  itemListElement:[{item:{
+    name:"Terrain constructible à Tours",
+    url:"https://www.bienici.com/annonce/vente/terrain-tours-confirmed",
+    address:{addressLocality:"Tours",postalCode:"37000"},
+    offers:{price:"198000"}
+  }}]
+}]);
+check(toursConfirmed.listings[0].cityConfirmed,
+  "Le vrai terrain de Tours reste confirmé");
 
 const empty = extract("www.leboncoin.fr", "Monnaie");
 check(empty.retrieved === 0, "page vide lisible, distincte du stock réel");
