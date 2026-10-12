@@ -57,6 +57,7 @@ public final class MainActivity extends Activity {
     private final Map<String, String> selogerPaths = new HashMap<>();
     private final LinkedHashMap<String, ListingEngine.Listing> imported = new LinkedHashMap<>();
     private final LinkedHashSet<String> sourcesVisited = new LinkedHashSet<>();
+    private final LinkedHashSet<String> sourcesOpened = new LinkedHashSet<>();
 
     private AutoCompleteTextView cityInput;
     private final ArrayList<String> communeNames = new ArrayList<>();
@@ -68,6 +69,7 @@ public final class MainActivity extends Activity {
     private TextView status;
     private boolean showingBrowser = true;
     private boolean showLotisseursOnLoad = false;
+    private boolean pageLoading = false;
     private String activeCity = "";
     private String batchSignature = "";
     private final ArrayList<String> activeCities = new ArrayList<>();
@@ -292,6 +294,7 @@ public final class MainActivity extends Activity {
                 return true;
             }
             @Override public void onPageFinished(WebView view, String url) {
+                pageLoading = false;
                 if (showLotisseursOnLoad && url.startsWith(TERRAIN_SCOPE)) {
                     showLotisseursOnLoad = false;
                     view.evaluateJavascript(
@@ -356,6 +359,7 @@ public final class MainActivity extends Activity {
         // Le passage d'une commune à l'autre dans le même lot ne l'efface pas.
         imported.clear();
         sourcesVisited.clear();
+        sourcesOpened.clear();
         activeCities.clear();
         activeCities.addAll(cities);
         cityPosition = 0;
@@ -382,7 +386,9 @@ public final class MainActivity extends Activity {
             return;
         }
         activeCity = city;
+        sourcesOpened.add(site + " · " + city);
         showLotisseursOnLoad = false;
+        pageLoading = true;
         showBrowser();
         browser.loadUrl(url);
         status.setText("Recherche TERRAIN pour " + city + " (" +
@@ -398,7 +404,7 @@ public final class MainActivity extends Activity {
             int next = (start + offset) % SITES.length;
             String source = SITES[next];
             if (searches.urlFor(source, activeCity) != null &&
-                    !sourcesVisited.contains(source + " · " + activeCity)) {
+                    !sourcesOpened.contains(source + " · " + activeCity)) {
                 siteSpinner.setSelection(next);
                 openSelectedSite();
                 return;
@@ -413,9 +419,11 @@ public final class MainActivity extends Activity {
         }
         status.setText("Fin du parcours : " + activeCities.size() +
             " commune(s), " + sourcesVisited.size() +
-            " page(s) importée(s). Tu peux consulter les annonces triées.");
-        chooseTab(filteredTab);
-        displayListings(true);
+            " page(s) importée(s). Les pages non importées restent non vérifiées.");
+        boolean hasSelected = !ListingEngine.filtered(
+            ListingEngine.classify(new ArrayList<>(imported.values()))).isEmpty();
+        chooseTab(hasSelected ? filteredTab : allTab);
+        displayListings(hasSelected);
     }
 
     private void importVisiblePage() {
@@ -424,9 +432,12 @@ public final class MainActivity extends Activity {
             return;
         }
         String city = activeCity;
-        if (city.isEmpty() || !ListingEngine.normalize(city)
-                .equals(ListingEngine.normalize(activeCity))) {
-            status.setText("Commune changée : ouvre d’abord le bon site avec les nouveaux critères.");
+        if (city.isEmpty()) {
+            status.setText("Commune non sélectionnée : démarre une recherche.");
+            return;
+        }
+        if (pageLoading || browser.getProgress() < 100) {
+            status.setText("Attends que la page se charge complètement avant d'importer.");
             return;
         }
         Uri current = Uri.parse(browser.getUrl() == null ? "" : browser.getUrl());
@@ -603,6 +614,7 @@ public final class MainActivity extends Activity {
     private void reset() {
         imported.clear();
         sourcesVisited.clear();
+        sourcesOpened.clear();
         activeCities.clear();
         cityPosition = 0;
         batchSignature = "";
