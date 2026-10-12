@@ -223,12 +223,38 @@
     const lot = (text.match(/\blot\s*(?:n[°o.]?\s*)?([A-Z]?\d{1,4})\b/i) || [])[1] || "";
     add({title, url:linked.href, description:text, price, area, seller, address, lot, location:locationText});
   }
+  // Navigation paginée si et seulement si le portail propose un véritable
+  // lien « suivant ». Ne pas suivre une publicité ni un autre site.
+  const nextCandidates = [...document.querySelectorAll(
+    'a[rel="next"], link[rel="next"], a[aria-label*="suiv"], ' +
+    'a[aria-label*="Suiv"], a[title*="suiv"], a[data-testid*="next"], ' +
+    'a[class*="pagination-next"]')];
+  const nextPageUrl = (() => {
+    for (const link of nextCandidates.slice(0, 20)) {
+      const href = link.getAttribute("href") || link.href || "";
+      try {
+        const next = new URL(href, base);
+        if (next.protocol !== "https:" || next.host !== location.host ||
+            next.href === base) continue;
+        const label = normalized(link.textContent || link.getAttribute("aria-label") || "");
+        // Ne pas suivre un simple « suivant » hors pagination.
+        const path = location.pathname.replace(/\/$/, "");
+        if (next.pathname !== location.pathname &&
+            !next.pathname.startsWith(path + "/")) continue;
+        if (label && !/suivant|next|page|plus/.test(label) &&
+            link.getAttribute("rel") !== "next") continue;
+        return next.href;
+      } catch (_) {}
+    }
+    return "";
+  })();
   const pageTop = clean(document.body?.innerText?.slice(0, 3500) || "");
   const accessBlocked = records.length === 0 &&
     /(?:captcha|recaptcha|verify (?:that )?you are human|access denied|too many requests|acces refuse|accès refusé|vérifiez que vous êtes humain|confirmez que vous êtes humain|robot verification|verification humaine|vérification humaine)/i.test(pageTop + " " + document.title);
   return JSON.stringify({
     source, pageUrl: base, pageTitle: document.title,
     accessBlocked,
+    nextPageUrl,
     requestedCity: requested,
     declaredCount: (() => {
       const headline = clean(document.querySelector("h1")?.textContent || "");
