@@ -47,8 +47,17 @@
     const raw = title + " " + details;
     const money = clean(item.price) || (raw.match(/(\d[\d \u00a0.]{2,})\s*€/i) || [])[1] || "";
     const area = clean(item.area) || (raw.match(/(\d[\d \u00a0]*(?:[,.]\d+)?)\s*m(?:²|2)(?![a-z0-9])/i) || [])[1] || "";
-    const normalizedPrice = money.replace(/[^\d]/g, "");
-    const normalizedArea = area.replace(/[\s\u00a0]/g, "").replace(",", ".").replace(/[^\d.]/g, "");
+    // Prix : la carte peut contenir « 65 900 € · 210 €/m² ». Ne jamais
+    // concaténer ces nombres (65900210) ni assimiler le prix/m² au total.
+    const moneyTokens = [...money.matchAll(/(\d[\d\s\u00a0.]{0,17})\s*(?:€|euros?|EUR)/gi)];
+    const candidates = moneyTokens.map(m => Number(m[1].replace(/[^\d]/g, "")))
+      .filter(n => Number.isFinite(n) && n >= 1000 && n < 100000000);
+    const priceNumber = candidates.length ? Math.max(...candidates) :
+      Number((money.match(/^\s*[\d\s\u00a0.]+\s*$/) ? money : "")
+        .replace(/[^\d]/g, "")) || 0;
+    const areaMatch = area.match(/(\d[\d\s\u00a0]*(?:[,.]\d+)?)\s*m(?:²|2)\b?/i);
+    const areaCandidate = areaMatch ? areaMatch[1] : area;
+    const normalizedArea = areaCandidate.replace(/[\s\u00a0]/g, "").replace(",", ".").replace(/[^\d.]/g, "");
     // La commune mentionnée seulement dans une description commerciale
     // n'est pas une preuve : un terrain de Crotelles peut être "à 5 min de Monnaie".
     // Préférer la localité structurée, le couple ville+code postal, puis le titre.
@@ -78,7 +87,7 @@
       city: requested, cityConfirmed: !!cityInCard,
       locationConflict: !!(conflictingLocality || (explicitLocation && !explicitMatches)),
       seller: clean(item.seller), address: clean(item.address), lot: clean(item.lot),
-      priceEuros: Number(normalizedPrice) || 0,
+      priceEuros: priceNumber,
       areaM2: Number(normalizedArea) || 0
     };
     if (seen.has(key)) {
