@@ -62,7 +62,8 @@ public final class ListingEngine {
         "villadim", "groupe set", "afedim", "val touraine habitat", "viabilis",
         "acanthe", "arpent", "foncier amenagement", "nexity",
         "entre terrains", "terravia", "lodgim", "quatro promotion",
-        "touraine logement", "francelot", "khor"
+        "touraine logement", "francelot", "khor", "lelievre immobilier",
+        "exeo promotion", "immo nature et construction"
     };
     private static final Pattern OFFER = Pattern.compile(
         "\\b(?:maison\\s+(?:et\\s+)?terrain|terrain\\s+(?:et\\s+)?maison|" +
