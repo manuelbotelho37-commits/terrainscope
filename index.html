@@ -314,7 +314,7 @@
     <button id="terrainUp" type="button" title="Retour en haut" aria-label="Retour aux critères de recherche">↑</button>
     <button id="terrainDown" type="button" title="Descendre" aria-label="Descendre dans les résultats">↓</button>
   </nav>
-  <footer class="foot">TerrainScope V53 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+  <footer class="foot">TerrainScope V54 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -470,12 +470,27 @@
       // explicitement indiquée comme non géolocalisée.
       return 'https://www.leboncoin.fr/recherche?'+new URLSearchParams({text:'terrain '+city,category:'9'}).toString();
     }
-    // Le Bon Coin documente NOT pour exclure des mots des annonces.
-    // Seulement des marques assez distinctives ; ne pas exclure Pro, agence,
-    // IAD, maison ou constructeur (ces mots figurent dans de vraies annonces).
-    const LBC_BUILDER_NEGATIVES=['mikit','ericlor','natilia','tradibudget','villadeale','primea'];
+    // Marques de constructeurs exclues UNIQUEMENT dans les liens facultatifs.
+    // Les phrases sont entre guillemets pour ne pas exclure des mots ordinaires
+    // isolés (notamment « pierre », « terre », « maison » ou « confort »).
+    // « Alicya » est conservé comme variante de l'orthographe officielle Alysia.
+    const BUILDER_EXCLUDED_BRANDS=[
+      {name:'Mikit',terms:['mikit']},
+      {name:'Ericlor',terms:['ericlor']},
+      {name:'Natilia',terms:['natilia']},
+      {name:'Tradibudget',terms:['tradibudget']},
+      {name:'Villadéale',terms:['villadeale']},
+      {name:'Priméa',terms:['primea']},
+      {name:'CID · Constructions Idéale Demeure',terms:['cid','"constructions ideale demeure"']},
+      {name:'Maisons de Stéphanie',terms:['"maisons de stephanie"','"maison de stephanie"']},
+      {name:'Maisons Alysia',terms:['alysia','alicya']},
+      {name:'Maisons France Confort',terms:['"france confort"']},
+      {name:'Pierre et Terre',terms:['"pierre et terre"']}
+    ];
+    const BUILDER_EXCLUSION_TERMS=BUILDER_EXCLUDED_BRANDS.flatMap(brand=>brand.terms);
+    const BUILDER_EXCLUSION_COUNT=BUILDER_EXCLUDED_BRANDS.length;
     function leboncoinReducedUrl(city){
-      const text='terrain '+LBC_BUILDER_NEGATIVES.map(x=>'NOT '+x).join(' ');
+      const text='terrain '+BUILDER_EXCLUSION_TERMS.map(term=>'NOT '+term).join(' ');
       const postal=terrainPostal(city);
       if(!postal)return null;
       // Le site peut ignorer certaines exclusions : proposer cette recherche
@@ -487,7 +502,7 @@
     // les résultats indexés par Google sont concernés (non exhaustifs, parfois périmés).
     function googleSiteWithoutBuildersUrl(city,domain){
       const place=clean(city).replace(/["“”]/g,'');
-      const negatives=LBC_BUILDER_NEGATIVES.map(word=>'-'+word).join(' ');
+      const negatives=BUILDER_EXCLUSION_TERMS.map(term=>'-'+term).join(' ');
       return googleUrl('site:'+domain+' "terrain" "'+place+'" '+negatives);
     }
     function bieniciTerrainUrl(city){
@@ -1048,7 +1063,7 @@
           el('developerAccordion').scrollIntoView({behavior:'instant',block:'start'});
         });
         if(main)a.className='main-source';
-        if(label.startsWith('Essayer sans 6 marques · '))a.className='source-optional';
+        if(label.startsWith('Essayer sans '+BUILDER_EXCLUSION_COUNT+' marques · '))a.className='source-optional';
         if(!url)a.className='unavailable-source';
         a.append(document.createTextNode(label+(url?' ↗':' · lien indisponible')));
         const small=document.createElement('small');small.textContent=help;a.append(small);root.append(a);
@@ -1064,7 +1079,7 @@
         if(reduced){
           const a=document.createElement('a');a.href=reduced;a.target='_blank';
           a.rel='noopener noreferrer';a.className='source-optional';
-          a.textContent='Essayer de masquer 6 marques de constructeurs sur Le Bon Coin ↗';
+          a.textContent='Essayer de masquer '+BUILDER_EXCLUSION_COUNT+' marques de constructeurs sur Le Bon Coin ↗';
           const explanation=document.createElement('small');
           explanation.textContent='Filtre NOT facultatif du site. Peut masquer aussi des annonces utiles : le lien principal reste sans exclusions.';
           a.append(explanation);root.append(a);
@@ -1075,7 +1090,7 @@
         makeLink('2 · SeLoger · '+city,result.url,false,result.exact
           ?'Terrains à vendre à '+city+' : page SeLoger directe, sans passer par Google. Annonces de constructeurs possibles sur le site externe.'
           :'Aucun lien direct vérifié pour '+city+'. TerrainScope ne renvoie plus vers tout le département.');
-        makeLink('Essayer sans 6 marques · SeLoger (via Google)',
+        makeLink('Essayer sans '+BUILDER_EXCLUSION_COUNT+' marques · SeLoger (via Google)',
           googleSiteWithoutBuildersUrl(city,'seloger.com'),false,
           'Recherche Google ciblée sur SeLoger et '+city+'. Ce n’est pas un filtre de SeLoger : résultats incomplets ou supprimés possibles.');
       }
@@ -1084,7 +1099,7 @@
         makeLink('3 · Bien’ici · '+city,direct,false,direct
           ?'Page Bien’ici directe : terrains à '+city+', sans passer par Google.'
           :'Adresse directe indisponible : code postal manquant, aucune recherche Google trompeuse.');
-        makeLink('Essayer sans 6 marques · Bien’ici (via Google)',
+        makeLink('Essayer sans '+BUILDER_EXCLUSION_COUNT+' marques · Bien’ici (via Google)',
           googleSiteWithoutBuildersUrl(city,'bienici.com'),false,
           'Recherche Google ciblée sur Bien’ici et '+city+'. Ce n’est pas un filtre de Bien’ici : résultats incomplets ou supprimés possibles.');
       }
