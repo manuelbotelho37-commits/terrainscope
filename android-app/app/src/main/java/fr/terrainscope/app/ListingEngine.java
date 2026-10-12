@@ -56,14 +56,18 @@ public final class ListingEngine {
         "maison de stephanie", "alysia", "alicya", "france confort",
         "pierre et terre", "le masson", "maison laure", "maisons laure",
         "mb habitat", "maisons i tours", "maison i tours",
-        "evolve construction", "imoter", "df constructions"
+        "evolve construction", "imoter", "df constructions",
+        "logis avenir", "maisons castor", "maison phénix",
+        "maison phenix", "les maisons de l avenir", "maisons d en france"
     };
     private static final String[] LOTISSEURS = {
         "villadim", "groupe set", "afedim", "val touraine habitat", "viabilis",
         "acanthe", "arpent", "foncier amenagement", "nexity",
         "entre terrains", "terravia", "lodgim", "quatro promotion",
         "touraine logement", "francelot", "khor", "lelievre immobilier",
-        "exeo promotion", "immo nature et construction"
+        "exeo promotion", "immo nature et construction",
+        "credit mutuel amenagement foncier", "cm cic amenagement foncier",
+        "cmcic amenagement foncier", "credit mutuel immobilier"
     };
     private static final Pattern OFFER = Pattern.compile(
         "\\b(?:maison\\s+(?:et\\s+)?terrain|terrain\\s+(?:et\\s+)?maison|" +
