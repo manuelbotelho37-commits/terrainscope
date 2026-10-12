@@ -1026,7 +1026,9 @@ public final class MainActivity extends Activity {
         ListingEngine.Listing item = record.listing;
         int width = getResources().getConfiguration().screenWidthDp;
         boolean wide = width >= 620;
-        int height = wide ? 180 : 149;
+        // Réserver l'espace nécessaire au motif, sans cacher de texte sur le Fold replié.
+        boolean hasReason = !record.reason.isEmpty();
+        int height = wide ? (hasReason ? 207 : 180) : (hasReason ? 189 : 149);
         int photoWidth = wide ? 195 : 126;
 
         LinearLayout panel = row();
@@ -1102,8 +1104,15 @@ public final class MainActivity extends Activity {
         seller.setSingleLine(true);
         seller.setEllipsize(TextUtils.TruncateAt.END);
         info.addView(seller);
+        if (hasReason) {
+            TextView classificationReason = heading("Motif : " + record.reason, 9, MUTED, false);
+            classificationReason.setMaxLines(2);
+            classificationReason.setEllipsize(TextUtils.TruncateAt.END);
+            place(info, classificationReason, 3, 0);
+        }
         panel.setContentDescription(item.title + ", " + item.city +
-            ", " + price.getText() + ", " + badge + ". Ouvrir l'annonce d'origine.");
+            ", " + price.getText() + ", " + badge +
+            (hasReason ? ". Motif : " + record.reason : "") + ". Ouvrir l'annonce d'origine.");
         panel.setOnClickListener(v -> {
             try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(item.url))); }
             catch (Exception error) {
