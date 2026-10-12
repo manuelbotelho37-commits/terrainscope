@@ -149,7 +149,11 @@
     if(node.dataset.locationStatus==='nearby')return null;
     const price=getPrice(title+' '+description);
     const area=getArea(title+' '+description);
-    return {url,title,description,city,price,area,source:sourceName(url),
+    // Les opérations de lotissement (ex. Nexity) sont utiles, mais ne sont pas
+    // des fiches de parcelle individuelle : ne pas les présenter comme telles.
+    const listingType=/\/programme(?:\/|$)/i.test(new URL(url).pathname)||
+      /\bprogramme\s+de\s+terrains?\b/.test(normalized(title))?'programme':'terrain';
+    return {url,title,description,city,price,area,listingType,source:sourceName(url),
       rank:rank(url),otherLinks:[]};
   }
   function mergeCandidates(){
@@ -210,7 +214,17 @@
         state.sourceFilter
           ?'Aucune fiche individuelle repérée dans Google pour '+state.sourceFilter+'. Ce n’est PAS le nombre de terrains à vendre sur le site : ouvre le catalogue complet pour vérifier les annonces d’agences et de lotisseurs.'
           :'Aucune annonce individuelle exploitable repérée dans l’index Google pour cette recherche. Consulte au besoin les accès directs non filtrés.';
-      out.append(p);pages.hidden=true;return;
+      out.append(p);
+      if(!state.active&&state.sourceFilter&&lastSearch?.cities?.length){
+        // Le site affiche parfois des annonces non indexées par Google.
+        // Accès réel au catalogue sans prétendre y masquer les constructeurs.
+        for(const city of lastSearch.cities){
+          const url=state.sourceFilter==='Bien’ici'?bieniciTerrainUrl(city):
+            state.sourceFilter==='SeLoger'?selogerTerrainUrl(city)?.url:null;
+          if(url)out.append(cardLink(url,'Voir les offres sur '+state.sourceFilter+' à '+city+' (NON filtrées) ↗','unique-open'));
+        }
+      }
+      pages.hidden=true;return;
     }
     const from=(state.page-1)*PAGE_SIZE;
     for(const item of unique.slice(from,from+PAGE_SIZE)){
@@ -222,12 +236,14 @@
         :null;
       source.textContent=preferred?state.sourceFilter:item.source;
       const price=document.createElement('strong');price.className='unique-price';
-      price.textContent=item.price?money(item.price):'Prix à consulter';
+      price.textContent=item.listingType==='programme'?'Prix des lots à consulter':
+        item.price?money(item.price):'Prix à consulter';
       header.append(source,price);
       const title=document.createElement('h4');title.textContent=item.title;
       const details=document.createElement('p');details.className='unique-details';
-      details.textContent=[item.city||'Localisation à confirmer',
-        item.area?areaText(item.area):'Surface à consulter'].join(' · ');
+      details.textContent=item.listingType==='programme'
+        ?[item.city||'Localisation à confirmer','Programme de lots · lots libres à vérifier'].join(' · ')
+        :[item.city||'Localisation à confirmer',item.area?areaText(item.area):'Surface à consulter'].join(' · ');
       const freshness=document.createElement('p');freshness.className='unique-freshness';
       freshness.textContent='Lien issu de Google · annonce peut être désactivée · disponibilité à vérifier';
       const actions=document.createElement('div');actions.className='unique-actions';
