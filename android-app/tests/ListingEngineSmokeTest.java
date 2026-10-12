@@ -140,7 +140,7 @@ public final class ListingEngineSmokeTest {
             "Non constructible marqué à vérifier");
         ListingEngine.Listing genuineLand = new ListingEngine.Listing(
             "IAD","https://www.iadfrance.fr/annonce/terrain-vente-monnaie-1328m2/r1976940",
-            "Terrain à bâtir à Monnaie","Alice Ravinet","Conseiller iad",
+            "Terrain à bâtir à Monnaie","Monnaie","Alice Ravinet",
             "Constructible, possibilité de réaliser une maison", "", "",
             138500,1328,true);
         check(!ListingEngine.requiresBuildabilityCheck(genuineLand),
