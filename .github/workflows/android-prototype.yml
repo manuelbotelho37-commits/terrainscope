@@ -1,0 +1,56 @@
+name: Tester et construire TerrainScope Android
+
+on:
+  push:
+    branches: [android-capture-prototype]
+    paths:
+      - 'android-app/**'
+      - '.github/workflows/android-prototype.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android-debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Lire le code
+        uses: actions/checkout@v4
+
+      - name: Installer Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Tester le tri et les doublons sans Android
+        run: |
+          mkdir -p android-app/build/engine-smoke
+          javac -encoding UTF-8 -d android-app/build/engine-smoke \
+            android-app/app/src/main/java/fr/terrainscope/app/ListingEngine.java \
+            android-app/tests/ListingEngineSmokeTest.java
+          java -cp android-app/build/engine-smoke fr.terrainscope.app.ListingEngineSmokeTest
+
+      - name: Préparer le SDK Android
+        uses: android-actions/setup-android@v3
+
+      - name: Installer Android API 35
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Préparer Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+
+      - name: Construire l'application expérimentale
+        run: gradle -p android-app :app:assembleDebug --no-daemon
+
+      - name: Publier l'APK de test
+        uses: actions/upload-artifact@v4
+        with:
+          name: TerrainScope-Android-Prototype-APK
+          path: android-app/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7
+          if-no-files-found: error
