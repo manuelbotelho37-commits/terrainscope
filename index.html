@@ -314,7 +314,7 @@
     <button id="terrainUp" type="button" title="Retour en haut" aria-label="Retour aux critères de recherche">↑</button>
     <button id="terrainDown" type="button" title="Descendre" aria-label="Descendre dans les résultats">↓</button>
   </nav>
-  <footer class="foot">TerrainScope V52 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+  <footer class="foot">TerrainScope V53 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -481,6 +481,14 @@
       // Le site peut ignorer certaines exclusions : proposer cette recherche
       // comme tentative complémentaire, jamais comme stock certifié.
       return leboncoinUrl(city)+'?'+new URLSearchParams({text}).toString();
+    }
+    // Alternative Google : SeLoger/Bien'ici ne documentent pas de filtre NOT
+    // équivalent. On ne prétend pas filtrer leurs résultats internes : seuls
+    // les résultats indexés par Google sont concernés (non exhaustifs, parfois périmés).
+    function googleSiteWithoutBuildersUrl(city,domain){
+      const place=clean(city).replace(/["“”]/g,'');
+      const negatives=LBC_BUILDER_NEGATIVES.map(word=>'-'+word).join(' ');
+      return googleUrl('site:'+domain+' "terrain" "'+place+'" '+negatives);
     }
     function bieniciTerrainUrl(city){
       const postal=terrainPostal(city);
@@ -1040,6 +1048,7 @@
           el('developerAccordion').scrollIntoView({behavior:'instant',block:'start'});
         });
         if(main)a.className='main-source';
+        if(label.startsWith('Essayer sans 6 marques · '))a.className='source-optional';
         if(!url)a.className='unavailable-source';
         a.append(document.createTextNode(label+(url?' ↗':' · lien indisponible')));
         const small=document.createElement('small');small.textContent=help;a.append(small);root.append(a);
@@ -1066,12 +1075,18 @@
         makeLink('2 · SeLoger · '+city,result.url,false,result.exact
           ?'Terrains à vendre à '+city+' : page SeLoger directe, sans passer par Google. Annonces de constructeurs possibles sur le site externe.'
           :'Aucun lien direct vérifié pour '+city+'. TerrainScope ne renvoie plus vers tout le département.');
+        makeLink('Essayer sans 6 marques · SeLoger (via Google)',
+          googleSiteWithoutBuildersUrl(city,'seloger.com'),false,
+          'Recherche Google ciblée sur SeLoger et '+city+'. Ce n’est pas un filtre de SeLoger : résultats incomplets ou supprimés possibles.');
       }
       for(const city of cities){
         const direct=bieniciTerrainUrl(city);
         makeLink('3 · Bien’ici · '+city,direct,false,direct
           ?'Page Bien’ici directe : terrains à '+city+', sans passer par Google.'
           :'Adresse directe indisponible : code postal manquant, aucune recherche Google trompeuse.');
+        makeLink('Essayer sans 6 marques · Bien’ici (via Google)',
+          googleSiteWithoutBuildersUrl(city,'bienici.com'),false,
+          'Recherche Google ciblée sur Bien’ici et '+city+'. Ce n’est pas un filtre de Bien’ici : résultats incomplets ou supprimés possibles.');
       }
       for(const city of cities){
         const direct=iadTerrainUrl(city);
