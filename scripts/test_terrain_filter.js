@@ -106,7 +106,7 @@ assert.ok(html.indexOf('id="addCity"') < html.indexOf('id="citySearchBtn"') &&
   'Voir les terrains et Lotisseurs suivent Ajouter cette commune');
 assert.match(html, /el\('lotisseursTop'\)\.addEventListener\('click'/,
   'Le bouton Lotisseurs conserve son fonctionnement');
-assert.match(source, /Annonces NON vérifiées sur les sites vendeurs/, 'Le statut doit rester incertain');
+assert.match(source, /annonce peut être désactivée · disponibilité à vérifier/, 'Le statut doit rester incertain');
 
 // Tester les URL TERRAIN de IAD construites depuis les codes postaux officiels.
 // Un lien /annonces/<ville>/vente ou une recherche Google générale renvoie des maisons.
