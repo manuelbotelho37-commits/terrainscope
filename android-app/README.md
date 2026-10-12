@@ -1,4 +1,12 @@
-# TerrainScope Android — prototype indépendant
+# TerraNova Android — prototype indépendant (ex-TerrainScope)
+
+**Identité visuelle TerraNova luxe** : bleu nuit (#0B1620), or (#D4AF37),
+vert nature (#1E7F53), gris ardoise (#2B3642).
+L'application Android affiche **TerraNova** et utilise une icône vectorielle
+fondée sur l'emblème approuvé. L'image haute définition approuvée sera
+intégrée à l'APK définitif après validation de la récupération des annonces.
+Les captures de maquette présentant des prix et quantités sont uniquement
+illustratives ; l'application n'enregistre ni n'affiche de faux résultats.
 
 **Statut : expérimental, non validé sur le Samsung.** Le site TerrainScope de production
 (GitHub Pages, branche main) reste inchangé. En particulier, la rubrique
