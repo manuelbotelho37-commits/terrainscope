@@ -222,6 +222,29 @@ check(blockedByCaptcha.retrieved===0 && blockedByCaptcha.accessBlocked,
 const deniedByServer = extract("www.seloger.com","Monnaie",[],[],
   "Access denied — Too many requests.");
 check(deniedByServer.accessBlocked,"Refus d'accès serveur identifié");
+// Sur les portails le prix total et le prix au m² peuvent cohabiter.
+const pricePerM2 = {
+  innerText:"Terrain viabilisé à Monnaie (37380) 310 m² 65 900 € 213 €/m²",
+  getClientRects:()=>[1],matches:()=>false,
+  querySelector(selector) {
+    if (selector.includes("h2")) return {textContent:"Terrain constructible à Monnaie"};
+    if (selector.includes("price")) return {textContent:"65 900 € 213 €/m²"};
+    if (selector.includes("area")) return {textContent:"310 m²"};
+    return null;
+  },
+  querySelectorAll(selector) {
+    return selector==="a[href]"?[{
+      href:"https://www.seloger.com/annonce/vente/terrain/monnaie-310",
+      textContent:"Terrain à bâtir",
+      getAttribute:key=>key==="href"?"/annonce/vente/terrain/monnaie-310":""
+    }]:[];
+  }
+};
+const correctPrice = extract("www.seloger.com","Monnaie",[],[pricePerM2]);
+check(correctPrice.listings.length===1 && correctPrice.listings[0].priceEuros===65900,
+  "Prix total 65 900 € distinct du prix 213 €/m²");
+check(correctPrice.listings[0].areaM2===310,"Surface 310 m² correctement calculée");
+
 const empty = extract("www.leboncoin.fr", "Monnaie");
 check(empty.retrieved === 0, "page vide lisible, distincte du stock réel");
 console.log("TerrainScope: " + checks + " vérifications de lecture des fiches réussies.");
