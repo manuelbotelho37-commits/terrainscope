@@ -64,6 +64,26 @@ jobs:
         with:
           gradle-version: '8.10.2'
 
+      # Ne pas enregistrer de clé privée de signature dans le dépôt public.
+      # Les secrets sont ajoutés une seule fois dans GitHub Settings > Secrets.
+      - name: Préparer une signature Android stable si configurée
+        env:
+          KEYSTORE_B64: ${{ secrets.TERRANOVA_KEYSTORE_BASE64 }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.TERRANOVA_SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.TERRANOVA_SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.TERRANOVA_SIGNING_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ] && [ -n "$SIGNING_STORE_PASSWORD" ] && [ -n "$SIGNING_KEY_ALIAS" ] && [ -n "$SIGNING_KEY_PASSWORD" ]; then
+            printf '%s' "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/terranova-signing.jks"
+            echo "TERRANOVA_SIGNING_KEYSTORE=$RUNNER_TEMP/terranova-signing.jks" >> "$GITHUB_ENV"
+            echo "TERRANOVA_SIGNING_STORE_PASSWORD=$SIGNING_STORE_PASSWORD" >> "$GITHUB_ENV"
+            echo "TERRANOVA_SIGNING_KEY_ALIAS=$SIGNING_KEY_ALIAS" >> "$GITHUB_ENV"
+            echo "TERRANOVA_SIGNING_KEY_PASSWORD=$SIGNING_KEY_PASSWORD" >> "$GITHUB_ENV"
+            echo "Signature TerraNova stable : activée."
+          else
+            echo "::warning::Signature debug éphémère. Impossible de mettre à jour un APK signé lors d'un autre run. Configurer les 4 secrets de signature."
+          fi
+
       - name: Construire l'application expérimentale
         run: gradle -p android-app :app:assembleDebug --no-daemon
 
