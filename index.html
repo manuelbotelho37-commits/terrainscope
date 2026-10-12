@@ -314,7 +314,7 @@
     <button id="terrainUp" type="button" title="Retour en haut" aria-label="Retour aux critères de recherche">↑</button>
     <button id="terrainDown" type="button" title="Descendre" aria-label="Descendre dans les résultats">↓</button>
   </nav>
-  <footer class="foot">TerrainScope V50 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+  <footer class="foot">TerrainScope V51 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -486,10 +486,11 @@
       const postal=terrainPostal(city);
       return postal?'https://www.bienici.com/recherche/achat/'+terrainSlug(city)+'-'+postal+'/terrain':null;
     }
-    // Les URL communales générées n'affichent pas toujours de résultats.
-    // Ouvrir la recherche officielle, puis choisir Terrain et la commune sur le site.
+    // Adresse structurée du site immobilier.notaires.fr : vente / terrain / commune / département.
+    // Une page sans résultat peut signifier qu'aucune annonce n'est publiée sur cette commune.
     function immobilierNotairesTerrainUrl(city){
-      return 'https://www.immobilier.notaires.fr/fr/annonces-immobilieres';
+      if(!clean(city))return null;
+      return 'https://www.immobilier.notaires.fr/fr/annonces-immobilieres/vente/terrain/' + terrainSlug(city) + '-37';
     }
     // Pages « Achat > Terrain » officiellement identifiées chez SeLoger.
     // L'identifiant ad08fr est propre au site ; on ne l'invente pas pour les autres communes.
@@ -1080,8 +1081,8 @@
       }
       for(const city of cities){
         const direct=immobilierNotairesTerrainUrl(city);
-        makeLink('5 · Immobilier.notaires.fr · recherche officielle',direct,false,
-          'Sur le site des notaires, sélectionner « Terrain » et saisir '+city+'. Le filtre communal automatique ne fonctionne pas de manière fiable.');
+        makeLink('5 · Immobilier.notaires.fr · terrains · '+city,direct,false,
+          'Accès direct aux terrains à vendre à '+city+' (37). Si la page est vide, aucun terrain notarial n’est nécessairement proposé actuellement.');
       }
       el('quickSources').hidden=false;
     }
