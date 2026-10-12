@@ -168,10 +168,8 @@ public final class ListingEngine {
         boolean samePreciseAddress = !normalize(a.address).isEmpty() &&
             normalize(a.address).equals(normalize(b.address)) &&
             normalize(a.address).length() >= 12;
-        boolean sameLot = !normalize(a.lot).isEmpty() &&
-            normalize(a.lot).equals(normalize(b.lot));
         boolean sameSeller = meaningfulSellerMatch(a.seller, b.seller);
-        return samePreciseAddress || sameSeller || (sameLot && sameSeller);
+        return samePreciseAddress || sameSeller;
     }
 
     public static List<Result> classify(List<Listing> input) {
