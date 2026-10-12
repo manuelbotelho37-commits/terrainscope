@@ -323,12 +323,27 @@
       ['CM-CIC · AFEDIM','afedim.fr'],['Val Touraine Habitat','valtourainehabitat-vente.fr']
     ];
     // Les liens directs ci-dessous proviennent des pages officielles d'offres de terrains.
+    // Catalogues officiels de terrains ; aucun lien « maison + terrain » par défaut.
+    // catalogue:false signifie que l'organisme existe mais ne publie pas de liste de terrains consultable.
     const DEVELOPERS = [
-      {name:'Villadim',domain:'villadim.fr',url:'https://www.villadim.fr/terrains',type:'Moteur officiel : recherche par ville disponible'},
-      {name:'Groupe SET',domain:'set.fr',url:'https://set.fr/nos-offres/pour-les-particuliers/terrains-a-vendre/',type:'Programmes officiels affichés par commune'},
-      {name:'CM-CIC · AFEDIM',domain:'afedim.fr',url:'https://www.afedim.fr/fr/acheter-un-terrain.html',type:'Moteur officiel : champ localisation et budget'},
-      {name:'Val Touraine Habitat',domain:'valtourainehabitat-vente.fr',url:'https://www.valtourainehabitat-vente.fr/acheter-un-terrain-a-batir/',type:'Lotissements et annonces officiels'},
-      {name:'Lelièvre Immobilier',domain:'lelievre-immobilier.com',url:'https://www.lelievre-immobilier.com/terrains-a-vendre-indre-et-loire',type:'Terrains et programmes du département 37'}
+      {name:'Villadim',domain:'villadim.fr',url:'https://www.villadim.fr/terrains'},
+      {name:'Groupe SET',domain:'set.fr',url:'https://set.fr/nos-offres/pour-les-particuliers/terrains-a-vendre/'},
+      {name:'CM-CIC · AFEDIM',domain:'afedim.fr',url:'https://www.afedim.fr/fr/achat-immobilier/annonces/Terrain/Indre-et-Loire-France/surface-0-800-m2/budget-0-2000000-euros/rayon-0-km/Resultats'},
+      {name:'Val Touraine Habitat',domain:'valtourainehabitat-vente.fr',url:'https://www.valtourainehabitat-vente.fr/lotissement/'},
+      {name:'Lelièvre Immobilier',domain:'lelievre-immobilier.com',url:'https://www.lelievre-immobilier.com/terrains-a-vendre-indre-et-loire'},
+      {name:'Viabilis',domain:'viabilis.fr',url:'https://www.viabilis.fr/terrains/?_sf_s=37&_sfm_vendu=Non'},
+      {name:'Acanthe',domain:'acanthe-terrain.fr',url:'https://www.acanthe-terrain.fr/terrains-a-batir/terrain-a-vendre-indre-et-loire/'},
+      {name:'Arpent',domain:'arpent-de-terre.fr',url:'https://arpent-de-terre.fr/fr/page/nos-terrains-disponibles'},
+      {name:'Foncier Aménagement',domain:'foncier-amenagement.fr',url:'https://www.foncier-amenagement.fr/recherche-terrains-lotissement/?departement-select=37'},
+      {name:'Francelot / Khor',domain:'khorimmobilier.com',url:'https://www.khorimmobilier.com/resultats/',notice:'Le catalogue présente aussi des maisons : sélectionner le filtre « Terrain à bâtir ».'},
+      {name:'Nexity',domain:'nexity.fr',url:'https://www.nexity.fr/annonces-immobilieres/achat-vente/terrain/tout/indre-et-loire'},
+      {name:'Exeo Promotion',domain:'exeo-promotion.fr',url:'https://exeo-promotion.fr/',catalogue:false,notice:'Le site officiel est en travaux. Aucun catalogue public de terrains à consulter actuellement.'},
+      {name:'Entre Terrains',domain:'entre-terrains.com',url:'https://www.entre-terrains.com/nos-programmes/'},
+      {name:'Terravia',domain:'terravia.fr',url:'https://www.terravia.fr/nos-terrains-a-batir/'},
+      {name:'Lodgim',domain:'lodgim.fr',url:'https://www.lodgim.fr/terrains-a-batir'},
+      {name:'Touraine Logement',domain:'touraine-logement.fr',url:'https://www.touraine-logement.fr/index.php/devenez-proprietaire.html',catalogue:false,notice:'Le site présente principalement des logements en accession ; pas de catalogue dédié aux terrains identifié.'},
+      {name:'Immo Nature et Construction',domain:'immo-nature-constructions.fr',url:'https://immo-nature-constructions.fr/terrains/'},
+      {name:'Quatro Promotion',domain:'quatro-promotion.fr',url:'https://www.quatro-promotion.fr/terrains-a-batir/'}
     ];
     const CITIES = ['Chambray-lès-Tours','Tours','Joué-lès-Tours','Saint-Avertin','Saint-Cyr-sur-Loire','La Riche','Fondettes','Ballan-Miré','Montlouis-sur-Loire','Azay-sur-Cher','Véretz','Savonnières','Parçay-Meslay','Rochecorbon','Larçay','Esvres-sur-Indre','Montbazon','Veigné','Saint-Pierre-des-Corps','Amboise','Loches','Dolus-le-Sec','Azay-le-Rideau','Monts','Sorigny','Saint-Branchs','Luynes','Pernay','Notre-Dame-d’Oé','Chanceaux-sur-Choisille','Artannes-sur-Indre','Saint-Martin-le-Beau','Athée-sur-Cher','Monnaie','La Ville-aux-Dames','Bléré','Esvres','Langeais','Cheillé','Sainte-Maure-de-Touraine','Chambourg-sur-Indre','Saint-Laurent-en-Gâtines','Villandry','Chinon'];
     // Annuaire officiel des communes du 37, mis en cache pour rester disponible
@@ -488,10 +503,9 @@
             '. Impossible de conclure à zéro lotissement ou zéro terrain.';
       }else notice.hidden=true;
       const meta=document.createElement('p');meta.className='dev-catalog-top';
-      meta.textContent='Contrôle automatique horaire des catalogues : '+
-        checkedDevelopers.length+' sur '+DEVELOPERS.length+' lotisseurs vérifiés récemment. '+
-        'Si un contrôle échoue, les fiches restantes sont des références historiques, pas un inventaire complet. '+
-        'Aucun statut de lot n’est certifié par le contrôle des programmes.';
+      meta.textContent=DEVELOPERS.length+' lotisseurs et aménageurs référencés, avec accès à leurs terrains ou à leur site officiel. '+
+        checkedDevelopers.length+' catalogue(s) contrôlé(s) automatiquement : ce contrôle ne concerne pas tous les sites. '+
+        'Les fiches datées sont indicatives ; les disponibilités sont à confirmer auprès du lotisseur.';
       root.append(meta);
       function external(url,title){
         const a=document.createElement('a');a.href=url;a.target='_blank';
@@ -533,7 +547,7 @@
         body.append(diagnosis);
         if(!items.length){
           const none=document.createElement('p');none.className='dev-empty';
-          none.textContent='Aucune fiche dans notre relevé. Cela ne signifie PAS que le lotisseur n’a pas de terrain.';
+          none.textContent='Pas encore de fiche individuelle enregistrée ici. Consulte directement la liste des terrains du lotisseur : cela ne veut pas dire qu’il n’a aucune offre.';
           body.append(none);
         }
         if(names.length&&!selected.length){
@@ -560,7 +574,9 @@
                   ?'Site inaccessible lors du contrôle · disponibilité inconnue'
                   :program.sourceVerified
                     ?'Programme trouvé dans le catalogue officiel · stocks à vérifier'
-                    :'Référence historique · stocks et présence à vérifier';
+                    :program.seen
+                      ?'Fiche repérée le '+new Date(program.seen+'T00:00:00').toLocaleDateString('fr-FR')+' · lots à confirmer'
+                      :'Référence historique · stocks et présence à vérifier';
           summary.append(title,town,stock);
           const details=document.createElement('div');details.className='program-body';
           const caution=document.createElement('p');
@@ -595,13 +611,19 @@
           details.append(external(program.url,'Vérifier les lots sur le site officiel ↗'));
           panel.append(summary,details);body.append(panel);
         }
-        body.append(external(dev.url,'Ouvrir le catalogue officiel de '+dev.name+' ↗'));
-        for(const city of names)body.append(external(linkFor([city],dev.domain),'Chercher '+city+' sur ce site ↗'));
+        if(dev.notice){
+          const note=document.createElement('p');note.className='dev-empty';note.textContent=dev.notice;body.append(note);
+        }
+        body.append(external(dev.url,dev.catalogue===false
+          ?'Ouvrir le site officiel de '+dev.name+' ↗'
+          :'Consulter les terrains sur le site de '+dev.name+' ↗'));
+        // Ne pas générer de fausses « fiches terrain » via Google :
+        // les requêtes larges par commune ramenaient aussi des maisons construites.
         group.append(body);root.append(group);
       }
       const active=el('developerAccordion');
       if(active)active.querySelector('summary span:first-child').textContent=
-        '🏘 '+DEVELOPERS.length+' lotisseurs référencés · '+checkedDevelopers.length+' catalogues vérifiés';
+        '🏘 '+DEVELOPERS.length+' lotisseurs · accès aux terrains officiels';
     }
     async function updateOfficialCatalogChecks(){
       // Lire directement la branche GitHub pour ne pas dépendre du délai de déploiement Pages.
