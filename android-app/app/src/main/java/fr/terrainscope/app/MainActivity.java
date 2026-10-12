@@ -60,6 +60,7 @@ public final class MainActivity extends Activity {
     private ScrollView results;
     private TextView status;
     private boolean showingBrowser = true;
+    private String activeCity = "";
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -154,43 +155,31 @@ public final class MainActivity extends Activity {
             return;
         }
         String site = String.valueOf(siteSpinner.getSelectedItem());
-        String code = postalCodes.getOrDefault(ListingEngine.normalize(city), "");
-        String slug = slug(city);
-        String url;
-        switch (site) {
-            case "Le Bon Coin":
-                url = "https://www.leboncoin.fr/recherche?category=9&text=" + enc("terrain " + city);
-                break;
-            case "SeLoger":
-                String path = selogerPaths.get(ListingEngine.normalize(city));
-                url = path == null ? "https://www.seloger.com/" :
-                    "https://www.seloger.com/recherche/achat/terrain/centre-val-de-loire/" + path;
-                break;
-            case "Bien’ici":
-                url = code.isEmpty() ? "https://www.bienici.com/" :
-                    "https://www.bienici.com/recherche/achat/" + slug + "-" + code + "/terrain";
-                break;
-            case "IAD":
-                url = code.isEmpty() ? "https://www.iadfrance.fr/" :
-                    "https://www.iadfrance.fr/annonces/" + slug + "-" + code + "/vente/terrain";
-                break;
-            case "Notaires":
-                // Les URL construites pour les communes ont déjà été instables : ne pas les inventer.
-                url = "https://www.immobilier.notaires.fr/fr/annonces-immobilieres";
-                break;
-            default:
-                url = TERRAIN_SCOPE;
+        SearchUrls searches = new SearchUrls(postalCodes, selogerPaths);
+        String url = searches.urlFor(site, city);
+        if (url == null) {
+            status.setText("Aucun accès direct à des terrains confirmé sur " + site + " à " +
+                city + ". Je n'ouvre pas des milliers d'annonces nationales : " +
+                "source indisponible tant que le filtrage géographique n'est pas vérifié.");
+            return;
         }
+        if (!activeCity.isEmpty() && !ListingEngine.normalize(activeCity)
+                .equals(ListingEngine.normalize(city))) {
+            imported.clear();
+        }
+        activeCity = city;
         showBrowser();
         browser.loadUrl(url);
-        status.setText("Ouverture de " + site + " pour " + city +
-            ". Confirme la commune et la catégorie Terrain sur le site avant l’import.");
+        status.setText("Recherche TERRAIN pour " + city + " (" +
+            postalCodes.get(ListingEngine.normalize(city)) + ") sur " + site +
+            ". Vérifie que le site affiche uniquement la commune et les terrains.");
     }
 
     private void importVisiblePage() {
         String city = cleanCity();
-        if (city.isEmpty()) {
-            status.setText("Indique une commune avant d’importer les annonces.");
+        if (city.isEmpty() || !ListingEngine.normalize(city)
+                .equals(ListingEngine.normalize(activeCity))) {
+            status.setText("Commune changée : ouvre d’abord le bon site avec les nouveaux critères.");
             return;
         }
         Uri current = Uri.parse(browser.getUrl() == null ? "" : browser.getUrl());
@@ -310,6 +299,7 @@ public final class MainActivity extends Activity {
 
     private void reset() {
         imported.clear();
+        activeCity = "";
         browser.loadUrl("about:blank");
         showBrowser();
         status.setText("Nouvelle recherche vide. Aucune annonce précédente conservée.");
