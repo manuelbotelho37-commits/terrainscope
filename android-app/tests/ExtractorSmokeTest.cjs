@@ -69,6 +69,21 @@ const unrelated = extract("www.bienici.com", "Monnaie", [{
   offers: { price: "230000" }
 }]);
 check(unrelated.retrieved === 0, "maison sans terrain ignorée");
+const houseWithGarden = extract("www.leboncoin.fr", "Monnaie", [{
+  name: "Maison 6 pièces, 120 m² avec jardin", description: "Terrain : 655 m² à Monnaie",
+  url: "https://www.leboncoin.fr/ad/ventes_immobilieres/44444",
+  offers: { price: "299000" }
+}]);
+check(houseWithGarden.retrieved === 0,
+  "Maison avec surface de terrain dans la description non importée comme terrain");
+const standaloneLand = extract("www.leboncoin.fr", "Monnaie", [{
+  name: "Terrain constructible 655 m²",
+  description: "À Monnaie (37380), terrain à bâtir",
+  url: "https://www.leboncoin.fr/ad/ventes_immobilieres/55555",
+  offers: { price: "89900" }
+}]);
+check(standaloneLand.retrieved === 1, "Vraie annonce de terrain conservée");
+
 const empty = extract("www.leboncoin.fr", "Monnaie");
 check(empty.retrieved === 0, "page vide lisible, distincte du stock réel");
 console.log("TerrainScope: " + checks + " vérifications de lecture des fiches réussies.");
