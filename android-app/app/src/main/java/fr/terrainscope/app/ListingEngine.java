@@ -20,13 +20,22 @@ public final class ListingEngine {
 
     public static final class Listing {
         public final String source, url, title, city, seller, description, address, lot;
+        public final String imageUrl; // photographie réelle de la fiche, jamais une image fictive
         public final long priceEuros;
         public final double areaM2;
         public final boolean cityConfirmed;
 
+        // Ancien constructeur conservé pour les tests et les fiches sans photo.
         public Listing(String source, String url, String title, String city, String seller,
                        String description, String address, String lot, long priceEuros,
                        double areaM2, boolean cityConfirmed) {
+            this(source, url, title, city, seller, description, address, lot,
+                 priceEuros, areaM2, cityConfirmed, "");
+        }
+
+        public Listing(String source, String url, String title, String city, String seller,
+                       String description, String address, String lot, long priceEuros,
+                       double areaM2, boolean cityConfirmed, String imageUrl) {
             this.source = clean(source);
             this.url = clean(url);
             this.title = clean(title);
@@ -38,6 +47,7 @@ public final class ListingEngine {
             this.priceEuros = priceEuros;
             this.areaM2 = areaM2;
             this.cityConfirmed = cityConfirmed;
+            this.imageUrl = clean(imageUrl);
         }
     }
 
