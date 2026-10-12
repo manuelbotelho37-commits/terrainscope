@@ -18,6 +18,13 @@
   const requested = clean(window.__terrainScopeRequestedCity || "");
   const requestedNormalized = normalized(requested);
   const requestedPostal = clean(window.__terrainScopeRequestedPostal || "");
+  const knownCities = (Array.isArray(window.__terrainScopeKnownCities)
+    ? window.__terrainScopeKnownCities : []).map(normalized).filter(Boolean);
+  const strongLocationPrefixes = [
+    "sur la commune de", "dans la commune de", "opportunite a",
+    "situe a", "situee a", "localise a", "localisee a",
+    "terrain situe a", "terrain situee a", "parcelle situee a"
+  ];
   const land = /\b(?:terrain(?:s)?|parcelle(?:s)?|lot(?:s)?\s+(?:a|à)\s+(?:batir|bâtir)|lotissement|foncier)\b/i;
   const unrelated = /\b(?:appartement(?:s)?|local commercial|bureaux à vendre|parking|garage à vendre)\b/i;
   const houseTitle = /^(?:(?:vente|a vendre|à vendre)\s+)?(?:maison(?:s)?|appartement(?:s)?|villa|villas|pavillon(?:s)?|immeuble(?:s)?|studio|longère)\b/i;
@@ -46,11 +53,21 @@
     // n'est pas une preuve : un terrain de Crotelles peut être "à 5 min de Monnaie".
     // Préférer la localité structurée, le couple ville+code postal, puis le titre.
     const explicitLocation = normalized(item.location || "");
+    // Certaines annonces sont indexées « Monnaie » alors qu'elles annoncent
+    // « opportunité à Crotelles » dans le descriptif ; même code postal,
+    // mais PAS la même commune. Chercher une localisation explicite
+    // et non une simple mention « proche de ».
+    const normalizedDetails = " " + normalized(details) + " ";
+    const conflictingLocality = knownCities.some(other =>
+      other !== requestedNormalized && strongLocationPrefixes.some(prefix =>
+        normalizedDetails.includes(" " + prefix + " " + other + " ")
+      )
+    );
     const full = " " + normalized(raw) + " ";
     const name = " " + normalized(title) + " ";
     const explicitMatches = !explicitLocation ||
       (" " + explicitLocation + " ").includes(" " + requestedNormalized + " ");
-    const cityInCard = requestedNormalized && (
+    const cityInCard = requestedNormalized && !conflictingLocality && (
       explicitLocation
         ? explicitMatches
         : (requestedPostal && full.includes(" " + requestedNormalized + " " + requestedPostal + " ")) ||
@@ -59,7 +76,7 @@
     const current = {
       source, url, title, description: details.slice(0, 1500),
       city: requested, cityConfirmed: !!cityInCard,
-      locationConflict: !!(explicitLocation && !explicitMatches),
+      locationConflict: !!(conflictingLocality || (explicitLocation && !explicitMatches)),
       seller: clean(item.seller), address: clean(item.address), lot: clean(item.lot),
       priceEuros: Number(normalizedPrice) || 0,
       areaM2: Number(normalizedArea) || 0
