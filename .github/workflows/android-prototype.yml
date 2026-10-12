@@ -71,15 +71,15 @@ jobs:
           disable-animations: true
           script: |
             adb install -r android-app/app/build/outputs/apk/debug/app-debug.apk
-            adb shell am start -n fr.terrainscope.app/.MainActivity
+            adb shell am start -n fr.terranova.app/fr.terrainscope.app.MainActivity
             sleep 8
             # uiautomator dump lance un second processus Android : l'émulateur
             # du runner s'est fait tuer (code 137 / mémoire). Test plus léger.
-            adb shell pidof fr.terrainscope.app | grep -Eq '[0-9]'
+            adb shell pidof fr.terranova.app | grep -Eq '[0-9]'
             mkdir -p android-app/build/visual-test
             timeout 35 adb exec-out screencap -p > android-app/build/visual-test/accueil.png || true
             test -s android-app/build/visual-test/accueil.png
-            adb shell pidof fr.terrainscope.app | grep -Eq '[0-9]'
+            adb shell pidof fr.terranova.app | grep -Eq '[0-9]'
 
       - name: Conserver la capture de l'interface Android
         if: always()
