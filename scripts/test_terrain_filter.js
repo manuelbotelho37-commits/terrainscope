@@ -7,6 +7,7 @@ const path = require('node:path');
 
 const source = fs.readFileSync(path.join(__dirname, '..', 'aggregator.js'), 'utf8');
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'service-worker.js'), 'utf8');
 const stubs = {
   uniqueResults: {replaceChildren(){},append(){}},
   uniqueSummary: {textContent:''},
@@ -68,12 +69,18 @@ assert.ok(html.indexOf('<section id="quickSources"') < html.indexOf('<details id
   'Les recherches directes officielles doivent apparaître avant les pistes Google');
 assert.match(html, /el\('googleLeads'\)\.open=false;/,
   'Les liens Google non vérifiés doivent être repliés à chaque recherche');
-assert.match(html, /TerrainScope V40/,
-  'Version cohérente V40');
-assert.match(html, /id="selectedCities"[^>]*><\/div><button id="lotisseursTop"[^>]*type="button">/,
-  'Lotisseurs doit être juste sous les communes sélectionnées');
-assert.match(html, /id="lotisseursTop"[^>]*>[^<]*<\/button><button id="citySearchBtn"[^>]*type="submit">/,
-  'Voir les terrains doit rester directement à côté dans les commandes des communes');
+assert.match(html, /TerrainScope V59/,
+  'La version publiée dans l’interface est V59');
+assert.match(serviceWorker, /terrainscope-v59-shell/,
+  'Le cache de la PWA doit correspondre à V59');
+assert.match(serviceWorker, /fetch\(req, \{cache:'no-store'\}\)/,
+  'Les fichiers de la PWA sont recherchés sur le réseau avant le cache');
+assert.match(html, /registration\.update\(\)\.catch/,
+  'La PWA doit pouvoir vérifier sa mise à jour sans désinstallation');
+assert.match(html, /id="selectedCities"[^>]*><\/div><button id="citySearchBtn"[^>]*type="submit">/,
+  'Voir les terrains doit être sous les communes sélectionnées');
+assert.match(html, /id="citySearchBtn"[^>]*>[^<]*<\/button><button id="lotisseursTop"[^>]*type="button"/,
+  'Lotisseurs doit rester juste sous Voir les terrains');
 assert.equal((html.match(/id="lotisseursTop"/g)||[]).length,1,
   'Un seul bouton Lotisseurs');
 assert.doesNotMatch(html, /id="placeholder"|id="setupMain"|Les annonces directement ici/,
@@ -82,17 +89,21 @@ assert.match(html, /class="status-row" id="statusRow" hidden/,
   'Le titre Résultats ne doit pas créer d’espace inutile avant la recherche');
 assert.match(html, /el\('statusRow'\)\.hidden=false;/,
   'Le titre Résultats réapparaît quand on recherche une commune');
-assert.match(html, /DEVELOPERS\.length\+' lotisseurs référencés · '\+checkedDevelopers\.length\+' catalogues vérifiés'/,
-  'L’en-tête Lotisseurs doit distinguer tous les professionnels des catalogues vérifiés');
+assert.match(html, /meta\.textContent=DEVELOPERS\.length\+' lotisseurs et aménageurs\./,
+  'Le titre de la grille lotisseurs reste sobre sans compteurs trompeurs');
+assert.match(html, /grid-template-columns:repeat\(auto-fill,minmax\(104px,1fr\)\)/,
+  'Les lotisseurs sont répartis dans des cartes régulières');
+assert.match(html, /caption\.append\(logo,label,count\)/,
+  'Chaque lotisseur a un emplacement de logo');
 assert.match(html, /id="lotisseursTop"/,
   'Le bouton Lotisseurs reste accessible sous la commune');
 assert.match(html, /el\('settingsBtn'\)\.onclick=openModal/,
   'Les réglages du moteur restent accessibles en haut');
 assert.equal((html.match(/type="submit"/g)||[]).length,1,
   'Un seul bouton de recherche pour éviter les doublons en bas du formulaire');
-assert.ok(html.indexOf('id="addCity"') < html.indexOf('id="lotisseursTop"') &&
-  html.indexOf('id="lotisseursTop"') < html.indexOf('id="citySearchBtn"'),
-  'Les boutons doivent être regroupés directement sous Ajouter cette commune');
+assert.ok(html.indexOf('id="addCity"') < html.indexOf('id="citySearchBtn"') &&
+  html.indexOf('id="citySearchBtn"') < html.indexOf('id="lotisseursTop"'),
+  'Voir les terrains et Lotisseurs suivent Ajouter cette commune');
 assert.match(html, /el\('lotisseursTop'\)\.addEventListener\('click'/,
   'Le bouton Lotisseurs conserve son fonctionnement');
 assert.match(source, /Annonces NON vérifiées sur les sites vendeurs/, 'Le statut doit rester incertain');
@@ -115,7 +126,11 @@ const end=html.indexOf('    /* Catalogue à preuve',begin);
 assert.ok(begin>=0&&end>begin,'Fonction de lien IAD manquante');
 const makeIadLink=vm.runInNewContext(
   html.slice(begin,end).replace('const iadTerrainUrl=','globalThis._iadTerrainUrl=')+
-  'globalThis._iadTerrainUrl', {CITY_POSTAL_CODES:postalCodes,citySearchKey:cityKey,normalize:normalized,globalThis:{}}
+  'globalThis._iadTerrainUrl', {
+    terrainPostal:city=>postalCodes.get(cityKey(city)),
+    terrainSlug:city=>normalized(city).replace(/[’']/g,'-').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''),
+    globalThis:{}
+  }
 ); 
 for(const [city,expected] of [
   ['Nouzilly','https://www.iadfrance.fr/annonces/nouzilly-37380/vente/terrain'],
@@ -125,8 +140,12 @@ for(const [city,expected] of [
 ]){
   assert.equal(makeIadLink(city),expected,'Catégorie terrain et commune : '+city);
 }
-assert.match(html,/makeLink\('4 · IAD · terrains · '\+city,iadTerrainUrl\(city\)/,
-  'Raccourci IAD devrait ouvrir une recherche terrain par commune');
+assert.match(html,/\{name:'iad',domain:'iadfrance\.fr',get:city=>iadTerrainUrl\(city\)\}/,
+  'La carte iad doit diriger vers la recherche terrain de la commune');
+assert.match(html,/\{name:'immobilier\.notaires\.fr',domain:'immobilier\.notaires\.fr',get:city=>immobilierNotairesTerrainUrl\(city\)\}/,
+  'La carte immobilier.notaires.fr doit garder son URL propre');
+assert.match(html,/\.quick-source-links > \.portal-tile\{/,
+  'Les cinq cartes portails doivent avoir les mêmes dimensions');
 assert.doesNotMatch(html,/linkFor\(\[city\],'iadfrance.fr'\)/,
   'Aucune recherche IAD générique susceptible de remonter des maisons');
 console.log('TerrainScope : vérifications IAD strictes pour 4 communes, 272 codes postaux et filtrage terrain OK.');
