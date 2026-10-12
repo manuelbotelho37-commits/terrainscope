@@ -154,8 +154,8 @@
     #form .city-entry.suggesting input{min-width:0}
     @media(max-width:520px){#form .city-entry.suggesting{grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);gap:5px}}
     #citySuggestions[hidden]{display:none!important}
-    #citySuggestions .city-item{display:block;min-height:42px;line-height:1.35;padding:8px 9px;
-      font-size:12px;font-weight:750;color:#1c4b37;overflow-wrap:anywhere}
+    #citySuggestions .city-item{display:block;min-height:48px;line-height:1.35;padding:10px 9px;
+      font-size:13px;font-weight:750;color:#1c4b37;overflow-wrap:anywhere;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
     #citySuggestions .city-item:focus,#citySuggestions .city-item:hover{background:#e4f4e2}
     #citySuggestions .city-placeholder{padding:12px;color:#49645a;font-size:12px;line-height:1.5}
     #citySuggestions .city-item{border-bottom:1px solid #edf3ef}
@@ -314,7 +314,7 @@
     <button id="terrainUp" type="button" title="Retour en haut" aria-label="Retour aux critères de recherche">↑</button>
     <button id="terrainDown" type="button" title="Descendre" aria-label="Descendre dans les résultats">↓</button>
   </nav>
-  <footer class="foot">TerrainScope V51 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+  <footer class="foot">TerrainScope V52 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -1202,10 +1202,18 @@
           const btn=document.createElement('button');
           btn.type='button';btn.className='city-item';btn.role='option';
           btn.textContent=city;
-          btn.addEventListener('click',()=>{
+          // Samsung/Android : enregistrer la sélection dès le début de l'appui.
+          // Le click arrive parfois après le blur et la disparition de la liste.
+          let selectionDone=false;
+          const selectCity=event=>{
+            if(selectionDone)return;
+            selectionDone=true;
+            if(event.cancelable)event.preventDefault();
             addCity(city);
-            cityInput.blur(); // Referme le clavier Samsung après la sélection.
-          });
+            cityInput.blur();
+          };
+          btn.addEventListener('pointerdown',selectCity);
+          btn.addEventListener('click',selectCity); // secours clavier et navigateurs anciens
           box.append(btn);
         }
       }else{
@@ -1257,10 +1265,9 @@
     document.addEventListener('pointerdown',e=>{
       if(!cityInput.parentElement.contains(e.target))closeCitySuggestions();
     });
-    cityInput.addEventListener('blur',()=>{
-      // Laisser les boutons de la liste traiter leur clic avant sa fermeture.
-      setTimeout(()=>{if(document.activeElement!==cityInput)closeCitySuggestions()},180);
-    });
+    // Ne pas fermer la liste sur un blur différé : sur Android, cela annule parfois
+    // le clic sur la commune proposée. Le tap extérieur, Échap et la sélection
+    // ferment déjà explicitement les propositions.
     renderCities();
     loadCompleteCityIndex();
     displayDevelopers();
