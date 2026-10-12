@@ -7,7 +7,7 @@ const path = require("node:path");
 const code = fs.readFileSync(path.resolve(__dirname, "../app/src/main/assets/extract-visible.js"), "utf8");
 let checks = 0;
 
-function extract(host, city, jsonDocuments = [], cards = [], pageText = "23 annonces pour la commune recherchée") {
+function extract(host, city, jsonDocuments = [], cards = [], pageText = "23 annonces pour la commune recherchée", nextLink = null) {
   const document = {
     title: "Terrains à vendre",
     body: { innerText: pageText },
@@ -16,6 +16,7 @@ function extract(host, city, jsonDocuments = [], cards = [], pageText = "23 anno
       if (selector === 'script[type="application/ld+json"]') {
         return jsonDocuments.map(data => ({ textContent: JSON.stringify(data) }));
       }
+      if (selector.includes('a[rel="next"]')) return nextLink ? [nextLink] : [];
       if (selector === "article") return cards;
       return [];
     }
@@ -24,7 +25,8 @@ function extract(host, city, jsonDocuments = [], cards = [], pageText = "23 anno
     document, window: { __terrainScopeRequestedCity: city,
       __terrainScopeRequestedPostal: city === "Monnaie" ? "37380" : city === "Tours" ? "37000" : "",
       __terrainScopeKnownCities: ["Monnaie", "Crotelles", "Tours", "Joué-lès-Tours", "Chambray-lès-Tours", "Veigné", "Chanceaux-sur-Choisille"] },
-    location: { hostname: host, href: "https://" + host + "/recherche/achat/" },
+    location: { hostname: host, host, pathname: "/recherche/achat/",
+      href: "https://" + host + "/recherche/achat/" },
     URL
   };
   return JSON.parse(vm.runInNewContext(code, context));
@@ -291,6 +293,27 @@ const toursConfirmed = extract("www.bienici.com","Tours",[{
 }]);
 check(toursConfirmed.listings[0].cityConfirmed,
   "Le vrai terrain de Tours reste confirmé");
+
+const nextLink = {
+  href:"https://www.seloger.com/recherche/achat/?page=2",
+  textContent:"Page suivante",
+  getAttribute:name => name==="href" ? "/recherche/achat/?page=2" :
+    name==="rel" ? "next" : ""
+};
+const pageTwo = extract("www.seloger.com","Monnaie",[],[],
+  "22 annonces terrains",nextLink);
+check(pageTwo.nextPageUrl === "https://www.seloger.com/recherche/achat/?page=2",
+  "La pagination doit permettre de continuer automatiquement à la page 2");
+const externalNext = {
+  href:"https://example.com/recherche/achat/?page=2",
+  textContent:"Page suivante",
+  getAttribute:name => name==="href" ? "https://example.com/recherche/achat/?page=2" :
+    name==="rel" ? "next" : ""
+};
+const refusedNext = extract("www.seloger.com","Monnaie",[],[],
+  "22 annonces terrains",externalNext);
+check(refusedNext.nextPageUrl==="",
+  "Ne pas suivre un autre domaine pendant la pagination automatique");
 
 const empty = extract("www.leboncoin.fr", "Monnaie");
 check(empty.retrieved === 0, "page vide lisible, distincte du stock réel");
