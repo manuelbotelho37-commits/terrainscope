@@ -26,7 +26,7 @@ public final class SearchUrls {
                 // /recherche?text=terrain ouvre au contraire les maisons, les
                 // appartements et parfois toute la France. Ne jamais l'utiliser.
                 return "https://www.leboncoin.fr/cl/ventes_immobilieres/cp_"
-                    + slug + "_" + code + "/real_estate_type:3";
+                    + slug + "_" + code + "/real_estate_type%3A3";
             case "SeLoger":
                 String path = seLogerPaths.get(key);
                 return path == null ? null :
