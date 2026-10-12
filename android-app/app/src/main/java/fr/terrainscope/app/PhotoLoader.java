@@ -28,6 +28,11 @@ final class PhotoLoader {
     private PhotoLoader() {}
 
     static void show(ImageView image, String url) {
+        show(image, url, null);
+    }
+
+    /** Source secondaire utilisée pour le favicon officiel des Notaires. */
+    static void show(ImageView image, String url, String fallbackUrl) {
         if (url == null || !url.startsWith("https://")) {
             image.setVisibility(View.GONE);
             return;
@@ -35,16 +40,25 @@ final class PhotoLoader {
         image.setTag(url);
         Bitmap cached = CACHE.get(url);
         if (cached != null) {
+            image.setVisibility(View.VISIBLE);
             image.setImageBitmap(cached);
             return;
         }
         POOL.execute(() -> {
-            Bitmap bitmap = download(url);
+            Bitmap primary = download(url);
+            Bitmap bitmap = primary;
+            if (bitmap == null && fallbackUrl != null && fallbackUrl.startsWith("https://")) {
+                bitmap = download(fallbackUrl);
+            }
             if (bitmap != null) CACHE.put(url, bitmap);
+            final Bitmap loaded = bitmap;
             MAIN.post(() -> {
                 if (!url.equals(image.getTag())) return;
-                if (bitmap == null) image.setVisibility(View.GONE);
-                else image.setImageBitmap(bitmap);
+                if (loaded == null) image.setVisibility(View.GONE);
+                else {
+                    image.setVisibility(View.VISIBLE);
+                    image.setImageBitmap(loaded);
+                }
             });
         });
     }
