@@ -49,6 +49,12 @@
     .quick-source-links .unavailable-source{display:block;padding:12px;border-radius:11px;
       border:1px solid #e0e3df;background:#f5f6f4;color:#647570;font-size:12px;font-weight:750}
     .quick-source-links a small{display:block;font-size:11px;font-weight:500;color:#527461}
+    .quick-source-links button.app-source{display:block;width:100%;padding:12px;border-radius:11px;border:1px solid #badf92;background:#d3f3a3;color:#153e2d;font-size:12px;font-weight:800;text-align:left;line-height:1.5;cursor:pointer}
+    .quick-source-links button.app-source small{display:block;font-size:11px;font-weight:500;color:#527461;margin-top:3px}
+    .quick-source-links button.app-source:focus-visible{outline:3px solid #35764e;outline-offset:2px}
+    .source-filter-bar{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 12px}
+    .source-filter-bar button{border:1px solid #c9dcc9;border-radius:9px;background:#fff;color:#2e5945;padding:9px 11px;font-size:12px;font-weight:750;min-height:42px}
+    .source-filter-bar button.active{background:#d3f3a3;border-color:#a6cf8f}
     #google-results [data-terrain-kind="incertains"]{border-left:4px solid #d59b48!important}
     body[data-result-mode="terrains"] #google-results .gsc-webResult.gsc-result[data-client-hidden="true"]{display:none!important}
     #google-results .gsc-adBlock{margin-bottom:9px}
@@ -299,9 +305,9 @@
       <span class="price-order" title="Les analyses locales ne consomment aucun crédit d’hébergement.">Recherche gratuite · analyse sur ce téléphone</span>
     </div>
     <details id="developerMatchNotice" hidden><summary id="developerMatchSummary">Programmes des lotisseurs</summary><div id="developerMatchDetails"></div></details><p id="criteriaText" class="criteria-text" hidden></p><div class="content-grid">
-      <section class="results" id="mainResults" aria-live="polite"><section id="quickSources" class="quick-sources" hidden><h3>Rechercher sur les sites immobiliers</h3><p>Les liens ouvrent les vrais filtres « terrain » des sites. Le bouton facultatif du Bon Coin tente d’écarter 18 marques. Pour SeLoger et Bien’ici, l’exclusion est seulement appliquée aux pistes Google de TerrainScope, pas aux pages des sites.</p><div id="quickSourceLinks" class="quick-source-links"></div></section>
-        <details id="googleLeads" class="google-leads" hidden><summary>Autres terrains repérés · 18 marques écartées · à vérifier</summary>
-          <section id="uniquePanel" class="unique-panel" hidden><h3>Terrains repérés par Google · tri des 18 marques</h3><p class="unique-intro">Les titres et extraits Google sont triés localement pour écarter les 18 marques sélectionnées, sans exclure Maisons CPR. Ce tri ne garantit ni la disponibilité, ni l'identification de tous les constructeurs ; vérifie toujours les annonces d'origine.</p><div id="uniqueSummary" class="unique-summary" role="status"></div><div id="uniqueResults" class="unique-results"></div><nav id="uniquePages" class="unique-pages" hidden aria-label="Pages des terrains distincts"></nav><p class="unique-disclaimer">Annonces repérées dans Google, pas l’intégralité des sites. Prix, surface, commune et vendeur à confirmer sur la fiche originale. Deux terrains distincts ne sont pas fusionnés sans indices suffisants.</p></section>
+      <section class="results" id="mainResults" aria-live="polite"><section id="quickSources" class="quick-sources" hidden><h3>Rechercher des terrains</h3><p>SeLoger et Bien’ici : consulte d’abord les pistes triées dans TerrainScope. Les accès aux catalogues complets restent disponibles, mais ils contiennent des annonces de constructeurs. Le Bon Coin propose toujours son filtre facultatif des 18 marques.</p><div id="quickSourceLinks" class="quick-source-links"></div></section>
+        <details id="googleLeads" class="google-leads" hidden><summary>Terrains repérés dans TerrainScope · constructeurs connus écartés</summary>
+          <section id="uniquePanel" class="unique-panel" hidden><h3>Terrains repérés par Google · tri des 18 marques</h3><p class="unique-intro">TerrainScope trie localement les titres et extraits indexés par Google, et écarte les constructeurs identifiés. Maisons CPR est conservé. Ces pistes ne représentent pas toutes les annonces de SeLoger ou Bien’ici et leur disponibilité est à vérifier.</p><div id="googleSourceFilters" class="source-filter-bar" aria-label="Filtrer les pistes par site"><button type="button" data-filter-source="" class="active" aria-pressed="true">Tous les sites</button><button type="button" data-filter-source="SeLoger" aria-pressed="false">SeLoger</button><button type="button" data-filter-source="Bien’ici" aria-pressed="false">Bien’ici</button></div><div id="uniqueSummary" class="unique-summary" role="status"></div><div id="uniqueResults" class="unique-results"></div><nav id="uniquePages" class="unique-pages" hidden aria-label="Pages des terrains distincts"></nav><p class="unique-disclaimer">Annonces repérées dans Google, pas l’intégralité des sites. Prix, surface, commune et vendeur à confirmer sur la fiche originale. Deux terrains distincts ne sont pas fusionnés sans indices suffisants.</p></section>
         </details>
         
         <div id="csePanel" class="box cse-holder" hidden><h3>Autres terrains repérés</h3><div id="cseHint" class="cse-hint">Résultats Google non exhaustifs. Vérifie chaque annonce sur son site d’origine.</div><p id="resultSummary" class="result-summary" aria-live="polite"></p><div id="google-results"></div><nav id="pageNavigator" class="pagination-box" aria-label="Pages de résultats" hidden><strong id="pagePosition"></strong><div id="pageButtons" class="pagination-controls"></div><p>Le nombre de pistes correspond uniquement à cette page.</p></nav></div>
@@ -314,7 +320,7 @@
     <button id="terrainUp" type="button" title="Retour en haut" aria-label="Retour aux critères de recherche">↑</button>
     <button id="terrainDown" type="button" title="Descendre" aria-label="Descendre dans les résultats">↓</button>
   </nav>
-  <footer class="foot">TerrainScope V56 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+  <footer class="foot">TerrainScope V57 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -1063,6 +1069,22 @@
     }
     function updateQuickSources(cities){
       const root=el('quickSourceLinks');root.replaceChildren();
+      const makeAppSource=(label,source,help)=>{
+        const button=document.createElement('button');button.type='button';button.className='app-source';
+        button.disabled=!googleConfigured;
+        button.append(document.createTextNode(label));
+        const small=document.createElement('small');small.textContent=googleConfigured?help:'Moteur de recherche Google non activé dans TerrainScope.';button.append(small);
+        button.addEventListener('click',()=>{
+          const leads=el('googleLeads');leads.hidden=false;leads.open=true;
+          if(window.TerrainAggregator?.setSourceFilter){
+            window.TerrainAggregator.setSourceFilter(source);
+          }else{
+            el('uniqueSummary').textContent='Le moteur de tri des terrains n’est pas disponible sur cet appareil.';
+          }
+          leads.scrollIntoView({behavior:'instant',block:'start'});
+        });
+        root.append(button);
+      };
       const makeLink=(label,url,main,help,internal=false)=>{
         const a=document.createElement(url?'a':'div');
         if(url)a.href=url;
@@ -1095,16 +1117,20 @@
         }
       }
       for(const city of cities){
+        makeAppSource('2 · Voir les terrains SeLoger triés · '+city,'SeLoger',
+          'Dans TerrainScope : pistes individuelles repérées dans Google, constructeurs connus écartés. Liste non exhaustive.');
         const result=selogerTerrainUrl(city);
-        makeLink('2 · SeLoger · '+city,result.url,false,result.exact
-          ?'Page officielle des terrains à '+city+'. Les 18 marques ne peuvent pas être masquées directement sur SeLoger ; utilise les pistes filtrées de TerrainScope en complément.'
-          :'Aucun lien direct vérifié pour '+city+'. TerrainScope ne renvoie plus vers tout le département.');
+        makeLink('SeLoger · catalogue complet NON filtré · '+city,result.url,false,result.exact
+          ?'Ouvre SeLoger sans filtre de vendeur : tu verras aussi les annonces des constructeurs.'
+          :'Lien exact vers SeLoger indisponible pour cette commune.');
       }
       for(const city of cities){
+        makeAppSource('3 · Voir les terrains Bien’ici triés · '+city,'Bien’ici',
+          'Dans TerrainScope : pistes individuelles repérées dans Google, constructeurs connus écartés. Liste non exhaustive.');
         const direct=bieniciTerrainUrl(city);
-        makeLink('3 · Bien’ici · '+city,direct,false,direct
-          ?'Page officielle des terrains à '+city+'. Les 18 marques ne peuvent pas être masquées directement sur Bien’ici ; utilise les pistes filtrées de TerrainScope en complément.'
-          :'Adresse directe indisponible : code postal manquant, aucune recherche Google trompeuse.');
+        makeLink('Bien’ici · catalogue complet NON filtré · '+city,direct,false,direct
+          ?'Ouvre Bien’ici sans filtre de vendeur : tu verras aussi les annonces des constructeurs.'
+          :'Lien exact vers Bien’ici indisponible : code postal manquant.');
       }
       for(const city of cities){
         const direct=iadTerrainUrl(city);
@@ -1119,6 +1145,10 @@
       }
       el('quickSources').hidden=false;
     }
+    el('googleSourceFilters').addEventListener('click',event=>{
+      const btn=event.target.closest('button[data-filter-source]');
+      if(btn&&window.TerrainAggregator?.setSourceFilter)window.TerrainAggregator.setSourceFilter(btn.dataset.filterSource);
+    });
     function handleSearch(e){
       e?.preventDefault();
       // Un nom encore saisi dans le champ est ajouté avant la recherche.
