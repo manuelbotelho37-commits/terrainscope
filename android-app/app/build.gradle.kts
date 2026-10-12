@@ -10,8 +10,8 @@ android {
         applicationId = "fr.terranova.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "0.3.0-terranova-luxe"
+        versionCode = 3
+        versionName = "0.3.1-terranova-luxe"
     }
 
     compileOptions {
