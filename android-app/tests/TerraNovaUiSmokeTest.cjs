@@ -26,6 +26,19 @@ check("PhotoLoader.show(icon, officialIcon(sourceDomain(site)))","Vrais favicons
 check("for (String site : SITES)","Cinq sources");
 check("sourcePills.put(site, tile)","Cinq pastilles identiques");
 check("enabledSources.contains(site)","Sélection des portails effective");
+check("resultSourceBar = section(PANEL, 13, Color.TRANSPARENT)","Navigation compacte dans les résultats");
+check("HorizontalScrollView siteScroller","Onglets sources horizontaux sur Fold fermé");
+check("addResultsSourceTile(strip, ALL_RESULTS)","Onglet Toutes les sources");
+check("for (String site : SITES) addResultsSourceTile(strip, site)","Cinq onglets portails avec logo");
+check("PhotoLoader.show(siteLogo, officialIcon(sourceDomain(site)))","Logos officiels des onglets portails");
+check("tile.setOnClickListener(v -> openResultsForSource(site))","Onglets sources vraiment cliquables");
+check("sourceFilter = ALL_RESULTS.equals(site) ? \"\" : site;","Filtre source activable");
+check("SourceListings.select(classified, filtered ? \"\" : sourceFilter, filtered)","Chaque onglet isole ses annonces");
+check("SourceListings.count(all, site)","Compteur d'annonces par portail");
+check("resultSourceBar.setVisibility(View.GONE)","Onglets cachés dans lotisseurs");
+check("resultSourceBar.setVisibility(View.VISIBLE)","Onglets visibles dans les résultats");
+check('heading("Motif : " + record.reason','Motif de classement des annonces visible');
+
 check("screenScroller = new ScrollView(this)","Défilement global");
 check("setContentView(screenScroller)","Écran défilant racine");
 check("screenScroller.addView(centered","Large écran centré");
