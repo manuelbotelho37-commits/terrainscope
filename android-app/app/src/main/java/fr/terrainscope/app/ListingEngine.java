@@ -186,11 +186,21 @@ public final class ListingEngine {
         // Il faut un indice d'identité supplémentaire : adresse exacte,
         // numéro de lot ET emplacement, ou annonceur réellement identique.
         if (conflict(a.lot, b.lot) || conflict(a.address, b.address)) return false;
-        boolean samePreciseAddress = !normalize(a.address).isEmpty() &&
-            normalize(a.address).equals(normalize(b.address)) &&
-            normalize(a.address).length() >= 12;
+        String address = normalize(a.address);
+        boolean specificStreet = containsPhrase(address, "rue") ||
+            containsPhrase(address, "avenue") || containsPhrase(address, "impasse") ||
+            containsPhrase(address, "chemin") || containsPhrase(address, "route") ||
+            containsPhrase(address, "allee") || containsPhrase(address, "boulevard") ||
+            containsPhrase(address, "lieu dit");
+        // « Monnaie (37380) » est une commune, PAS une adresse précise.
+        boolean samePreciseAddress = specificStreet && address.length() >= 14 &&
+            address.equals(normalize(b.address));
         boolean sameSeller = meaningfulSellerMatch(a.seller, b.seller);
-        return samePreciseAddress || sameSeller;
+        boolean sameLotIdentified = sameSeller && !normalize(a.lot).isEmpty() &&
+            normalize(a.lot).equals(normalize(b.lot));
+        // Identité d'agence seule insuffisante : le même promoteur peut avoir
+        // plusieurs lots au prix/surface identiques.
+        return samePreciseAddress || sameLotIdentified;
     }
 
     public static List<Result> classify(List<Listing> input) {
