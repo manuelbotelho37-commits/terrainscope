@@ -19,6 +19,7 @@
   const requestedNormalized = normalized(requested);
   const land = /\b(?:terrain(?:s)?|parcelle(?:s)?|lot(?:s)?\s+(?:a|à)\s+(?:batir|bâtir)|lotissement|foncier)\b/i;
   const unrelated = /\b(?:appartement(?:s)?|local commercial|bureaux à vendre|parking|garage à vendre)\b/i;
+  const houseTitle = /\b(?:maison(?:s)?|appartement(?:s)?|villa|villas|pavillon(?:s)?|immeuble(?:s)?|studio|longère)\b/i;
   const listingLink = /\/(?:annonce|annonces|ad|vente|ventes_immobilieres|immobilier|terrain|terrains|achat)[/-]/i;
   const records = [];
   const seen = new Set();
@@ -28,7 +29,12 @@
     if (!item || records.length >= 200) return;
     const title = clean(item.title), url = absolute(item.url), details = clean(item.description);
     if (!url || !/^https?:/.test(url) || !title) return;
-    if (!land.test(title + " " + details) || unrelated.test(title)) return;
+    // Attention : « Maison 6 pièces, terrain 655 m² » n'est PAS un terrain.
+    // Seule une fiche de terrain (type de bien indiqué dans son titre) entre
+    // dans la collecte. L'expression « terrain » dans la description seule
+    // ne suffit jamais à convertir une maison en parcelle à vendre.
+    if (houseTitle.test(title) || unrelated.test(title)) return;
+    if (!land.test(title)) return;
     const key = url.split("#")[0].replace(/\/$/, "");
     if (seen.has(key)) return;
     seen.add(key);
