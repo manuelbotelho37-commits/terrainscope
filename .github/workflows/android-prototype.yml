@@ -42,7 +42,7 @@ jobs:
             android-app/tests/ListingEngineSmokeTest.java \
             android-app/tests/SearchUrlsSmokeTest.java
           java -cp android-app/build/engine-smoke fr.terrainscope.app.ListingEngineSmokeTest
-          node -e "const fs=require('fs');const a=JSON.parse(fs.readFileSync('android-app/app/src/main/assets/communes-37.json','utf8'));fs.writeFileSync('android-app/build/communes-37-test.tsv',a.map(x=>x.nom+'\\t'+x.codesPostaux[0]).join('\\n'));console.log('Communes testées :',a.length)"
+          node -e "const fs=require('fs');const a=JSON.parse(fs.readFileSync('android-app/app/src/main/assets/communes-37.json','utf8'));fs.writeFileSync('android-app/build/communes-37-test.tsv',a.map(x=>[x.nom,x.codesPostaux[0]].join(String.fromCharCode(9))).join(String.fromCharCode(10)));console.log('Communes testées :',a.length)"
           java -cp android-app/build/engine-smoke fr.terrainscope.app.SearchUrlsSmokeTest android-app/build/communes-37-test.tsv
 
       - name: Installer Android API 35
