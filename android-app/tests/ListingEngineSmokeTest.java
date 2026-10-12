@@ -27,11 +27,11 @@ public final class ListingEngineSmokeTest {
     }
     public static void main(String[] args) {
         ListingEngine.Listing lbc = listing("Le Bon Coin","Terrain constructible",
-            "Agence Touraine","Monnaie",85000,500,"","https://www.leboncoin.fr/ad/vents/123");
+            "Agence Touraine","Monnaie",85000,500,"A1","https://www.leboncoin.fr/ad/vents/123");
         ListingEngine.Listing seloger = listing("SeLoger","Terrain à bâtir",
-            "Agence Touraine","Monnaie",85000,500,"","https://www.seloger.com/annonce/456");
+            "Agence Touraine","Monnaie",85000,500,"A1","https://www.seloger.com/annonce/456");
         ListingEngine.Listing bienici = listing("Bien’ici","Parcelle à bâtir",
-            "Agence Touraine","Monnaie",85000,500,"","https://www.bienici.com/annonce/vente/789");
+            "Agence Touraine","Monnaie",85000,500,"A1","https://www.bienici.com/annonce/vente/789");
 
         List<ListingEngine.Result> duplicates = ListingEngine.classify(Arrays.asList(bienici, seloger, lbc));
         check(status(duplicates,"Le Bon Coin")==ListingEngine.State.ACCEPTED,"Priorité Le Bon Coin");
@@ -94,7 +94,7 @@ public final class ListingEngineSmokeTest {
         // Cas Monnaie observés sur les portails : agences, constructeurs,
         // aménageurs, même surface/prix répliqués sur plusieurs sites.
         ListingEngine.Listing bsk = listing("SeLoger","Terrain constructible",
-            "SOPHIE VIALE BSK IMMOBILIER","Monnaie",145000,838,"",
+            "SOPHIE VIALE BSK IMMOBILIER","Monnaie",145000,838,"B19",
             "https://www.seloger.com/annonce/838-bsk");
         check(!ListingEngine.isBuilder(bsk),"Agence BSK reste visible");
         ListingEngine.Listing logis = listing("SeLoger","Terrain viabilisé",
@@ -111,7 +111,7 @@ public final class ListingEngineSmokeTest {
             "https://www.seloger.com/annonce/cmcic");
         check(ListingEngine.isLotisseur(cmcic),"Crédit Mutuel Aménagement reste lotisseur");
         ListingEngine.Listing bskRepeat = listing("Bien’ici","Terrain constructible",
-            "BSK IMMOBILIER","Monnaie",145000,838,"",
+            "BSK IMMOBILIER","Monnaie",145000,838,"B19",
             "https://www.bienici.com/annonce/vente/838-bsk");
         List<ListingEngine.Result> afterTri = ListingEngine.classify(
             Arrays.asList(bskRepeat, logis, villadim, bsk));
@@ -220,6 +220,29 @@ public final class ListingEngineSmokeTest {
             "", "", 64900, 283, true);
         check(!ListingEngine.isBuilder(knownAgency),
             "Agence identifiée : la publicité du voisin ne doit pas la masquer");
+
+        ListingEngine.Listing samePromoterLot1 = listing(
+            "SeLoger","Terrain lotissement libre de constructeur","Villadim",
+            "Monnaie",90000,410,"",
+            "https://www.seloger.com/annonce/villadim-lot1");
+        ListingEngine.Listing samePromoterLot2 = listing(
+            "Bien’ici","Terrain lotissement libre de constructeur","Villadim",
+            "Monnaie",90000,410,"",
+            "https://www.bienici.com/annonce/vente/villadim-lot2");
+        check(ListingEngine.filtered(ListingEngine.classify(
+            Arrays.asList(samePromoterLot1,samePromoterLot2))).size()==2,
+            "Même promoteur, surface et prix : préserver les deux lots sans numéro connu");
+        ListingEngine.Listing onlyTownA = new ListingEngine.Listing(
+            "SeLoger","https://www.seloger.com/annonce/ville",
+            "Terrain Monnaie", "Monnaie", "Agence Bellevue", "",
+            "Monnaie 37380","",112000,600,true);
+        ListingEngine.Listing onlyTownB = new ListingEngine.Listing(
+            "Bien’ici","https://www.bienici.com/annonce/vente/ville",
+            "Terrain Monnaie", "Monnaie", "Agence de la Gare", "",
+            "Monnaie 37380","",112000,600,true);
+        check(ListingEngine.filtered(ListingEngine.classify(
+            Arrays.asList(onlyTownA,onlyTownB))).size()==2,
+            "Même commune comme adresse non spécifique : deux terrains distincts");
 
         System.out.println("TerrainScope : " + assertions + " vérifications du moteur réussies.");
     }
