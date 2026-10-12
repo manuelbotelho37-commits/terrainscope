@@ -17,7 +17,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.AutoCompleteTextView;
+import android.widget.MultiAutoCompleteTextView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Spinner;
@@ -59,7 +59,7 @@ public final class MainActivity extends Activity {
     private final LinkedHashSet<String> sourcesVisited = new LinkedHashSet<>();
     private final LinkedHashSet<String> sourcesOpened = new LinkedHashSet<>();
 
-    private AutoCompleteTextView cityInput;
+    private MultiAutoCompleteTextView cityInput;
     private final ArrayList<String> communeNames = new ArrayList<>();
     private Spinner siteSpinner;
     private WebView browser;
@@ -191,7 +191,8 @@ public final class MainActivity extends Activity {
         search.addView(heading("COMMUNE(S) · SÉPARE PAR UNE VIRGULE", 11, GOLD, true));
         LinearLayout fields = row();
         fields.setGravity(Gravity.CENTER_VERTICAL);
-        cityInput = new AutoCompleteTextView(this);
+        cityInput = new MultiAutoCompleteTextView(this);
+        cityInput.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
         cityInput.setThreshold(2);
         cityInput.setAdapter(new ArrayAdapter<String>(this,
             android.R.layout.simple_dropdown_item_1line, communeNames));
