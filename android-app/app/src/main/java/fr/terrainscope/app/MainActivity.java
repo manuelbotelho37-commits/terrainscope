@@ -3,6 +3,8 @@ package fr.terrainscope.app;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
+import android.view.Gravity;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
@@ -70,46 +72,166 @@ public final class MainActivity extends Activity {
         status.setText("Choisis une commune, ouvre un site, puis importe les annonces affichées.");
     }
 
+
+    private static final int DARK = Color.rgb(18, 55, 46);
+    private static final int LIGHT = Color.rgb(246, 249, 246);
+    private static final int SOFT = Color.rgb(231, 240, 232);
+    private static final int LIME = Color.rgb(211, 243, 163);
+    private static final int TEXT = Color.rgb(34, 60, 50);
+    private static final int MUTED = Color.rgb(91, 117, 105);
+    private Button filteredTab;
+    private Button allTab;
+    private Button lotisseursTab;
+
+    private GradientDrawable rounded(int fill, int radius, int border) {
+        GradientDrawable d = new GradientDrawable();
+        d.setColor(fill);
+        d.setCornerRadius(dp(radius));
+        if (border != Color.TRANSPARENT) d.setStroke(dp(1), border);
+        return d;
+    }
+
+    private void place(LinearLayout parent, View child, int top, int bottom) {
+        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2);
+        p.setMargins(0, dp(top), 0, dp(bottom));
+        parent.addView(child, p);
+    }
+
+    private TextView heading(String content, int size, int color, boolean bold) {
+        TextView v = text(content, size, bold);
+        v.setTextColor(color);
+        v.setIncludeFontPadding(false);
+        return v;
+    }
+
+    private LinearLayout section(int fill, int radius, int border) {
+        LinearLayout v = new LinearLayout(this);
+        v.setOrientation(LinearLayout.VERTICAL);
+        v.setPadding(dp(14), dp(12), dp(14), dp(12));
+        v.setBackground(rounded(fill, radius, border));
+        return v;
+    }
+
+    private Button action(String title, boolean primary) {
+        Button b = new Button(this);
+        b.setText(title);
+        b.setTextSize(12);
+        b.setAllCaps(false);
+        b.setTypeface(null, Typeface.BOLD);
+        b.setTextColor(primary ? DARK : GREEN);
+        b.setBackground(rounded(primary ? LIME : Color.WHITE, 11,
+            primary ? Color.TRANSPARENT : Color.rgb(208, 225, 212)));
+        b.setElevation(0);
+        b.setMinimumHeight(dp(48));
+        b.setMinHeight(dp(48));
+        b.setPadding(dp(8), 0, dp(8), 0);
+        return b;
+    }
+
+    private void addControl(LinearLayout row, Button b, float weight) {
+        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, dp(47), weight);
+        p.setMargins(dp(2), 0, dp(2), 0);
+        row.addView(b, p);
+    }
+
+    private void chooseTab(Button selected) {
+        for (Button b : new Button[]{filteredTab, allTab, lotisseursTab}) {
+            if (b == null) continue;
+            boolean active = b == selected;
+            b.setTextColor(active ? DARK : MUTED);
+            b.setBackground(rounded(active ? LIME : SOFT, 11, Color.TRANSPARENT));
+        }
+    }
+
     private void buildScreen() {
+        getWindow().setStatusBarColor(DARK);
+        getWindow().setNavigationBarColor(DARK);
         main = new LinearLayout(this);
         main.setOrientation(LinearLayout.VERTICAL);
-        main.setPadding(dp(10), dp(8), dp(10), dp(6));
-        main.setBackgroundColor(Color.rgb(248, 251, 248));
+        main.setPadding(dp(12), dp(9), dp(12), dp(8));
+        main.setBackgroundColor(LIGHT);
 
-        TextView heading = text("TerrainScope · Android expérimental", 19, true);
-        heading.setTextColor(GREEN);
-        main.addView(heading);
-        status = text("", 12, false);
-        main.addView(status);
+        LinearLayout masthead = section(DARK, 18, Color.TRANSPARENT);
+        masthead.addView(heading("TerrainScope", 24, Color.WHITE, true));
+        TextView kicker = heading("RECHERCHE DE TERRAINS  ·  INDRE-ET-LOIRE", 10, LIME, true);
+        place(masthead, kicker, 1, 2);
+        masthead.addView(heading("Application Android · version d'essai", 11,
+            Color.rgb(203, 220, 211), false));
+        place(main, masthead, 0, 7);
 
-        LinearLayout search = row();
+        LinearLayout search = section(Color.WHITE, 16, Color.rgb(223, 235, 224));
+        search.addView(heading("RECHERCHER DES TERRAINS", 11, GREEN, true));
+        LinearLayout fields = row();
+        fields.setGravity(Gravity.CENTER_VERTICAL);
         cityInput = new EditText(this);
         cityInput.setSingleLine(true);
-        cityInput.setTextSize(14);
-        cityInput.setHint("Commune (ex. Monnaie)");
-        search.addView(cityInput, new LinearLayout.LayoutParams(0, dp(49), 3f));
+        cityInput.setTextSize(15);
+        cityInput.setTextColor(TEXT);
+        cityInput.setHintTextColor(MUTED);
+        cityInput.setHint("Commune · ex. Monnaie");
+        cityInput.setPadding(dp(11), 0, dp(9), 0);
+        cityInput.setBackground(rounded(LIGHT, 10, Color.rgb(207, 225, 211)));
+        LinearLayout.LayoutParams c = new LinearLayout.LayoutParams(0, dp(49), 1.45f);
+        c.setMargins(0, 0, dp(7), 0);
+        fields.addView(cityInput, c);
         siteSpinner = new Spinner(this);
         ArrayAdapter<String> choices = new ArrayAdapter<>(
             this, android.R.layout.simple_spinner_dropdown_item, SITES);
         siteSpinner.setAdapter(choices);
-        search.addView(siteSpinner, new LinearLayout.LayoutParams(0, dp(49), 2f));
-        main.addView(search);
+        siteSpinner.setPadding(dp(8), 0, dp(5), 0);
+        siteSpinner.setBackground(rounded(LIGHT, 10, Color.rgb(207, 225, 211)));
+        fields.addView(siteSpinner, new LinearLayout.LayoutParams(0, dp(49), 1f));
+        place(search, fields, 7, 8);
 
-        LinearLayout nav = row();
-        addButton(nav, "Ouvrir site", () -> openSelectedSite(), 1f);
-        addButton(nav, "Importer la page", () -> importVisiblePage(), 1.4f);
-        addButton(nav, "Nouvelle recherche", () -> reset(), 1.3f);
-        main.addView(nav);
+        LinearLayout actions = row();
+        Button openSite = action("Rechercher sur le site ↗", true);
+        openSite.setOnClickListener(v -> openSelectedSite());
+        addControl(actions, openSite, 1.15f);
+        Button importSite = action("Récupérer les annonces", false);
+        importSite.setOnClickListener(v -> importVisiblePage());
+        addControl(actions, importSite, 1.1f);
+        place(search, actions, 0, 6);
 
-        LinearLayout tabs = row();
-        addButton(tabs, "Annonces triées", () -> displayListings(true), 1f);
-        addButton(tabs, "Toutes les annonces", () -> displayListings(false), 1f);
-        addButton(tabs, "Lotisseurs", () -> {
+        Button reset = action("Nouvelle commune / vider la recherche", false);
+        reset.setTextSize(11);
+        reset.setMinimumHeight(dp(39));
+        reset.setOnClickListener(v -> reset());
+        place(search, reset, 0, 1);
+        place(main, search, 0, 7);
+
+        LinearLayout tabbar = row();
+        tabbar.setPadding(dp(4), dp(4), dp(4), dp(4));
+        tabbar.setBackground(rounded(SOFT, 15, Color.TRANSPARENT));
+        filteredTab = action("Annonces triées", true);
+        filteredTab.setTextSize(11);
+        filteredTab.setOnClickListener(v -> {
+            chooseTab(filteredTab);
+            displayListings(true);
+        });
+        addControl(tabbar, filteredTab, 1f);
+        allTab = action("Toutes les annonces", false);
+        allTab.setTextSize(11);
+        allTab.setOnClickListener(v -> {
+            chooseTab(allTab);
+            displayListings(false);
+        });
+        addControl(tabbar, allTab, 1.15f);
+        lotisseursTab = action("Lotisseurs", false);
+        lotisseursTab.setTextSize(11);
+        lotisseursTab.setOnClickListener(v -> {
+            chooseTab(lotisseursTab);
             browser.loadUrl(TERRAIN_SCOPE);
             showBrowser();
-            status.setText("Module des lotisseurs conservé dans TerrainScope Web.");
-        }, 0.8f);
-        main.addView(tabs);
+            status.setText("Les lotisseurs restent accessibles dans TerrainScope existant.");
+        });
+        addControl(tabbar, lotisseursTab, .8f);
+        place(main, tabbar, 0, 7);
+
+        status = heading("Prêt pour une recherche de terrains.", 12, TEXT, false);
+        status.setPadding(dp(12), dp(9), dp(12), dp(9));
+        status.setBackground(rounded(Color.rgb(237, 247, 233), 12,
+            Color.rgb(212, 230, 209)));
+        place(main, status, 0, 8);
 
         browser = new WebView(this);
         browser.setBackgroundColor(Color.WHITE);
@@ -124,25 +246,25 @@ public final class MainActivity extends Activity {
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
                 if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())) return false;
-                try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); } catch (Exception ignored) {}
+                try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); }
+                catch (Exception ignored) {}
                 return true;
             }
             @Override public void onPageFinished(WebView view, String url) {
-                if (showingBrowser) status.setText(
-                    "Page ouverte. Attends l’affichage des annonces, puis appuie sur « Importer la page »." +
-                    " Répète sur les pages suivantes et les autres sites.");
+                if (showingBrowser && activeCity.length() > 0)
+                    status.setText("Site chargé pour " + activeCity +
+                        ". Vérifie la catégorie Terrain et la commune avant d'importer.");
             }
         });
-        main.addView(browser, new LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        browser.setBackground(rounded(Color.WHITE, 13, Color.rgb(225, 233, 225)));
+        main.addView(browser, new LinearLayout.LayoutParams(-1, 0, 1f));
 
         results = new ScrollView(this);
         cards = new LinearLayout(this);
         cards.setPadding(dp(3), dp(10), dp(3), dp(10));
         cards.setOrientation(LinearLayout.VERTICAL);
         results.addView(cards);
-        main.addView(results, new LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        main.addView(results, new LinearLayout.LayoutParams(-1, 0, 1f));
         results.setVisibility(View.GONE);
         setContentView(main);
     }
