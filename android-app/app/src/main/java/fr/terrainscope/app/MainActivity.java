@@ -225,11 +225,16 @@ public final class MainActivity extends Activity {
         addControl(actions, importSite, 1.1f);
         place(search, actions, 0, 6);
 
-        Button reset = action("Effacer cette recherche", false);
+        LinearLayout secondary = row();
+        Button nextSite = action("Site suivant →", true);
+        nextSite.setTextSize(11);
+        nextSite.setOnClickListener(v -> openNextSite());
+        addControl(secondary, nextSite, 1f);
+        Button reset = action("Effacer la recherche", false);
         reset.setTextSize(11);
-        reset.setMinimumHeight(dp(39));
         reset.setOnClickListener(v -> reset());
-        place(search, reset, 0, 1);
+        addControl(secondary, reset, 1f);
+        place(search, secondary, 0, 1);
         place(main, search, 0, 7);
 
         LinearLayout tabbar = row();
@@ -340,6 +345,25 @@ public final class MainActivity extends Activity {
         status.setText("Recherche TERRAIN pour " + city + " (" +
             postalCodes.get(ListingEngine.normalize(city)) + ") sur " + site +
             ". Vérifie que le site affiche uniquement la commune et les terrains.");
+    }
+
+    private void openNextSite() {
+        String city = cleanCity();
+        if (city.isEmpty()) {
+            status.setText("Sélectionne une commune avant de passer au site suivant.");
+            return;
+        }
+        SearchUrls searches = new SearchUrls(postalCodes, selogerPaths);
+        int start = siteSpinner.getSelectedItemPosition();
+        for (int offset = 1; offset <= SITES.length; offset++) {
+            int next = (start + offset) % SITES.length;
+            if (searches.urlFor(SITES[next], city) != null) {
+                siteSpinner.setSelection(next);
+                openSelectedSite();
+                return;
+            }
+        }
+        status.setText("Aucune nouvelle source avec un lien Terrain confirmé pour cette commune.");
     }
 
     private void importVisiblePage() {
