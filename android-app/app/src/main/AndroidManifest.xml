@@ -3,8 +3,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="TerraNova"
-        android:icon="@drawable/terranova_logo"
-        android:roundIcon="@drawable/terranova_logo"
+        android:icon="@drawable/terranova_app_icon"
+        android:roundIcon="@drawable/terranova_app_icon"
         android:allowBackup="false"
         android:usesCleartextTraffic="false"
         android:theme="@android:style/Theme.Material.NoActionBar">
