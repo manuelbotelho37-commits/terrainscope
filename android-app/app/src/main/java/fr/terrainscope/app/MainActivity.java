@@ -86,6 +86,7 @@ public final class MainActivity extends Activity {
     private int scanPageNumber = 0;
     private int scanLimited = 0;
     private int scanBlocked = 0;
+    private int scanLoadNonce = 0;
     private boolean scanning = false;
 
     @Override public void onCreate(Bundle state) {
@@ -466,9 +467,22 @@ public final class MainActivity extends Activity {
         scanPageUrls.add(task[2]);
         status.setText("Recherche " + (scanTaskIndex+1) + "/" + scanTasks.size() +
             " · " + task[0] + " · " + task[1] + " · " + imported.size() + " annonces reçues");
+        loadScannedUrl(task[2], run);
+    }
+
+    private void loadScannedUrl(String url, int run) {
+        int nonce = ++scanLoadNonce;
         pageLoading = true;
         webError = false;
-        browser.loadUrl(task[2]);
+        browser.loadUrl(url);
+        scanHandler.postDelayed(() -> {
+            if (scanning && run == scanGeneration && nonce == scanLoadNonce &&
+                    pageLoading) {
+                scanBlocked++;
+                scanTaskIndex++;
+                startNextScanTask(run);
+            }
+        }, 18000);
     }
 
     private void scanPageLoaded() {
@@ -530,8 +544,7 @@ public final class MainActivity extends Activity {
                 if (sameHost && scanPageNumber < 4 && !scanPageUrls.contains(nextUrl)) {
                     scanPageUrls.add(nextUrl);
                     scanPageNumber++;
-                    pageLoading = true;
-                    browser.loadUrl(nextUrl);
+                    loadScannedUrl(nextUrl, run);
                     return;
                 }
                 if (sameHost && scanPageNumber >= 4) scanLimited++;
