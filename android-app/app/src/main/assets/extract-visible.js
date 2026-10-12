@@ -122,7 +122,12 @@
     '[class*="property-card"]', '[class*="annonce-card"]',
     '[class*="AnnonceCard"]', 'li[data-testid]', '[data-cy*="listing"]',
     '[data-qa-id="aditem_container"]', 'a[href*="/ad/ventes_immobilieres/"]',
-    '[data-test-id*="listing"]', '[data-qa-id*="classified"]'
+    '[data-test-id*="listing"]', '[data-qa-id*="classified"]',
+    'a[href*="/annonce/terrain-vente-"]',
+    'a[href*="/annonce/vente/"]',
+    'a[href*="/annonce/achat/"]',
+    'a[href*="/annonces/vente/terrain"]',
+    '[data-testid*="property-card"]', '[class*="search-result-card"]'
   ];
   const nodes = [...new Set(selectors.flatMap(sel => {
     try { return [...document.querySelectorAll(sel)]; } catch (_) { return []; }
@@ -130,17 +135,35 @@
   for (const node of nodes.slice(0, 800)) {
     if (records.length >= 200) break;
     if (node.getClientRects().length === 0) continue;
-    const text = clean(node.innerText || node.textContent);
+    let card = node;
+    // iad et Bien'ici rendent parfois leur titre comme un lien isolé ;
+    // prix et surface se trouvent alors dans son parent. Remonter uniquement
+    // tant que l'on reste dans UNE fiche, jamais au conteneur de la liste.
+    if (node.matches?.("a[href]")) {
+      const own = clean(node.innerText || node.textContent);
+      if (!/\d[\d\s\u00a0]*\s*€/.test(own)) {
+        let parent = node.parentElement;
+        for (let depth = 0; parent && depth < 3; depth++, parent = parent.parentElement) {
+          const nearby = clean(parent.innerText || parent.textContent);
+          if (nearby.length > 2200) break;
+          if (/\d[\d\s\u00a0]*\s*€/.test(nearby) && land.test(nearby)) {
+            card = parent;
+            break;
+          }
+        }
+      }
+    }
+    const text = clean(card.innerText || card.textContent);
     if (text.length < 18 || text.length > 2500 || !land.test(text)) continue;
     // Le Bon Coin expose souvent une carte sous la forme d'un <a> racine,
     // sans lien <a> enfant. On doit donc inclure ce nœud lui-même.
     const links = [
       ...(node.matches?.("a[href]") ? [node] : []),
-      ...node.querySelectorAll("a[href]")
+      ...card.querySelectorAll("a[href]")
     ].filter(a => !/^javascript:/i.test(a.getAttribute("href") || ""));
     const linked = links.find(a => listingLink.test(a.getAttribute("href") || "")) || links[0];
     if (!linked) continue;
-    let title = valueFrom(node, "h2, h3, h4, [data-testid*='title'], [class*='title']") || clean(linked.textContent);
+    let title = valueFrom(card, "h2, h3, h4, [data-testid*='title'], [class*='title']") || clean(linked.textContent);
     if (!title || title.length < 5) title = text.slice(0, 170);
     // Les cartes Le Bon Coin « Terrain · 500m² » ont parfois pour titre
     // générique « Immobilier Neuf ». Ne pas les rater, mais NE JAMAIS
@@ -149,11 +172,11 @@
     const terrainKind = /\bTerrain\s*[·:]\s*\d+[\d\s]*(?:m²|m2)/i.test(text);
     if (!land.test(title) && terrainKind && !primaryHouse)
       title = "Terrain à vendre · " + title;
-    const seller = valueFrom(node, '[data-testid*="agency"], [data-testid*="seller"], [data-testid*="advertiser"], [class*="agency-name"], [class*="seller-name"], [class*="advertiser-name"], [class*="merchant-name"]');
-    const locationText = valueFrom(node, '[data-testid*="location"], [data-testid*="locality"], [data-qa-id*="location"], [class*="property-location"], [class*="card-location"]');
-    const price = valueFrom(node, '[data-testid*="price"], [class*="price"], [data-cy*="price"]');
-    const area = valueFrom(node, '[data-testid*="area"], [class*="surface"], [class*="area"]');
-    const address = valueFrom(node, '[data-testid*="address"], [class*="address"]');
+    const seller = valueFrom(card, '[data-testid*="agency"], [data-testid*="seller"], [data-testid*="advertiser"], [class*="agency-name"], [class*="seller-name"], [class*="advertiser-name"], [class*="merchant-name"]');
+    const locationText = valueFrom(card, '[data-testid*="location"], [data-testid*="locality"], [data-qa-id*="location"], [class*="property-location"], [class*="card-location"]');
+    const price = valueFrom(card, '[data-testid*="price"], [class*="price"], [data-cy*="price"]');
+    const area = valueFrom(card, '[data-testid*="area"], [class*="surface"], [class*="area"]');
+    const address = valueFrom(card, '[data-testid*="address"], [class*="address"]');
     const lot = (text.match(/\blot\s*(?:n[°o.]?\s*)?([A-Z]?\d{1,4})\b/i) || [])[1] || "";
     add({title, url:linked.href, description:text, price, area, seller, address, lot, location:locationText});
   }
