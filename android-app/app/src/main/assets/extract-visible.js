@@ -197,8 +197,12 @@
     const lot = (text.match(/\blot\s*(?:n[°o.]?\s*)?([A-Z]?\d{1,4})\b/i) || [])[1] || "";
     add({title, url:linked.href, description:text, price, area, seller, address, lot, location:locationText});
   }
+  const pageTop = clean(document.body?.innerText?.slice(0, 3500) || "");
+  const accessBlocked = records.length === 0 &&
+    /(?:captcha|recaptcha|verify (?:that )?you are human|access denied|too many requests|acces refuse|accès refusé|vérifiez que vous êtes humain|confirmez que vous êtes humain|robot verification|verification humaine|vérification humaine)/i.test(pageTop + " " + document.title);
   return JSON.stringify({
     source, pageUrl: base, pageTitle: document.title,
+    accessBlocked,
     requestedCity: requested,
     declaredCount: (() => {
       const headline = clean(document.querySelector("h1")?.textContent || "");
