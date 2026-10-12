@@ -287,10 +287,23 @@ public final class ListingEngine {
         return output;
     }
 
+    /** Prix croissant pour toutes les vues : prix inconnu systématiquement à la fin.
+     * Le classement des portails reste utilisé pour départager les prix égaux,
+     * et surtout pour choisir la bonne source en cas de doublon. */
+    public static final Comparator<Result> BY_ASCENDING_PRICE = (first, second) -> {
+        long a = first.listing.priceEuros > 0 ? first.listing.priceEuros : Long.MAX_VALUE;
+        long b = second.listing.priceEuros > 0 ? second.listing.priceEuros : Long.MAX_VALUE;
+        int price = Long.compare(a, b);
+        if (price != 0) return price;
+        int source = Integer.compare(priority(first.listing.source), priority(second.listing.source));
+        if (source != 0) return source;
+        return first.listing.url.compareTo(second.listing.url);
+    };
+
     public static List<Result> filtered(List<Result> all) {
         ArrayList<Result> results = new ArrayList<>();
         for (Result r : all) if (r.state == State.ACCEPTED) results.add(r);
-        results.sort(Comparator.comparingInt(r -> priority(r.listing.source)));
+        results.sort(BY_ASCENDING_PRICE);
         return results;
     }
 
