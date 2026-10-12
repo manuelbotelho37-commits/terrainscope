@@ -62,6 +62,34 @@ jobs:
       - name: Construire l'application expérimentale
         run: gradle -p android-app :app:assembleDebug --no-daemon
 
+      - name: Vérifier le démarrage sur un émulateur Android
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          disable-animations: true
+          script: |
+            adb install -r android-app/app/build/outputs/apk/debug/app-debug.apk
+            adb shell am start -n fr.terrainscope.app/.MainActivity
+            sleep 8
+            adb shell uiautomator dump /sdcard/terrainscope-ui.xml
+            mkdir -p android-app/build/visual-test
+            adb pull /sdcard/terrainscope-ui.xml android-app/build/visual-test/window.xml
+            grep -q 'TerrainScope' android-app/build/visual-test/window.xml
+            grep -q 'Annonces triées' android-app/build/visual-test/window.xml
+            grep -q 'Toutes les annonces' android-app/build/visual-test/window.xml
+            adb exec-out screencap -p > android-app/build/visual-test/accueil.png
+            adb shell dumpsys activity activities | grep -q 'fr.terrainscope.app'
+
+      - name: Conserver la capture de l'interface Android
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TerrainScope-Android-Visual-Test
+          path: android-app/build/visual-test/
+          retention-days: 7
+          if-no-files-found: warn
+
       - name: Publier l'APK de test
         uses: actions/upload-artifact@v4
         with:
