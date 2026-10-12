@@ -26,7 +26,7 @@
     'residentiel','pavillonnaire','plat','cadre','emplacement','vente'
   ]);
   const state={serial:0,stage:0,active:false,waiting:1,pageSeen:new Set(),
-    byUrl:new Set(),entries:[],unique:[],duplicates:0,page:1,
+    byUrl:new Set(),entries:[],unique:[],duplicates:0,page:1,sourceFilter:'',
     stageTimer:null,pageTimer:null,processing:false,started:false};
   const get=id=>document.getElementById(id);
   const normalized=value=>String(value||'').normalize('NFD')
@@ -182,19 +182,32 @@
   function draw(){
     const out=get('uniqueResults'),summary=get('uniqueSummary'),pages=get('uniquePages');
     if(!out||!summary||!pages)return;
-    const unique=state.unique,number=unique.length;
+    // Afficher uniquement les pistes issues du portail sélectionné.
+    // Ces fiches viennent de l'index Google, PAS du catalogue complet du portail.
+    const unique=state.sourceFilter
+      ?state.unique.filter(item=>item.source===state.sourceFilter)
+      :state.unique;
+    const number=unique.length;
     const pagesCount=Math.max(1,Math.ceil(number/PAGE_SIZE));
     state.page=Math.min(state.page,pagesCount);
     const status=state.active?'Recherche en cours · '+(SOURCES[state.stage]?.name||'autres sources'):
       'Recherche Google terminée';
-    summary.textContent=number+' lien(s) de terrain repéré(s) dans Google · '+state.duplicates+
-      ' doublon(s) regroupé(s) · '+status+
-      ' · Annonces NON vérifiées sur les sites vendeurs';
+    const scope=state.sourceFilter?' · Source : '+state.sourceFilter:' · Toutes sources';
+    summary.textContent=number+' piste(s) de terrain trouvée(s) dans l’index Google'+scope+
+      ' · '+status+' · Disponibilité NON vérifiée, recherche non exhaustive';
+    const chooser=get('googleSourceFilters');
+    if(chooser)for(const btn of chooser.querySelectorAll('button[data-filter-source]')){
+      const selected=btn.dataset.filterSource===state.sourceFilter;
+      btn.setAttribute('aria-pressed',String(selected));
+      btn.classList.toggle('active',selected);
+    }
     out.replaceChildren();
     if(!number){
       const p=document.createElement('p');p.className='unique-empty';
-      p.textContent=state.active?'Recherche des terrains sur les portails…':
-        'Aucune annonce exploitable trouvée dans les résultats Google. Essaie les accès directs aux sites ci-dessous.';
+      p.textContent=state.active?'Recherche de terrains en cours sur les sites…':
+        state.sourceFilter
+          ?'Aucune annonce individuelle exploitable repérée sur '+state.sourceFilter+' pour cette recherche. Cela ne signifie pas qu’aucun terrain n’y est publié : consulte au besoin son catalogue complet non filtré.'
+          :'Aucune annonce individuelle exploitable repérée dans l’index Google pour cette recherche. Consulte au besoin les accès directs non filtrés.';
       out.append(p);pages.hidden=true;return;
     }
     const from=(state.page-1)*PAGE_SIZE;
@@ -318,7 +331,7 @@
   function search(cities){
     state.serial++;stopTimers();
     state.entries=[];state.unique=[];state.byUrl.clear();
-    state.duplicates=0;state.page=1;state.stage=0;state.waiting=1;
+    state.duplicates=0;state.page=1;state.sourceFilter='';state.stage=0;state.waiting=1;
     state.pageSeen.clear();state.active=true;state.processing=false;state.started=false;
     get('uniquePanel').hidden=false;draw();startStage();
   }
@@ -327,6 +340,13 @@
     const serial=state.serial;
     setTimeout(()=>capture(serial),320);
   }
-  window.TerrainAggregator={search,onRendered,resume:()=>{if(state.active)startStage()},isIndividualLandListing,previewSaysInactive};
+  function setSourceFilter(source){
+    if(source&&!SOURCES.some(item=>item.name===source&&item.domain))return false;
+    state.sourceFilter=source||'';
+    state.page=1;
+    draw();
+    return true;
+  }
+  window.TerrainAggregator={search,onRendered,setSourceFilter,resume:()=>{if(state.active)startStage()},isIndividualLandListing,previewSaysInactive};
   draw();
 })();
