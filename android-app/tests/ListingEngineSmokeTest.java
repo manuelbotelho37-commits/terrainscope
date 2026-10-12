@@ -146,6 +146,37 @@ public final class ListingEngineSmokeTest {
         check(!ListingEngine.requiresBuildabilityCheck(genuineLand),
             "Terrain constructible proposé par iad conservé");
 
+        // Deux terrains distincts peuvent partager le même prix et la même
+        // surface sur deux portails : éviter l'effacement automatique.
+        ListingEngine.Listing lotAlpha = listing("SeLoger","Terrain A",
+            "Agence Bellevue","Monnaie",99000,520,"",
+            "https://www.seloger.com/annonce/lot-alpha");
+        ListingEngine.Listing lotBeta = listing("Bien’ici","Terrain B",
+            "Agence de la Gare","Monnaie",99000,520,"",
+            "https://www.bienici.com/annonce/lot-beta");
+        check(ListingEngine.filtered(ListingEngine.classify(Arrays.asList(lotAlpha,lotBeta))).size()==2,
+            "Même prix et surface, annonceurs différents : deux terrains conservés");
+        ListingEngine.Listing unknownSeller = listing("Bien’ici","Terrain sans vendeur",
+            "","Monnaie",99000,520,"",
+            "https://www.bienici.com/annonce/terrain-non-attribue");
+        check(ListingEngine.filtered(ListingEngine.classify(Arrays.asList(lotAlpha,unknownSeller))).size()==2,
+            "Annonceur manquant : ne jamais masquer un terrain présumé doublon");
+        ListingEngine.Listing genericSeller = listing("Bien’ici","Terrain de lotissement",
+            "Agence","Monnaie",99000,520,"",
+            "https://www.bienici.com/annonce/terrain-generique");
+        check(ListingEngine.filtered(ListingEngine.classify(Arrays.asList(lotAlpha,genericSeller))).size()==2,
+            "Simple étiquette Agence : pas une preuve de doublon");
+        ListingEngine.Listing sharedAddressA = new ListingEngine.Listing(
+            "SeLoger","https://www.seloger.com/annonce/parcelle-rue-nantes",
+            "Terrain constructible","Monnaie","Agence Bellevue","",
+            "14 rue de Nantes, Monnaie","",99000,520,true);
+        ListingEngine.Listing sharedAddressB = new ListingEngine.Listing(
+            "Bien’ici","https://www.bienici.com/annonce/rue-nantes",
+            "Terrain à bâtir","Monnaie","Autre agence immobilière","",
+            "14 rue de Nantes, Monnaie","",99000,520,true);
+        check(ListingEngine.filtered(ListingEngine.classify(Arrays.asList(sharedAddressA,sharedAddressB))).size()==1,
+            "Adresse précise identique : rapprochement malgré deux agences");
+
         System.out.println("TerrainScope : " + assertions + " vérifications du moteur réussies.");
     }
 }
