@@ -198,6 +198,29 @@ public final class ListingEngineSmokeTest {
         check(!ListingEngine.isBuilder(actualCPR),
             "Maisons CPR est conservé même avec la mention d'un concurrent à proximité");
 
+        ListingEngine.Listing genericBuilder = new ListingEngine.Listing(
+            "SeLoger", "https://www.seloger.com/annonce/maison-terrains-123",
+            "Terrain constructible à vendre", "Monnaie", "Immobilier neuf",
+            "Sur ce terrain LOGIS AVENIR vous propose de réaliser votre projet de construction " +
+                "de maison individuelle avec les prestations comprises.",
+            "", "", 64900, 283, true);
+        check(ListingEngine.isBuilder(genericBuilder),
+            "Annonceur générique mais argumentaire de Logis Avenir : constructeur exclu");
+        ListingEngine.Listing unnamedAgency = new ListingEngine.Listing(
+            "SeLoger", "https://www.seloger.com/annonce/terrain-libre-124",
+            "Terrain constructible à vendre", "Monnaie", "",
+            "Terrain situé près d'une ancienne opération Logis Avenir, libre de constructeur.",
+            "", "", 64900, 283, true);
+        check(!ListingEngine.isBuilder(unnamedAgency),
+            "Vendeur absent et concurrent cité sans offre de construction : terrain conservé");
+        ListingEngine.Listing knownAgency = new ListingEngine.Listing(
+            "SeLoger", "https://www.seloger.com/annonce/terrain-libre-125",
+            "Terrain constructible à vendre", "Monnaie", "BSK IMMOBILIER",
+            "Un constructeur Logis Avenir vous propose de construire sur un terrain voisin.",
+            "", "", 64900, 283, true);
+        check(!ListingEngine.isBuilder(knownAgency),
+            "Agence identifiée : la publicité du voisin ne doit pas la masquer");
+
         System.out.println("TerrainScope : " + assertions + " vérifications du moteur réussies.");
     }
 }
