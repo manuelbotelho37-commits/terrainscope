@@ -83,7 +83,9 @@
     '[data-testid*="search-result"]', '[class*="ListingCard"]',
     '[class*="listing-card"]', '[class*="PropertyCard"]',
     '[class*="property-card"]', '[class*="annonce-card"]',
-    '[class*="AnnonceCard"]', 'li[data-testid]', '[data-cy*="listing"]'
+    '[class*="AnnonceCard"]', 'li[data-testid]', '[data-cy*="listing"]',
+    '[data-qa-id="aditem_container"]', 'a[href*="/ad/ventes_immobilieres/"]',
+    '[data-test-id*="listing"]', '[data-qa-id*="classified"]'
   ];
   const nodes = [...new Set(selectors.flatMap(sel => {
     try { return [...document.querySelectorAll(sel)]; } catch (_) { return []; }
@@ -93,11 +95,23 @@
     if (node.getClientRects().length === 0) continue;
     const text = clean(node.innerText || node.textContent);
     if (text.length < 18 || text.length > 2500 || !land.test(text)) continue;
-    const links = [...node.querySelectorAll("a[href]")].filter(a => !/^javascript:/i.test(a.getAttribute("href") || ""));
+    // Le Bon Coin expose souvent une carte sous la forme d'un <a> racine,
+    // sans lien <a> enfant. On doit donc inclure ce nœud lui-même.
+    const links = [
+      ...(node.matches?.("a[href]") ? [node] : []),
+      ...node.querySelectorAll("a[href]")
+    ].filter(a => !/^javascript:/i.test(a.getAttribute("href") || ""));
     const linked = links.find(a => listingLink.test(a.getAttribute("href") || "")) || links[0];
     if (!linked) continue;
     let title = valueFrom(node, "h2, h3, h4, [data-testid*='title'], [class*='title']") || clean(linked.textContent);
     if (!title || title.length < 5) title = text.slice(0, 170);
+    // Les cartes Le Bon Coin « Terrain · 500m² » ont parfois pour titre
+    // générique « Immobilier Neuf ». Ne pas les rater, mais NE JAMAIS
+    // importer une carte explicitement étiquetée Maison/Appartement.
+    const primaryHouse = /\b(?:Maison|Appartement|Studio|Villa|Pavillon)\s*[·:,]/i.test(text);
+    const terrainKind = /\bTerrain\s*[·:]\s*\d+[\d\s]*(?:m²|m2)/i.test(text);
+    if (!land.test(title) && terrainKind && !primaryHouse)
+      title = "Terrain à vendre · " + title;
     const seller = valueFrom(node, '[data-testid*="agency"], [data-testid*="seller"], [class*="agency-name"], [class*="seller-name"]');
     const price = valueFrom(node, '[data-testid*="price"], [class*="price"], [data-cy*="price"]');
     const area = valueFrom(node, '[data-testid*="area"], [class*="surface"], [class*="area"]');
@@ -107,7 +121,14 @@
   }
   return JSON.stringify({
     source, pageUrl: base, pageTitle: document.title,
-    requestedCity: requested, scannedCards: nodes.length, retrieved: records.length,
+    requestedCity: requested,
+    declaredCount: (() => {
+      const headline = clean(document.querySelector("h1")?.textContent || "");
+      const header = clean(document.body?.innerText?.slice(0, 4000) || "");
+      const match = (headline + " " + header).match(/\b(\d{1,5})\s+annonces?\b/i);
+      return match ? Number(match[1]) : null;
+    })(),
+    scannedCards: nodes.length, retrieved: records.length,
     listings: records,
     warning: "Import limité au contenu de la page chargée. Ni exhaustivité ni disponibilité garanties."
   });
