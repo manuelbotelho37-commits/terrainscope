@@ -168,7 +168,7 @@ public final class MainActivity extends Activity {
         brandLine.setGravity(Gravity.CENTER_VERTICAL);
         ImageView brandIcon = new ImageView(this);
         brandIcon.setContentDescription("Logo TerraNova");
-        brandIcon.setImageResource(R.drawable.terranova_logo);
+        brandIcon.setImageResource(R.drawable.terranova_app_icon);
         brandLine.addView(brandIcon, new LinearLayout.LayoutParams(dp(64), dp(64)));
         LinearLayout brandText = new LinearLayout(this);
         brandText.setOrientation(LinearLayout.VERTICAL);
