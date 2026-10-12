@@ -400,7 +400,8 @@ public final class MainActivity extends Activity {
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
         panel.setPadding(dp(12), dp(11), dp(12), dp(12));
-        panel.setBackgroundColor(Color.WHITE);
+        panel.setBackground(rounded(Color.WHITE, 14, Color.rgb(218, 230, 221)));
+        panel.setElevation(dp(2));
         LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(-1, -2);
         layout.setMargins(0, dp(8), 0, dp(4));
         cards.addView(panel, layout);
@@ -419,9 +420,7 @@ public final class MainActivity extends Activity {
         if (!record.reason.isEmpty()) panel.addView(text(record.reason, 12, false));
         if (!record.otherSources.isEmpty())
             panel.addView(text("Autres sites : " + String.join(", ", record.otherSources), 12, false));
-        Button open = new Button(this);
-        open.setAllCaps(false);
-        open.setText("Voir l’annonce d’origine ↗");
+        Button open = action("Voir l’annonce d’origine ↗", true);
         open.setOnClickListener(v -> {
             try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(item.url))); }
             catch (Exception exception) { status.setText("Lien inaccessible : " + item.url); }
