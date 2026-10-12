@@ -1,7 +1,7 @@
 /* Relevé officiel daté, jamais de garantie de statut en temps réel. */
 window.TERRAIN_LOTISSEURS_DATA = {
-  "date": "2026-10-11",
-  "scope": "Catalogue Villadim : 11 opérations en Indre-et-Loire réconciliées avec la liste officielle du 11/10/2026. Autres lotisseurs : catalogues partiels. Chiffres des lots = compteurs visibles sur les fiches officielles, pas des disponibilités certifiées en temps réel.",
+  "date": "2026-10-12",
+  "scope": "Catalogue Villadim : 11 opérations en Indre-et-Loire réconciliées avec la liste officielle du 11/10/2026. Autres lotisseurs : fiches repérées le 12/10/2026, non exhaustives. Chiffres des lots = compteurs visibles sur les fiches officielles, pas des disponibilités certifiées en temps réel.",
   "programs": [
     {
       "developer": "Villadim",
@@ -681,6 +681,20 @@ window.TERRAIN_LOTISSEURS_DATA = {
       "surfaceMax": 691,
       "priceFrom": 56000
     }
+    ,
+    {"developer":"Viabilis","city":"Tauxigny-Saint-Bauld","name":"La Thibaudière","url":"https://www.viabilis.fr/terrain/la-thibaudiere-indre-et-loire-37/","seen":"2026-10-12"},
+    {"developer":"Viabilis","city":"Beaumont-Louestault","name":"La Blinière","url":"https://www.viabilis.fr/terrain/la-bliniere-beaumont-louestault-37/","seen":"2026-10-12"},
+    {"developer":"Acanthe","city":"Cormery","name":"Lotissement des Quarts","url":"https://www.acanthe-terrain.fr/terrains-a-batir/terrain-a-vendre-indre-et-loire/","note":"Accès à la page officielle des terrains du 37 ; sélectionner « Lotissement des Quarts ».","seen":"2026-10-12"},
+    {"developer":"Nexity","city":"Notre-Dame-d'Oé","name":"La Petite Borde","url":"https://www.nexity.fr/terrain/0079_58G_80676","seen":"2026-10-12"},
+    {"developer":"Nexity","city":"Mettray","name":"Allures","url":"https://www.nexity.fr/terrain/0079_58G_80275","seen":"2026-10-12"},
+    {"developer":"Nexity","city":"Parçay-Meslay","name":"Verde Loge","url":"https://www.nexity.fr/terrain/0079_58G_79935","seen":"2026-10-12"},
+    {"developer":"Entre Terrains","city":"La Membrolle-sur-Choisille","name":"Les Hauts de Mazagran","url":"https://www.entre-terrains.com/programme/les-hauts-de-mazagran/","seen":"2026-10-12"},
+    {"developer":"Entre Terrains","city":"Chanceaux-sur-Choisille","name":"La Pierre Couverte","url":"https://www.entre-terrains.com/programme/la-pierre-couverte/","seen":"2026-10-12"},
+    {"developer":"Terravia","city":"Véretz","name":"Le Jardin des Poètes","url":"https://www.terravia.fr/bien/le-jardin-des-poetes-veretz/","seen":"2026-10-12"},
+    {"developer":"Terravia","city":"Lignières-de-Touraine","name":"Le Haut Vivier","url":"https://www.terravia.fr/bien/le-haut-vivier-lignieres/","seen":"2026-10-12"},
+    {"developer":"Lodgim","city":"Charentilly","name":"Le Clos des Ouches","url":"https://www.lodgim.fr/node/89060","seen":"2026-10-12"},
+    {"developer":"Immo Nature et Construction","city":"Mosnes","name":"La Garenne","url":"https://immo-nature-constructions.fr/terrains/","seen":"2026-10-12"},
+    {"developer":"Quatro Promotion","city":"Neuillé-Pont-Pierre","name":"La Borde 4","url":"https://www.quatro-promotion.fr/terrains-a-batir/la-borde/","seen":"2026-10-12"}
   ],
   "audit": {
     "developer": "Villadim",
