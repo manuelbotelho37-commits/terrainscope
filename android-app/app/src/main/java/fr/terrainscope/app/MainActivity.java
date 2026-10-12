@@ -65,6 +65,7 @@ public final class MainActivity extends Activity {
     private ScrollView results;
     private TextView status;
     private boolean showingBrowser = true;
+    private boolean showLotisseursOnLoad = false;
     private String activeCity = "";
 
     @Override public void onCreate(Bundle state) {
@@ -250,9 +251,10 @@ public final class MainActivity extends Activity {
         lotisseursTab.setTextSize(11);
         lotisseursTab.setOnClickListener(v -> {
             chooseTab(lotisseursTab);
+            showLotisseursOnLoad = true;
             browser.loadUrl(TERRAIN_SCOPE);
             showBrowser();
-            status.setText("Catalogue des 18 lotisseurs : version TerrainScope conservée.");
+            status.setText("Ouverture du catalogue des 18 lotisseurs…");
         });
         addControl(tabbar, lotisseursTab, .8f);
         place(main, tabbar, 0, 7);
@@ -280,6 +282,16 @@ public final class MainActivity extends Activity {
                 return true;
             }
             @Override public void onPageFinished(WebView view, String url) {
+                if (showLotisseursOnLoad && url.startsWith(TERRAIN_SCOPE)) {
+                    showLotisseursOnLoad = false;
+                    view.evaluateJavascript(
+                        "(function(){var b=document.getElementById('lotisseursTop');" +
+                        "var d=document.getElementById('developerAccordion');" +
+                        "if(b && d){if(!d.open)b.click();" +
+                        "b.scrollIntoView({block:'center'});return true;}return false;})()",
+                        ignored -> status.setText("Catalogue des lotisseurs ouvert dans TerrainScope."));
+                    return;
+                }
                 if (showingBrowser && activeCity.length() > 0)
                     status.setText("Site chargé pour " + activeCity +
                         ". Vérifie la catégorie Terrain et la commune avant d'importer.");
@@ -319,6 +331,7 @@ public final class MainActivity extends Activity {
             imported.clear();
         }
         activeCity = city;
+        showLotisseursOnLoad = false;
         showBrowser();
         browser.loadUrl(url);
         status.setText("Recherche TERRAIN pour " + city + " (" +
