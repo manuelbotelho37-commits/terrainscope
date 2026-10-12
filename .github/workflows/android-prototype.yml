@@ -118,9 +118,18 @@ jobs:
           APKSIGNER="$(find "$SDK_ROOT/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
           test -x "$APKSIGNER"
           "$APKSIGNER" verify --verbose --print-certs "$APK" > "$RUNNER_TEMP/terranova-apk-verification.txt"
-          # Empreinte publique du certificat stable; jamais la clé privée.
-          grep -Fqi "6aaad66d19b9a46ef816c131d4ee0ea509f666c1e5ec0307b3344c6530f5b180" "$RUNNER_TEMP/terranova-apk-verification.txt"
-          echo "Signature APK vérifiée : certificat TerraNova permanent attendu."
+          # L'archive conservée par l'utilisateur peut être différente d'une
+          # première clé préparée : comparer à LA CLÉ effectivement installée
+          # dans GitHub plutôt qu'à une empreinte issue d'une autre archive.
+          # On ne publie jamais la clé privée ni ses mots de passe.
+          APK_SHA256="$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$RUNNER_TEMP/terranova-apk-verification.txt" | head -n 1 | tr -d ':[:space:]' | tr '[:upper:]' '[:lower:]')"
+          KEY_SHA256="$(keytool -list -v -keystore "$TERRANOVA_SIGNING_KEYSTORE" -storepass "$TERRANOVA_SIGNING_STORE_PASSWORD" -alias "$TERRANOVA_SIGNING_KEY_ALIAS" | sed -n 's/^[[:space:]]*SHA256:[[:space:]]*//p' | head -n 1 | tr -d ':[:space:]' | tr '[:upper:]' '[:lower:]')"
+          test -n "$APK_SHA256" && test -n "$KEY_SHA256"
+          test "$APK_SHA256" = "$KEY_SHA256" || {
+            echo "::error::Le certificat de l'APK ne correspond pas à celui du secret GitHub."
+            exit 1
+          }
+          echo "Signature APK valide et identique à la clé GitHub. Empreinte publique SHA-256 : $APK_SHA256"
 
       - name: Vérifier le démarrage sur un émulateur Android
         # Le runner Android GitHub peut planter (adb Broken pipe) avant même
