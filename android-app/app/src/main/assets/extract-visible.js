@@ -34,7 +34,7 @@
     seen.add(key);
     const raw = title + " " + details;
     const money = clean(item.price) || (raw.match(/(\d[\d \u00a0.]{2,})\s*€/i) || [])[1] || "";
-    const area = clean(item.area) || (raw.match(/(\d[\d \u00a0]*(?:[,.]\d+)?)\s*m(?:²|2)\b/i) || [])[1] || "";
+    const area = clean(item.area) || (raw.match(/(\d[\d \u00a0]*(?:[,.]\d+)?)\s*m(?:²|2)(?![a-z0-9])/i) || [])[1] || "";
     const normalizedPrice = money.replace(/[^\d]/g, "");
     const normalizedArea = area.replace(/[\s\u00a0]/g, "").replace(",", ".").replace(/[^\d.]/g, "");
     const cityInCard = requestedNormalized && (" " + normalized(raw) + " ").includes(" " + requestedNormalized + " ");
