@@ -66,22 +66,37 @@ jobs:
 
       # Ne pas enregistrer de clé privée de signature dans le dépôt public.
       # Les secrets sont ajoutés une seule fois dans GitHub Settings > Secrets.
-      - name: Préparer une signature Android stable si configurée
+      - name: Préparer la clé permanente TerraNova si elle est configurée
         env:
+          SIGNING_BUNDLE: ${{ secrets.TERRANOVA_SIGNING_BUNDLE }}
           KEYSTORE_B64: ${{ secrets.TERRANOVA_KEYSTORE_BASE64 }}
           SIGNING_STORE_PASSWORD: ${{ secrets.TERRANOVA_SIGNING_STORE_PASSWORD }}
           SIGNING_KEY_ALIAS: ${{ secrets.TERRANOVA_SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.TERRANOVA_SIGNING_KEY_PASSWORD }}
         run: |
-          if [ -n "$KEYSTORE_B64" ] && [ -n "$SIGNING_STORE_PASSWORD" ] && [ -n "$SIGNING_KEY_ALIAS" ] && [ -n "$SIGNING_KEY_PASSWORD" ]; then
+          if [ -n "$SIGNING_BUNDLE" ]; then
+            python3 - <<'PY'
+          import base64, json, os, pathlib
+          raw = base64.b64decode(os.environ["SIGNING_BUNDLE"])
+          key = json.loads(raw)
+          path = pathlib.Path(os.environ["RUNNER_TEMP"]) / "terranova-signing.p12"
+          path.write_bytes(base64.b64decode(key["keystore"]))
+          with open(os.environ["GITHUB_ENV"], "a") as out:
+              out.write("TERRANOVA_SIGNING_KEYSTORE=" + str(path) + "\n")
+              out.write("TERRANOVA_SIGNING_STORE_PASSWORD=" + key["storePassword"] + "\n")
+              out.write("TERRANOVA_SIGNING_KEY_ALIAS=" + key["keyAlias"] + "\n")
+              out.write("TERRANOVA_SIGNING_KEY_PASSWORD=" + key["keyPassword"] + "\n")
+          PY
+            echo "Signature permanente TerraNova activée, secret unique."
+          elif [ -n "$KEYSTORE_B64" ] && [ -n "$SIGNING_STORE_PASSWORD" ] && [ -n "$SIGNING_KEY_ALIAS" ] && [ -n "$SIGNING_KEY_PASSWORD" ]; then
             printf '%s' "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/terranova-signing.jks"
             echo "TERRANOVA_SIGNING_KEYSTORE=$RUNNER_TEMP/terranova-signing.jks" >> "$GITHUB_ENV"
             echo "TERRANOVA_SIGNING_STORE_PASSWORD=$SIGNING_STORE_PASSWORD" >> "$GITHUB_ENV"
             echo "TERRANOVA_SIGNING_KEY_ALIAS=$SIGNING_KEY_ALIAS" >> "$GITHUB_ENV"
             echo "TERRANOVA_SIGNING_KEY_PASSWORD=$SIGNING_KEY_PASSWORD" >> "$GITHUB_ENV"
-            echo "Signature TerraNova stable : activée."
+            echo "Signature TerraNova stable activée (4 secrets existants)."
           else
-            echo "::warning::Signature debug éphémère. Impossible de mettre à jour un APK signé lors d'un autre run. Configurer les 4 secrets de signature."
+            echo "::warning::Clé permanente absente : APK debug NON INSTALLABLE PAR MISE À JOUR. Ajouter TERRANOVA_SIGNING_BUNDLE dans Secrets avant de distribuer."
           fi
 
       - name: Construire l'application expérimentale
