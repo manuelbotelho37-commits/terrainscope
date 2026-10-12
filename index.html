@@ -142,25 +142,27 @@
     #csePanel[data-mirror-pager="true"] #google-results .gsc-cursor-box{position:absolute!important;left:-10000px!important;height:1px!important;width:1px!important;overflow:hidden!important}
     @media(max-width:800px) and (min-width:701px){.content-grid{grid-template-columns:minmax(0,1fr) 240px}}
     @media(max-width:620px){.quick-source-links{grid-template-columns:1fr}.panel{padding:17px}.status-row h2{font-size:19px}}
-/* Commune : suggestions visibles sur le Galaxy Z Fold, au-dessus du formulaire. */
+/* Les suggestions apparaissent à côté du champ, au-dessus du clavier Samsung. */
     #form .field:first-child{position:relative;z-index:30}
     #form .inwrap{position:relative;z-index:40}
-    /* Pas de zone défilante imbriquée : Android peut piéger le geste de défilement. */
+    #form .city-entry.suggesting{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:7px}
     #citySuggestions{position:relative!important;top:auto!important;left:auto!important;right:auto!important;
       z-index:20;height:auto;max-height:none!important;overflow:visible!important;
-      overscroll-behavior:auto!important;touch-action:pan-y!important;
-      margin-top:6px;background:#fff;box-shadow:0 7px 19px #112f3224;border:2px solid #9ccbb3;
-      border-radius:12px;width:100%}
+      overscroll-behavior:auto!important;touch-action:auto!important;
+      margin-top:0;background:#fff;box-shadow:0 5px 13px #112f3220;border:2px solid #9ccbb3;
+      border-radius:12px;width:100%;min-width:0}
+    #form .city-entry.suggesting input{min-width:0}
+    @media(max-width:520px){#form .city-entry.suggesting{grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);gap:5px}}
     #citySuggestions[hidden]{display:none!important}
-    #citySuggestions .city-item{display:block;min-height:43px;line-height:1.45;padding:11px 12px;
-      font-size:14px;font-weight:700;color:#1c4b37}
+    #citySuggestions .city-item{display:block;min-height:42px;line-height:1.35;padding:8px 9px;
+      font-size:12px;font-weight:750;color:#1c4b37;overflow-wrap:anywhere}
     #citySuggestions .city-item:focus,#citySuggestions .city-item:hover{background:#e4f4e2}
     #citySuggestions .city-placeholder{padding:12px;color:#49645a;font-size:12px;line-height:1.5}
     #citySuggestions .city-item{border-bottom:1px solid #edf3ef}
     #citySuggestions .city-item:last-child{border-bottom:0}
     #citySuggestions .city-close{width:100%;display:block;text-align:center;background:#eef6ed;
       border:0;border-top:1px solid #dce7dc;border-radius:0 0 10px 10px;
-      padding:12px;color:#365747;font-size:13px;font-weight:800;min-height:44px}
+      padding:7px 5px;color:#365747;font-size:11px;font-weight:800;min-height:34px}
     /* Navigation discrète des résultats : sortie immédiate, sans animation. */
     #terrainNav{position:fixed;right:max(12px,env(safe-area-inset-right));bottom:calc(24px + env(safe-area-inset-bottom));
       z-index:110;display:none;flex-direction:column;gap:8px;pointer-events:none}
@@ -173,6 +175,8 @@
       min-height:42px;padding:10px 13px;font-weight:850;font-size:13px;white-space:nowrap}
     #developerAccordion{padding:0;overflow:hidden;border:1px solid #d7e7da;border-radius:15px;background:white}
     #developerAccordion{width:100%;margin-top:8px;flex-shrink:0;box-shadow:none}
+    #developerAccordion:not([open]){display:none}
+    #developerAccordion>summary{display:none!important} /* Un seul contrôle de lotisseurs visible. */
     #lotisseursTop[aria-expanded="true"]{background:#dbedc9;border-color:#8ec58f}
     #developerAccordion>summary{list-style:none;display:flex;align-items:center;gap:8px;cursor:pointer;
       color:#194b30;background:#e3f4d6;padding:14px;min-height:58px;font-size:16px;font-weight:850}
@@ -270,7 +274,7 @@
       <div class="section-top"><h2>Recherche de terrains</h2><span class="note">Sans historique de recherche</span></div>
       <form id="form">
         <div class="form">
-          <div class="field"><label for="city">Communes * <span class="city-small">— plusieurs communes possibles</span></label><div class="inwrap"><input id="city" autocomplete="off" type="text" placeholder="Commune d’Indre-et-Loire (ex. Monnaie)" aria-autocomplete="list" aria-expanded="false" aria-controls="citySuggestions" spellcheck="false"><div id="citySuggestions" class="city-list" role="listbox" hidden></div></div><button type="button" id="addCity" class="city-add">+ Ajouter cette commune</button><div id="selectedCities" class="city-chips" aria-live="polite"></div><button id="citySearchBtn" class="search city-search" type="submit">⌕ &nbsp;Voir les terrains</button><button id="lotisseursTop" class="city-lotisseurs" type="button" aria-controls="developerAccordion" aria-expanded="false">🏘 Lotisseurs · programmes et terrains</button><details class="box" id="developerAccordion"><summary><span>🏘 Lotisseurs</span><span class="lotisseur-chevron" aria-hidden="true">⌄</span></summary><div class="developer-body"><p class="caption">Programmes repérés dans les sources officielles, avec détails des lots lorsqu'ils sont publiés.</p><div id="developers"></div></div></details><small class="city-help">Ajoute plusieurs communes avant de lancer la recherche. Appuie sur × pour en retirer une.</small></div>
+          <div class="field"><label for="city">Communes * <span class="city-small">— plusieurs communes possibles</span></label><div class="inwrap city-entry"><input id="city" autocomplete="off" type="text" placeholder="Commune d’Indre-et-Loire (ex. Monnaie)" aria-autocomplete="list" aria-expanded="false" aria-controls="citySuggestions" spellcheck="false"><div id="citySuggestions" class="city-list" role="listbox" hidden></div></div><button type="button" id="addCity" class="city-add">+ Ajouter cette commune</button><div id="selectedCities" class="city-chips" aria-live="polite"></div><button id="citySearchBtn" class="search city-search" type="submit">⌕ &nbsp;Voir les terrains</button><button id="lotisseursTop" class="city-lotisseurs" type="button" aria-controls="developerAccordion" aria-expanded="false">🏘 Lotisseurs · programmes et terrains</button><details class="box" id="developerAccordion"><summary><span>🏘 Lotisseurs</span><span class="lotisseur-chevron" aria-hidden="true">⌄</span></summary><div class="developer-body"><p class="caption">Programmes repérés dans les sources officielles, avec détails des lots lorsqu'ils sont publiés.</p><div id="developers"></div></div></details><small class="city-help">Ajoute plusieurs communes avant de lancer la recherche. Appuie sur × pour en retirer une.</small></div>
           <div class="field"><label for="surface">Surface mini (m²)</label><input id="surface" type="number" inputmode="numeric" min="0" step="1" placeholder="Ex. 500"></div>
           <div class="field"><label for="budget">Budget maxi (€)</label><input id="budget" type="number" inputmode="numeric" min="0" step="1000" placeholder="Ex. 120000"></div>
         </div>
@@ -311,7 +315,7 @@
     <button id="terrainUp" type="button" title="Retour en haut" aria-label="Retour aux critères de recherche">↑</button>
     <button id="terrainDown" type="button" title="Descendre" aria-label="Descendre dans les résultats">↓</button>
   </nav>
-  <footer class="foot">TerrainScope V48 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+  <footer class="foot">TerrainScope V49 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -483,13 +487,10 @@
       const postal=terrainPostal(city);
       return postal?'https://www.bienici.com/recherche/achat/'+terrainSlug(city)+'-'+postal+'/terrain':null;
     }
-    // Immobilier.notaires.fr : structure officielle /fr/annonces-immobilieres/
-    // vente/terrain/<commune>-37 ; filtre le TYPE de bien et la COMMUNE.
-    // Le site ne garantit pas qu'un terrain « terrain » soit constructible.
+    // Les URL communales générées n'affichent pas toujours de résultats.
+    // Ouvrir la recherche officielle, puis choisir Terrain et la commune sur le site.
     function immobilierNotairesTerrainUrl(city){
-      const postal=terrainPostal(city);
-      if(!postal||!/^37\\d{3}$/.test(postal))return null;
-      return 'https://www.immobilier.notaires.fr/fr/annonces-immobilieres/vente/terrain/'+terrainSlug(city)+'-37';
+      return 'https://www.immobilier.notaires.fr/fr/annonces-immobilieres';
     }
     // Pages « Achat > Terrain » officiellement identifiées chez SeLoger.
     // L'identifiant ad08fr est propre au site ; on ne l'invente pas pour les autres communes.
@@ -1080,9 +1081,8 @@
       }
       for(const city of cities){
         const direct=immobilierNotairesTerrainUrl(city);
-        makeLink('5 · Immobilier.notaires.fr · '+city,direct,false,direct
-          ?'Page officielle : vente de terrains à '+city+' (37), sans passer par Google. Constructibilité à vérifier.'
-          :'Lien exact indisponible pour '+city+' : code postal non connu.');
+        makeLink('5 · Immobilier.notaires.fr · recherche officielle',direct,false,
+          'Sur le site des notaires, sélectionner « Terrain » et saisir '+city+'. Le filtre communal automatique ne fonctionne pas de manière fiable.');
       }
       el('quickSources').hidden=false;
     }
@@ -1110,7 +1110,7 @@
       el('countBreakdown').textContent='Les résultats peuvent prendre quelques secondes à apparaître.';el('countBreakdown').hidden=false;
       el('statusBadge').textContent=googleConfigured?'Recherche en cours…':'Accès aux sites prêts';
       
-      el('citySuggestions').hidden=true;
+      closeCitySuggestions();
       const links=el('sites');links.replaceChildren();
       function addSource(name,url){
         const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.className='source';
@@ -1132,7 +1132,7 @@
         const iad=iadTerrainUrl(city);
         if(iad)addSource('IAD · terrains · '+city,iad);
         const notaires=immobilierNotairesTerrainUrl(city);
-        if(notaires)addSource('Immobilier.notaires.fr · terrains · '+city,notaires);
+        if(notaires)addSource('Immobilier.notaires.fr · ouvrir la recherche (choisir '+city+' et Terrain)',notaires);
       }
       const all=el('allSites');all.hidden=true;all.removeAttribute('href');
       if(googleConfigured){
@@ -1210,16 +1210,15 @@
         const aa=citySearchKey(a),bb=citySearchKey(b);
         const pa=aa.startsWith(search)?0:1,pb=bb.startsWith(search)?0:1;
         return pa-pb||aa.localeCompare(bb,'fr');
-      }).slice(0,5);
+      }).slice(0,3);
     }
     function drawSuggestions(){
       const box=el('citySuggestions');
       const input=cityInput.value;
       const picks=matchingCities(input);
       box.replaceChildren();
-      if(!citySearchKey(input)){
-        box.hidden=true;
-        cityInput.setAttribute('aria-expanded','false');
+      if(citySearchKey(input).replace(/\s/g,'').length<3){
+        closeCitySuggestions();
         return;
       }
       if(picks.length){
@@ -1242,17 +1241,20 @@
       }
       const close=document.createElement('button');
       close.type='button';close.className='city-close';
-      close.textContent='Fermer les propositions ×';
+      close.textContent='Fermer ×';
       close.addEventListener('click',()=>{
         closeCitySuggestions();
         cityInput.blur();
       });
       box.append(close);
       box.hidden=false;
+      box.parentElement.classList.add('suggesting');
       cityInput.setAttribute('aria-expanded','true');
     }
     function closeCitySuggestions(){
-      el('citySuggestions').hidden=true;
+      const box=el('citySuggestions');
+      box.hidden=true;
+      box.parentElement.classList.remove('suggesting');
       cityInput.setAttribute('aria-expanded','false');
     }
     cityInput.addEventListener('input',drawSuggestions);
