@@ -10,8 +10,8 @@ android {
         applicationId = "fr.terranova.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 8
-        versionName = "0.5.2-terranova-lotisseurs-pastilles"
+        versionCode = 9
+        versionName = "0.5.3-terranova-prix-pastilles"
     }
 
     // La clé signant les mises à jour doit rester identique entre builds.
