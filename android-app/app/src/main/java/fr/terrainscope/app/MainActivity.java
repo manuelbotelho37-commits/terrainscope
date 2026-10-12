@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Gravity;
 import android.graphics.Typeface;
 import android.net.Uri;
@@ -96,6 +98,8 @@ public final class MainActivity extends Activity {
     private static final int MUTED = Color.rgb(175, 184, 195);
     private static final int GOLD = Color.rgb(212, 175, 55);
     private static final int BORDER = Color.rgb(72, 77, 78);
+    private static final int GOLD_SOFT = Color.rgb(148, 117, 47);
+    private static final int PANEL = Color.rgb(20, 34, 47);
     private Button filteredTab;
     private Button allTab;
     private Button lotisseursTab;
@@ -168,9 +172,15 @@ public final class MainActivity extends Activity {
         main = new LinearLayout(this);
         main.setOrientation(LinearLayout.VERTICAL);
         main.setPadding(dp(12), dp(9), dp(12), dp(8));
-        main.setBackgroundColor(LIGHT);
+        main.setBackgroundColor(DARK);
 
-        LinearLayout masthead = section(DARK, 18, Color.TRANSPARENT);
+        LinearLayout masthead = section(PANEL, 20, GOLD_SOFT);
+        GradientDrawable heroBackground = new GradientDrawable(
+            GradientDrawable.Orientation.TL_BR,
+            new int[]{Color.rgb(29, 44, 58), DARK});
+        heroBackground.setCornerRadius(dp(20));
+        heroBackground.setStroke(dp(1), GOLD_SOFT);
+        masthead.setBackground(heroBackground);
         LinearLayout brandLine = row();
         brandLine.setGravity(Gravity.CENTER_VERTICAL);
         ImageView brandIcon = new ImageView(this);
@@ -182,15 +192,17 @@ public final class MainActivity extends Activity {
         TextView wordmark = heading("TerraNova", 27, GOLD, true);
         wordmark.setTypeface(Typeface.create("serif", Typeface.BOLD));
         brandText.addView(wordmark);
-        brandText.addView(heading("Recherche de terrains", 12, MUTED, false));
+        brandText.addView(heading("L'EXCELLENCE FONCIÈRE  ·  TOURAINE", 10, MUTED, true));
+        brandText.addView(heading("Le bon terrain, avant les autres.", 12, TEXT, false));
         LinearLayout.LayoutParams wordmarkSize = new LinearLayout.LayoutParams(0,-2,1f);
         wordmarkSize.setMargins(dp(10),0,0,0);
         brandLine.addView(brandText, wordmarkSize);
         masthead.addView(brandLine);
         place(main, masthead, 0, 7);
 
-        LinearLayout search = section(LIGHT, 16, BORDER);
-        search.addView(heading("COMMUNE(S) · SÉPARE PAR UNE VIRGULE", 11, GOLD, true));
+        LinearLayout search = section(PANEL, 18, BORDER);
+        search.addView(heading("OÙ SOUHAITEZ-VOUS CONSTRUIRE ?", 12, GOLD, true));
+        search.addView(heading("Recherchez une ou plusieurs communes du 37.", 11, MUTED, false));
         LinearLayout fields = row();
         fields.setGravity(Gravity.CENTER_VERTICAL);
         cityInput = new MultiAutoCompleteTextView(this);
@@ -205,7 +217,7 @@ public final class MainActivity extends Activity {
         cityInput.setHint("Monnaie, Tours, Chambray-lès-Tours");
         cityInput.setPadding(dp(11), 0, dp(9), 0);
         cityInput.setBackground(rounded(SOFT, 10, BORDER));
-        LinearLayout.LayoutParams c = new LinearLayout.LayoutParams(0, dp(49), 1.45f);
+        LinearLayout.LayoutParams c = new LinearLayout.LayoutParams(0, dp(53), 1f);
         c.setMargins(0, 0, dp(7), 0);
         fields.addView(cityInput, c);
         siteSpinner = new Spinner(this);
@@ -221,33 +233,29 @@ public final class MainActivity extends Activity {
         siteSpinner.setAdapter(choices);
         siteSpinner.setPadding(dp(8), 0, dp(5), 0);
         siteSpinner.setBackground(rounded(SOFT, 10, BORDER));
-        fields.addView(siteSpinner, new LinearLayout.LayoutParams(0, dp(49), 1f));
+        siteSpinner.setVisibility(View.GONE);
+        fields.addView(siteSpinner, new LinearLayout.LayoutParams(0, dp(1), 0f));
         place(search, fields, 7, 8);
 
-        LinearLayout actions = row();
-        Button openSite = action("Rechercher ↗", true);
-        openSite.setOnClickListener(v -> openSelectedSite());
-        addControl(actions, openSite, 1.15f);
-        Button importSite = action("Importer la page", false);
-        importSite.setOnClickListener(v -> importVisiblePage());
-        addControl(actions, importSite, 1.1f);
-        place(search, actions, 0, 6);
-
-        LinearLayout secondary = row();
-        Button nextSite = action("Site / commune suivante →", true);
-        nextSite.setTextSize(11);
-        nextSite.setOnClickListener(v -> openNextSite());
-        addControl(secondary, nextSite, 1f);
-        Button reset = action("Effacer la recherche", false);
-        reset.setTextSize(11);
+        Button searchAll = action("⌕  RECHERCHER LES TERRAINS", true);
+        searchAll.setTextSize(14);
+        searchAll.setOnClickListener(v -> startAutomatedSearch());
+        place(search, searchAll, 0, 4);
+        LinearLayout helper = row();
+        TextView sources = heading("LE BON COIN  ·  SELOGER  ·  BIEN'ICI  ·  IAD  ·  NOTAIRES",
+            10, MUTED, true);
+        helper.addView(sources, new LinearLayout.LayoutParams(0, -2, 1f));
+        Button reset = action("Effacer", false);
+        reset.setTextSize(10);
+        reset.setMinimumHeight(dp(35));
         reset.setOnClickListener(v -> reset());
-        addControl(secondary, reset, 1f);
-        place(search, secondary, 0, 1);
+        helper.addView(reset, new LinearLayout.LayoutParams(dp(84), dp(36)));
+        place(search, helper, 0, 1);
         place(main, search, 0, 7);
 
         LinearLayout tabbar = row();
         tabbar.setPadding(dp(4), dp(4), dp(4), dp(4));
-        tabbar.setBackground(rounded(SOFT, 15, BORDER));
+        tabbar.setBackground(rounded(PANEL, 15, GOLD_SOFT));
         filteredTab = action("Annonces triées", true);
         filteredTab.setTextSize(11);
         filteredTab.setOnClickListener(v -> {
@@ -273,7 +281,7 @@ public final class MainActivity extends Activity {
 
         status = heading("Prêt pour une recherche de terrains.", 12, TEXT, false);
         status.setPadding(dp(12), dp(9), dp(12), dp(9));
-        status.setBackground(rounded(LIGHT, 12, BORDER));
+        status.setBackground(rounded(PANEL, 12, BORDER));
         place(main, status, 0, 8);
 
         browser = new WebView(this);
