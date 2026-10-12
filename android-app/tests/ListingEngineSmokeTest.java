@@ -159,8 +159,12 @@ public final class ListingEngineSmokeTest {
         ListingEngine.Listing unknownSeller = listing("Bien’ici","Terrain sans vendeur",
             "","Monnaie",99000,520,"",
             "https://www.bienici.com/annonce/terrain-non-attribue");
-        check(ListingEngine.filtered(ListingEngine.classify(Arrays.asList(lotAlpha,unknownSeller))).size()==2,
-            "Annonceur manquant : ne jamais masquer un terrain présumé doublon");
+        List<ListingEngine.Result> missingSeller =
+            ListingEngine.classify(Arrays.asList(lotAlpha, unknownSeller));
+        check(missingSeller.size()==2 &&
+              missingSeller.stream().anyMatch(r -> r.listing == unknownSeller &&
+                  r.state == ListingEngine.State.TO_VERIFY),
+            "Vendeur manquant : conserver la fiche dans Toutes, sans proposer avant contrôle");
         ListingEngine.Listing genericSeller = listing("Bien’ici","Terrain de lotissement",
             "Agence","Monnaie",99000,520,"",
             "https://www.bienici.com/annonce/terrain-generique");
@@ -243,6 +247,38 @@ public final class ListingEngineSmokeTest {
         check(ListingEngine.filtered(ListingEngine.classify(
             Arrays.asList(onlyTownA,onlyTownB))).size()==2,
             "Même commune comme adresse non spécifique : deux terrains distincts");
+
+        // Cas remonté avec capture écran : Bien'ici, Monnaie, 374 m², 71 000 €,
+        // annonce de CONSTRUCTIONS IDÉALE DEMEURE (CID).
+        ListingEngine.Listing cidMonnaie = new ListingEngine.Listing(
+            "Bien’ici", "https://www.bienici.com/annonce/vente/terrain-cid-374",
+            "Achat terrain 374 m²", "Monnaie", "CONSTRUCTIONS IDEALE DEMEURE",
+            "374 m² de terrain à Monnaie", "", "", 71000, 374, true,
+            "https://cdn.example.com/monnaie-374-terrain.jpg");
+        check(ListingEngine.isBuilder(cidMonnaie),
+            "CID Constructions Idéale Demeure est un constructeur à exclure");
+        List<ListingEngine.Result> cidChecked =
+            ListingEngine.classify(Arrays.asList(cidMonnaie));
+        check(cidChecked.get(0).state == ListingEngine.State.BUILDER,
+            "CID figure en constructeur exclu");
+        check(ListingEngine.filtered(cidChecked).isEmpty(),
+            "CID ne doit jamais apparaître dans Annonces triées");
+        check(cidChecked.get(0).listing.imageUrl.endsWith("terrain.jpg"),
+            "Photo de la fiche conservée même si le constructeur est exclu");
+        ListingEngine.Listing cidInText = new ListingEngine.Listing(
+            "Bien’ici", "https://www.bienici.com/annonce/vente/terrain-cid-374b",
+            "Achat terrain 374 m²", "Monnaie", "",
+            "CONSTRUCTIONS IDEALE DEMEURE · Saint-Cyr-sur-Loire",
+            "", "", 71000, 374, true);
+        check(ListingEngine.isBuilder(cidInText),
+            "CID exclu lorsque seul le descriptif contient sa raison sociale");
+        ListingEngine.Listing missingAdvertiser = new ListingEngine.Listing(
+            "Bien’ici", "https://www.bienici.com/annonce/vente/terrain-sans-vendeur",
+            "Terrain constructible", "Monnaie", "", "",
+            "", "", 71000, 374, true);
+        check(ListingEngine.classify(Arrays.asList(missingAdvertiser)).get(0).state ==
+              ListingEngine.State.TO_VERIFY,
+            "Annonceur absent : à vérifier et visible dans Toutes les annonces");
 
         System.out.println("TerrainScope : " + assertions + " vérifications du moteur réussies.");
     }
