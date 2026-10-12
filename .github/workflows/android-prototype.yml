@@ -96,11 +96,24 @@ jobs:
             echo "TERRANOVA_SIGNING_KEY_PASSWORD=$SIGNING_KEY_PASSWORD" >> "$GITHUB_ENV"
             echo "Signature TerraNova stable activée (4 secrets existants)."
           else
-            echo "::warning::Clé permanente absente : APK debug NON INSTALLABLE PAR MISE À JOUR. Ajouter TERRANOVA_SIGNING_BUNDLE dans Secrets avant de distribuer."
+            echo "::error::Signature permanente absente. Aucun APK temporaire ne doit être distribué : configurer TERRANOVA_SIGNING_BUNDLE avant de lancer le build."
+            exit 1
           fi
 
       - name: Construire l'application expérimentale
         run: gradle -p android-app :app:assembleDebug --no-daemon
+
+      - name: Vérifier la signature et le certificat permanents
+        run: |
+          APK="android-app/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          SDK_ROOT="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          APKSIGNER="$(find "$SDK_ROOT/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          test -x "$APKSIGNER"
+          "$APKSIGNER" verify --verbose --print-certs "$APK" > "$RUNNER_TEMP/terranova-apk-verification.txt"
+          # Empreinte publique du certificat stable; jamais la clé privée.
+          grep -Fqi "6aaad66d19b9a46ef816c131d4ee0ea509f666c1e5ec0307b3344c6530f5b180" "$RUNNER_TEMP/terranova-apk-verification.txt"
+          echo "Signature APK vérifiée : certificat TerraNova permanent attendu."
 
       - name: Vérifier le démarrage sur un émulateur Android
         # Le runner Android GitHub peut planter (adb Broken pipe) avant même
