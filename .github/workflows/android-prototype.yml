@@ -1,16 +1,8 @@
 name: Tester et construire TerraNova Android
 
+# Aucun test automatique à chaque modification : GitHub pouvait envoyer
+# un e-mail à chaque exécution ou échec. Lancer les tests manuellement seulement.
 on:
-  push:
-    branches: [android-capture-prototype]
-    paths:
-      - 'android-app/**'
-      - '.github/workflows/android-prototype.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'android-app/**'
-      - '.github/workflows/android-prototype.yml'
   workflow_dispatch:
 
 permissions:
