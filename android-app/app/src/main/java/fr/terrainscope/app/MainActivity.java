@@ -637,13 +637,13 @@ public final class MainActivity extends Activity {
                 JSONObject.quote(postalCodes.getOrDefault(ListingEngine.normalize(city), "")) + ";\n" +
                 "window.__terrainScopeKnownCities=" + new JSONArray(communeNames).toString() + ";\n" + script;
             status.setText("Lecture des annonces de la page actuellement affichée…");
-            browser.evaluateJavascript(payload, reply -> receiveImport(reply, host));
+            browser.evaluateJavascript(payload, reply -> receiveImport(reply, host, false));
         } catch (Exception error) {
             status.setText("Lecture indisponible : " + error.getMessage());
         }
     }
 
-    private void receiveImport(String encoded, String sourceHost) {
+    private void receiveImport(String encoded, String sourceHost, boolean automated) {
         try {
             Object decoded = new JSONTokener(encoded).nextValue();
             if (!(decoded instanceof String)) throw new IllegalArgumentException("Pas de données retournées");
@@ -656,7 +656,7 @@ public final class MainActivity extends Activity {
                 status.setText("Ce site demande une vérification humaine (CAPTCHA) ou refuse l'accès. " +
                     "Aucune annonce n'a pu être récupérée : cela ne signifie PAS zéro terrain. " +
                     "Complète le contrôle sur le site puis réessaie, ou passe au suivant.");
-                showBrowser();
+                if (!automated) showBrowser();
                 return;
             }
             JSONArray listings = result.optJSONArray("listings");
@@ -721,7 +721,7 @@ public final class MainActivity extends Activity {
                 displayListings(hasSelected);
                 if (!hasSelected) report += " · Aucune fiche validée : contrôle dans Toutes les annonces.";
             }
-            status.setText(report);
+            if (!automated) status.setText(report);
         } catch (Exception error) {
             status.setText("Cette page n’a pas pu être lue. Ce n’est PAS « zéro terrain disponible ». " +
                 "Cause : " + error.getMessage());
@@ -866,11 +866,16 @@ public final class MainActivity extends Activity {
     private void showBrowser() {
         showingBrowser = true;
         browser.setVisibility(View.VISIBLE);
+        browser.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 1f));
         results.setVisibility(View.GONE);
     }
     private void showResults() {
         showingBrowser = false;
-        browser.setVisibility(View.GONE);
+        // Garder la WebView attachée et active pour la collecte en arrière-plan
+        // même lorsque les résultats occupent l'écran.
+        browser.setVisibility(View.INVISIBLE);
+        LinearLayout.LayoutParams hidden = new LinearLayout.LayoutParams(-1, dp(1));
+        browser.setLayoutParams(hidden);
         results.setVisibility(View.VISIBLE);
     }
     private boolean approvedHost(String host) {
