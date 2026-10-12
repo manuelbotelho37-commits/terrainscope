@@ -179,6 +179,19 @@
     #developerMatchNotice{margin:10px 1px;padding:12px 13px;background:#e8f6e4;color:#2b563b;
       border:1px solid #cfebc9;border-radius:11px;font-size:13px;font-weight:800;line-height:1.45}
     #developerMatchNotice[hidden]{display:none}
+    #developerMatchNotice{padding:0;overflow:hidden}
+    #developerMatchNotice>summary{list-style:none;cursor:pointer;min-height:54px;padding:14px;display:flex;flex-direction:column;align-items:flex-start;gap:7px}
+    #developerMatchNotice>summary::-webkit-details-marker{display:none}
+    #developerMatchNotice>summary .match-tap{text-decoration:underline;font-size:12px}
+    #developerMatchNotice>summary:focus-visible{outline:3px solid #28764d;outline-offset:-3px}
+    #developerMatchDetails{border-top:1px solid #c2e5be;padding:12px;display:flex;flex-direction:column;gap:10px}
+    #developerMatchDetails>p{font-size:12px;font-weight:500;margin:0;line-height:1.5}
+    #developerMatchDetails .match-group{background:#fff;border:1px solid #c7e2c7;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:9px}
+    #developerMatchDetails .match-group h3{font-size:15px;color:#1d5234;margin:0}
+    #developerMatchDetails .match-card{background:#f7fbf5;border:1px solid #deedda;border-radius:9px;padding:10px;display:flex;flex-direction:column;gap:6px}
+    #developerMatchDetails .match-card strong{font-size:13px}
+    #developerMatchDetails .match-card p{font-size:12px;font-weight:500;margin:0}
+    #developerMatchDetails .match-card a{font-size:13px;font-weight:800;background:#e1f2dc;color:#23523a;padding:11px;border-radius:8px;text-decoration:none;text-align:center}
     .dev-catalog-top{font-size:11px;color:#536d61;line-height:1.5;margin-bottom:9px}
     .dev-group{margin:8px 0;border:1px solid #d9e5d8;border-radius:11px;overflow:hidden;background:#fff}
     .dev-group>summary{list-style:none;cursor:pointer;background:#f0f7ed;padding:12px 11px;
@@ -275,7 +288,7 @@
       <span class="price-order">Sources prioritaires, puis prix croissant</span>
       <span class="price-order" title="Les analyses locales ne consomment aucun crédit d’hébergement.">Recherche gratuite · analyse sur ce téléphone</span>
     </div>
-    <p id="developerMatchNotice" role="status" hidden></p><p id="criteriaText" class="criteria-text" hidden></p><div class="content-grid">
+    <details id="developerMatchNotice" hidden><summary id="developerMatchSummary">Programmes des lotisseurs</summary><div id="developerMatchDetails"></div></details><p id="criteriaText" class="criteria-text" hidden></p><div class="content-grid">
       <section class="results" id="mainResults" aria-live="polite"><section id="quickSources" class="quick-sources" hidden><h3>Rechercher sur les sites immobiliers</h3><p>Commence par Le Bon Coin : ce lien ouvre directement sa recherche sur la commune, plutôt qu'une ancienne annonce supprimée indexée par Google. Les offres doivent être confirmées chez le vendeur.</p><div id="quickSourceLinks" class="quick-source-links"></div></section>
         <details id="googleLeads" class="google-leads" hidden><summary>Afficher les pistes Google non vérifiées (risque d’annonces supprimées)</summary>
           <section id="uniquePanel" class="unique-panel" hidden><h3>Résultats Google non vérifiés</h3><p class="unique-intro">Résultats indexés par Google : certains liens peuvent mener à des annonces supprimées ou vendues. L’application ne peut pas confirmer leur disponibilité en temps réel. Les doublons reconnaissables sont regroupés automatiquement.</p><div id="uniqueSummary" class="unique-summary" role="status"></div><div id="uniqueResults" class="unique-results"></div><nav id="uniquePages" class="unique-pages" hidden aria-label="Pages des terrains distincts"></nav><p class="unique-disclaimer">Annonces repérées dans Google, pas l’intégralité des sites. Prix, surface, commune et vendeur à confirmer sur la fiche originale. Deux terrains distincts ne sont pas fusionnés sans indices suffisants.</p></section>
@@ -293,7 +306,7 @@
     <button id="terrainUp" type="button" title="Retour en haut" aria-label="Retour aux critères de recherche">↑</button>
     <button id="terrainDown" type="button" title="Descendre" aria-label="Descendre dans les résultats">↓</button>
   </nav>
-  <footer class="foot">TerrainScope V43 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+  <footer class="foot">TerrainScope V44 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -517,21 +530,66 @@
         }
         entries.set(dev.name,{checked,scan:live[dev.name],rows});
       }
-      const matched=[];
-      for(const dev of DEVELOPERS){
-        const item=entries.get(dev.name);
-        if(item.rows.some(matches))matched.push(dev.name);
-      }
+      // Résumé cliquable : lotisseurs et programmes des communes recherchées.
+      const matched=DEVELOPERS.map(dev=>({dev,programs:entries.get(dev.name).rows.filter(matches)}))
+        .filter(item=>item.programs.length>0);
+      const programCount=matched.reduce((n,item)=>n+item.programs.length,0);
       const notice=el('developerMatchNotice');
+      const selection=names.map(cityKey).sort().join('|');
+      const keepOpen=notice.open&&notice.dataset.selection===selection;
+      notice.dataset.selection=selection;
+      notice.hidden=!names.length;
+      notice.open=Boolean(names.length&&keepOpen);
+      const summary=el('developerMatchSummary'),content=el('developerMatchDetails');
+      summary.replaceChildren();content.replaceChildren();
       if(names.length){
-        notice.hidden=false;
-        const count=matched.length;
-        notice.textContent=count
-          ?count+' lotisseur(s) avec au moins une opération référencée sur '+names.join(', ')+
-            '. Stock des lots à confirmer. Ouvre « Lotisseurs ».'
-          :'Inventaires incomplets ou non confirmés pour '+names.join(', ')+
-            '. Impossible de conclure à zéro lotissement ou zéro terrain.';
-      }else notice.hidden=true;
+        const title=document.createElement('strong');
+        title.textContent=matched.length
+          ?'🏘 '+matched.length+' lotisseur'+(matched.length>1?'s':'')+' · '+
+            programCount+' programme'+(programCount>1?'s':'')+' sur '+names.join(' · ')
+          :'🏘 Aucun programme référencé sur '+names.join(' · ');
+        const hint=document.createElement('span');hint.className='match-tap';
+        hint.textContent=matched.length
+          ?'Appuie ici pour afficher les lotisseurs et leurs programmes ▼'
+          :'Appuie ici pour afficher les détails ▼';
+        summary.append(title,hint);
+        const caution=document.createElement('p');
+        caution.textContent=matched.length
+          ?'Programmes du relevé, pas lots libres certifiés. Prix et disponibilité à vérifier directement chez le lotisseur.'
+          :'Le relevé est incomplet : cela ne prouve pas qu’aucun terrain n’existe dans ces communes.';
+        content.append(caution);
+        for(const entry of matched){
+          const group=document.createElement('section');group.className='match-group';
+          const heading=document.createElement('h3');
+          heading.textContent=entry.dev.name+' · '+entry.programs.length+
+            ' programme'+(entry.programs.length>1?'s':'');
+          group.append(heading);
+          for(const program of entry.programs){
+            const card=document.createElement('div');card.className='match-card';
+            const name=document.createElement('strong');name.textContent=program.name||'Programme à consulter';
+            const city=document.createElement('p');city.textContent=program.city||'Commune à confirmer';
+            card.append(name,city);
+            if(program.surfaceMin&&program.surfaceMax){
+              const size=document.createElement('p');
+              size.textContent='Surfaces relevées : '+fmt(program.surfaceMin)+' à '+fmt(program.surfaceMax)+' m²';
+              card.append(size);
+            }
+            if(program.priceFrom){
+              const price=document.createElement('p');
+              price.textContent='Ancien prix indicatif dès '+fmt(program.priceFrom)+' €';
+              card.append(price);
+            }
+            if(typeof program.url==='string'&&/^https?:\/\//.test(program.url)){
+              const link=document.createElement('a');
+              link.href=program.url;link.target='_blank';link.rel='noopener noreferrer';
+              link.textContent='Voir ce programme chez '+entry.dev.name+' ↗';
+              card.append(link);
+            }
+            group.append(card);
+          }
+          content.append(group);
+        }
+      }
       const meta=document.createElement('p');meta.className='dev-catalog-top';
       meta.textContent=DEVELOPERS.length+' lotisseurs et aménageurs référencés, avec accès à leurs terrains ou à leur site officiel. '+
         checkedDevelopers.length+' catalogue(s) contrôlé(s) automatiquement : ce contrôle ne concerne pas tous les sites. '+
