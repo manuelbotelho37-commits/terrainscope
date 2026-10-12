@@ -311,7 +311,7 @@
     <button id="terrainUp" type="button" title="Retour en haut" aria-label="Retour aux critères de recherche">↑</button>
     <button id="terrainDown" type="button" title="Descendre" aria-label="Descendre dans les résultats">↓</button>
   </nav>
-  <footer class="foot">TerrainScope V47 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+  <footer class="foot">TerrainScope V48 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -332,7 +332,7 @@
       ['Leboncoin','leboncoin.fr'],['SeLoger','seloger.com'],['Bien’ici','bienici.com'],
       ['IAD · terrains','iadfrance.fr'],['Lelièvre Immobilier','lelievre-immobilier.com'],
       ['Nos-terrains','nos-terrains.com'],['Immonot · notaires','immonot.com'],
-      ['Notaires de France','immobilier.notaires.fr'],['Terrain-Construction','terrain-construction.com'],
+      ['Immobilier.notaires.fr','immobilier.notaires.fr'],['Terrain-Construction','terrain-construction.com'],
       ['ParuVendu','paruvendu.fr'],['Logic-Immo','logic-immo.com'],['PAP','pap.fr'],
       ['Figaro Immobilier','immobilier.lefigaro.fr'],['Kazimo','kazimo.fr'],
       ['Superimmo','superimmo.com'],['Ouest-France Immo','ouestfrance-immo.com'],
@@ -482,6 +482,14 @@
     function bieniciTerrainUrl(city){
       const postal=terrainPostal(city);
       return postal?'https://www.bienici.com/recherche/achat/'+terrainSlug(city)+'-'+postal+'/terrain':null;
+    }
+    // Immobilier.notaires.fr : structure officielle /fr/annonces-immobilieres/
+    // vente/terrain/<commune>-37 ; filtre le TYPE de bien et la COMMUNE.
+    // Le site ne garantit pas qu'un terrain « terrain » soit constructible.
+    function immobilierNotairesTerrainUrl(city){
+      const postal=terrainPostal(city);
+      if(!postal||!/^37\\d{3}$/.test(postal))return null;
+      return 'https://www.immobilier.notaires.fr/fr/annonces-immobilieres/vente/terrain/'+terrainSlug(city)+'-37';
     }
     // Pages « Achat > Terrain » officiellement identifiées chez SeLoger.
     // L'identifiant ad08fr est propre au site ; on ne l'invente pas pour les autres communes.
@@ -1070,6 +1078,12 @@
           ?'Page IAD filtrée « Terrain » sur '+city+' ; zéro résultat possible si aucune offre publiée.'
           :'Lien IAD non créé : code postal manquant, pour éviter d’afficher une autre commune.');
       }
+      for(const city of cities){
+        const direct=immobilierNotairesTerrainUrl(city);
+        makeLink('5 · Immobilier.notaires.fr · '+city,direct,false,direct
+          ?'Page officielle : vente de terrains à '+city+' (37), sans passer par Google. Constructibilité à vérifier.'
+          :'Lien exact indisponible pour '+city+' : code postal non connu.');
+      }
       el('quickSources').hidden=false;
     }
     function handleSearch(e){
@@ -1117,6 +1131,8 @@
         if(b)addSource('Bien’ici · terrains · '+city,b);
         const iad=iadTerrainUrl(city);
         if(iad)addSource('IAD · terrains · '+city,iad);
+        const notaires=immobilierNotairesTerrainUrl(city);
+        if(notaires)addSource('Immobilier.notaires.fr · terrains · '+city,notaires);
       }
       const all=el('allSites');all.hidden=true;all.removeAttribute('href');
       if(googleConfigured){
