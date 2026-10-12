@@ -589,7 +589,7 @@ public final class MainActivity extends Activity {
         cards.addView(panel, layout);
         String statusText = record.state == ListingEngine.State.BUILDER ? " · CONSTRUCTEUR" :
             record.state == ListingEngine.State.DUPLICATE ? " · DOUBLON" :
-            record.state == ListingEngine.State.TO_VERIFY ? " · COMMUNE À VÉRIFIER" :
+            record.state == ListingEngine.State.TO_VERIFY ? " · À VÉRIFIER" :
             ListingEngine.isLotisseur(item) ? " · LOTISSEUR" : "";
         TextView origin = text(item.source + statusText, 12, true);
         origin.setTextColor(record.state == ListingEngine.State.BUILDER ? Color.rgb(235, 136, 130) : GOLD);
