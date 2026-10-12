@@ -51,7 +51,7 @@ import java.util.Map;
 /**
  * Prototype Android : consultation des sites dans une WebView et extraction
  * locale, déclenchée par l'utilisateur. Aucun backend, crédit ou stockage.
- * Le module des 18 lotisseurs existant reste disponible via TerrainScope Web.
+ * Les 18 lotisseurs sont accessibles sous la recherche en pastilles compactes.
  */
 public final class MainActivity extends Activity {
     private static final String TERRAIN_SCOPE = "https://manuelbotelho37-commits.github.io/terrainscope/";
@@ -129,7 +129,6 @@ public final class MainActivity extends Activity {
     private static final int PANEL = Color.rgb(20, 34, 47);
     private Button filteredTab;
     private Button allTab;
-    private Button lotisseursTab;
 
     private GradientDrawable rounded(int fill, int radius, int border) {
         GradientDrawable d = new GradientDrawable();
@@ -183,7 +182,7 @@ public final class MainActivity extends Activity {
     }
 
     private void chooseTab(Button selected) {
-        for (Button b : new Button[]{filteredTab, allTab, lotisseursTab}) {
+        for (Button b : new Button[]{filteredTab, allTab}) {
             if (b == null) continue;
             boolean active = b == selected;
             b.setTextColor(active ? DARK : TEXT);
@@ -206,6 +205,17 @@ public final class MainActivity extends Activity {
     /** Favicons officiels des sites, chargés à la demande ; jamais de faux logo. */
     private static String officialIcon(String domain) {
         return "https://www.google.com/s2/favicons?domain=" + domain + "&sz=128";
+    }
+
+    /** Le favicon du sous-domaine immobilier.notaires.fr est parfois vide.
+     * Essayer également la marque officielle notaires.fr et garder le libellé visible. */
+    private void showSourceIcon(ImageView icon, String site) {
+        if ("Notaires".equals(site)) {
+            PhotoLoader.show(icon, officialIcon("notaires.fr"),
+                officialIcon("immobilier.notaires.fr"));
+        } else {
+            PhotoLoader.show(icon, officialIcon(sourceDomain(site)));
+        }
     }
 
     private void refreshSourcePills() {
@@ -280,7 +290,7 @@ public final class MainActivity extends Activity {
             LinearLayout.LayoutParams logoSize = new LinearLayout.LayoutParams(dp(22), dp(22));
             logoSize.setMargins(0, 0, dp(6), 0);
             tile.addView(siteLogo, logoSize);
-            PhotoLoader.show(siteLogo, officialIcon(sourceDomain(site)));
+            showSourceIcon(siteLogo, site);
         }
         TextView caption = heading("", 10, TEXT, true);
         caption.setSingleLine(true);
@@ -289,6 +299,76 @@ public final class MainActivity extends Activity {
         resultSourceTiles.put(site, tile);
         resultSourceCaptions.put(site, caption);
         tile.setOnClickListener(v -> openResultsForSource(site));
+    }
+
+    /** 18 pastilles de même taille, juste sous Rechercher ; ouvre chaque site officiel. */
+    private void addDeveloperPills(LinearLayout parent) {
+        try {
+            JSONArray developers = new JSONObject(readAsset("lotisseurs-37.json"))
+                .getJSONArray("developers");
+            LinearLayout header = row();
+            header.setGravity(Gravity.CENTER_VERTICAL);
+            TextView title = heading("Lotisseurs & aménageurs", 11, MUTED, true);
+            header.addView(title, new LinearLayout.LayoutParams(0, -2, 1f));
+            TextView count = heading(developers.length() + " sites officiels", 10, MUTED, false);
+            header.addView(count);
+            place(parent, header, 7, 5);
+
+            int width = getResources().getConfiguration().screenWidthDp;
+            int columns = width >= 620 ? 6 : width >= 480 ? 4 : 3;
+            LinearLayout chipRow = null;
+            for (int i = 0; i < developers.length(); i++) {
+                if (i % columns == 0) {
+                    chipRow = row();
+                    place(parent, chipRow, 0, 5);
+                }
+                JSONObject dev = developers.getJSONObject(i);
+                final String name = dev.getString("name");
+                final String domain = dev.optString("domain", "");
+                final String link = dev.getString("url");
+                final String notice = dev.optString("notice", "");
+
+                LinearLayout pill = new LinearLayout(this);
+                pill.setOrientation(LinearLayout.VERTICAL);
+                pill.setGravity(Gravity.CENTER);
+                pill.setPadding(dp(3), dp(4), dp(3), dp(3));
+                pill.setBackground(rounded(LIGHT, 12, GOLD_SOFT));
+                LinearLayout.LayoutParams size =
+                    new LinearLayout.LayoutParams(0, dp(70), 1f);
+                size.setMargins(dp(2), 0, dp(2), 0);
+                chipRow.addView(pill, size);
+
+                ImageView logo = new ImageView(this);
+                logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                logo.setContentDescription("Logo officiel " + name);
+                pill.addView(logo, new LinearLayout.LayoutParams(dp(27), dp(27)));
+                PhotoLoader.show(logo, officialIcon(domain));
+
+                TextView caption = heading(name, 9, TEXT, false);
+                caption.setGravity(Gravity.CENTER);
+                caption.setMaxLines(2);
+                caption.setEllipsize(TextUtils.TruncateAt.END);
+                LinearLayout.LayoutParams labelSize =
+                    new LinearLayout.LayoutParams(-1, dp(34));
+                labelSize.setMargins(0, dp(2), 0, 0);
+                pill.addView(caption, labelSize);
+                pill.setContentDescription(name + " : ouvrir le site officiel");
+                pill.setOnClickListener(v -> {
+                    try {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link)));
+                        if (!notice.isEmpty())
+                            status.setText(name + " : " + notice);
+                    } catch (Exception error) {
+                        status.setText("Impossible d'ouvrir le site " + name);
+                    }
+                });
+            }
+        } catch (Exception error) {
+            TextView problem = heading(
+                "Catalogue des lotisseurs indisponible : " + error.getMessage(),
+                10, MUTED, false);
+            place(parent, problem, 5, 5);
+        }
     }
 
     private void buildScreen() {
@@ -403,7 +483,7 @@ public final class MainActivity extends Activity {
             icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
             FrameLayout.LayoutParams iconSize = new FrameLayout.LayoutParams(dp(28), dp(28), Gravity.CENTER);
             mark.addView(icon, iconSize);
-            PhotoLoader.show(icon, officialIcon(sourceDomain(site)));
+            showSourceIcon(icon, site);
             TextView check = heading("✓", 11, GOLD, true);
             FrameLayout.LayoutParams checkSize = new FrameLayout.LayoutParams(
                 dp(13), dp(14), Gravity.TOP | Gravity.RIGHT);
@@ -442,6 +522,7 @@ public final class MainActivity extends Activity {
         golden.setStroke(dp(1), GOLD);
         searchAll.setOnClickListener(v -> startAutomatedSearch());
         place(search, searchAll, 0, 4);
+        addDeveloperPills(search);
         LinearLayout helper = row();
         TextView sources = heading("Recherche multi-sites · classement automatique",
             10, MUTED, false);
@@ -473,13 +554,6 @@ public final class MainActivity extends Activity {
             displayListings(false);
         });
         addControl(tabbar, allTab, 1.15f);
-        lotisseursTab = action("🏘 18 lotisseurs", false);
-        lotisseursTab.setTextSize(11);
-        lotisseursTab.setOnClickListener(v -> {
-            chooseTab(lotisseursTab);
-            displayDevelopers();
-        });
-        addControl(tabbar, lotisseursTab, 1.12f);
         place(main, tabbar, 0, 7);
 
         status = heading("Prêt pour une recherche de terrains.", 12, TEXT, false);
@@ -966,91 +1040,6 @@ public final class MainActivity extends Activity {
         } catch (Exception error) {
             status.setText("Cette page n’a pas pu être lue. Ce n’est PAS « zéro terrain disponible ». " +
                 "Cause : " + error.getMessage());
-        }
-    }
-
-    private void displayDevelopers() {
-        showResults();
-        resultSourceBar.setVisibility(View.GONE);
-        cards.removeAllViews();
-        TextView label = heading("RÉSEAU FONCIER  ·  18 PARTENAIRES", 10, GOLD, true);
-        place(cards, label, 7, 2);
-        TextView headline = heading("Aménageurs & lotisseurs", 23, TEXT, true);
-        headline.setTypeface(Typeface.create("serif", Typeface.BOLD));
-        place(cards, headline, 0, 5);
-        TextView subtitle = text("Sites officiels · terrains et programmes disponibles à vérifier", 11, false);
-        subtitle.setTextColor(MUTED);
-        place(cards, subtitle, 0, 9);
-        try {
-            JSONObject catalog = new JSONObject(readAsset("lotisseurs-37.json"));
-            JSONArray developers = catalog.getJSONArray("developers");
-            int width = getResources().getConfiguration().screenWidthDp;
-            int columns = width >= 620 ? 3 : 2;
-            LinearLayout currentRow = null;
-            for (int i = 0; i < developers.length(); i++) {
-                if (i % columns == 0) {
-                    currentRow = row();
-                    place(cards, currentRow, 0, 7);
-                }
-                JSONObject developer = developers.getJSONObject(i);
-                String name = developer.getString("name");
-                String site = developer.getString("url");
-                String domain = developer.optString("domain", "");
-                String notice = developer.optString("notice", "");
-                LinearLayout tile = new LinearLayout(this);
-                tile.setOrientation(LinearLayout.VERTICAL);
-                tile.setGravity(Gravity.CENTER_HORIZONTAL);
-                tile.setPadding(dp(8), dp(10), dp(8), dp(7));
-                tile.setBackground(rounded(LIGHT, 15, GOLD_SOFT));
-                tile.setElevation(dp(1));
-                // Hauteur FIXE : les 18 cases restent parfaitement alignées.
-                LinearLayout.LayoutParams tileSize = new LinearLayout.LayoutParams(
-                    0, dp(174), 1f);
-                tileSize.setMargins(dp(3), 0, dp(3), 0);
-                currentRow.addView(tile, tileSize);
-
-                ImageView brand = new ImageView(this);
-                brand.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                brand.setContentDescription("Logo du site " + name);
-                LinearLayout.LayoutParams iconSize = new LinearLayout.LayoutParams(dp(48), dp(48));
-                iconSize.setMargins(0, 0, 0, dp(5));
-                tile.addView(brand, iconSize);
-                PhotoLoader.show(brand, officialIcon(domain));
-                
-                TextView nameLabel = heading(name, 13, TEXT, true);
-                nameLabel.setGravity(Gravity.CENTER);
-                nameLabel.setMaxLines(2);
-                nameLabel.setMinLines(2);
-                nameLabel.setEllipsize(TextUtils.TruncateAt.END);
-                tile.addView(nameLabel, new LinearLayout.LayoutParams(-1, dp(39)));
-
-                TextView domainLabel = heading(domain, 10, MUTED, false);
-                domainLabel.setGravity(Gravity.CENTER);
-                domainLabel.setSingleLine(true);
-                domainLabel.setEllipsize(TextUtils.TruncateAt.END);
-                tile.addView(domainLabel, new LinearLayout.LayoutParams(-1, dp(20)));
-
-                TextView go = heading(notice.isEmpty() ? "VOIR LES TERRAINS  ↗" :
-                    "VOIR LES OFFRES  ↗", 9, GOLD, true);
-                go.setGravity(Gravity.CENTER);
-                go.setSingleLine(true);
-                go.setEllipsize(TextUtils.TruncateAt.END);
-                tile.addView(go, new LinearLayout.LayoutParams(-1, dp(24)));
-                tile.setContentDescription(name + " - " + domain + ". Ouvrir les offres sur le site officiel.");
-                tile.setOnClickListener(v -> {
-                    try {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(site)));
-                        if (!notice.isEmpty())
-                            status.setText(name + " : " + notice);
-                    } catch (Exception error) {
-                        status.setText("Site inaccessible : " + name);
-                    }
-                });
-            }
-            status.setText("18 lotisseurs dans des cartes identiques. Logos chargés depuis les sites ; offres à confirmer.");
-        } catch (Exception error) {
-            status.setText("Impossible de lire les 18 lotisseurs : " + error.getMessage());
-            cards.addView(text("Le catalogue est indisponible.", 12, false));
         }
     }
 
