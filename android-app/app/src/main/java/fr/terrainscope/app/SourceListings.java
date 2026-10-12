@@ -18,6 +18,8 @@ public final class SourceListings {
         if (!key.isEmpty()) {
             chosen.removeIf(result -> !ListingEngine.normalize(result.listing.source).equals(key));
         }
+        // Même tri sur les terrains sélectionnés, Toutes et chaque portail.
+        chosen.sort(ListingEngine.BY_ASCENDING_PRICE);
         return chosen;
     }
 
