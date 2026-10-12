@@ -1,5 +1,5 @@
 // TerrainScope : cache limité à ses propres fichiers (même origine que d'autres apps).
-const CACHE = 'terrainscope-v58-shell';
+const CACHE = 'terrainscope-v59-shell';
 const PREFIX = 'terrainscope-';
 const FILES = ['./', './index.html', './aggregator.js', './lotisseurs-data.js', './communes-37.json', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 const PATHS = new Set(FILES.map(path => new URL(path, self.registration.scope).pathname));
@@ -25,7 +25,7 @@ self.addEventListener('fetch', event => {
   const url = new URL(req.url);
   if (req.method !== 'GET' || url.origin !== self.location.origin || !PATHS.has(url.pathname)) return;
   event.respondWith(
-    fetch(req).then(response => {
+    fetch(req, {cache:'no-store'}).then(response => {
       if (response.ok) {
         const copy = response.clone();
         event.waitUntil(caches.open(CACHE).then(cache => cache.put(req, copy)));
