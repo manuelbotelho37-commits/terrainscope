@@ -22,6 +22,7 @@ import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
+import android.widget.ImageView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -47,7 +48,7 @@ public final class MainActivity extends Activity {
     private static final String TERRAIN_SCOPE = "https://manuelbotelho37-commits.github.io/terrainscope/";
     private static final String[] SITES =
         {"Le Bon Coin", "SeLoger", "Bien’ici", "IAD", "Notaires"};
-    private static final int GREEN = Color.rgb(40, 91, 66);
+    private static final int GREEN = Color.rgb(30, 127, 83);
     private static final int PALE = Color.rgb(223, 244, 210);
     private final Map<String, String> postalCodes = new HashMap<>();
     // Codes de localité SeLoger vérifiés dans la version web existante.
@@ -69,16 +70,20 @@ public final class MainActivity extends Activity {
         loadCommuneIndex();
         loadSeLogerPaths();
         buildScreen();
-        status.setText("Choisis une commune, ouvre un site, puis importe les annonces affichées.");
+        chooseTab(filteredTab);
+        displayListings(true);
+        status.setText("Choisis une commune, ouvre un site puis importe sa page. Aucune annonce fictive.");
     }
 
 
-    private static final int DARK = Color.rgb(18, 55, 46);
-    private static final int LIGHT = Color.rgb(246, 249, 246);
-    private static final int SOFT = Color.rgb(231, 240, 232);
-    private static final int LIME = Color.rgb(211, 243, 163);
-    private static final int TEXT = Color.rgb(34, 60, 50);
-    private static final int MUTED = Color.rgb(91, 117, 105);
+    private static final int DARK = Color.rgb(11, 22, 32);
+    private static final int LIGHT = Color.rgb(16, 29, 41);
+    private static final int SOFT = Color.rgb(43, 54, 66);
+    private static final int LIME = Color.rgb(212, 175, 55);
+    private static final int TEXT = Color.rgb(242, 235, 218);
+    private static final int MUTED = Color.rgb(175, 184, 195);
+    private static final int GOLD = Color.rgb(212, 175, 55);
+    private static final int BORDER = Color.rgb(72, 77, 78);
     private Button filteredTab;
     private Button allTab;
     private Button lotisseursTab;
@@ -118,9 +123,9 @@ public final class MainActivity extends Activity {
         b.setTextSize(12);
         b.setAllCaps(false);
         b.setTypeface(null, Typeface.BOLD);
-        b.setTextColor(primary ? DARK : GREEN);
-        b.setBackground(rounded(primary ? LIME : Color.WHITE, 11,
-            primary ? Color.TRANSPARENT : Color.rgb(208, 225, 212)));
+        b.setTextColor(primary ? DARK : TEXT);
+        b.setBackground(rounded(primary ? GOLD : LIGHT, 11,
+            primary ? Color.TRANSPARENT : BORDER));
         b.setElevation(0);
         b.setMinimumHeight(dp(48));
         b.setMinHeight(dp(48));
@@ -138,29 +143,42 @@ public final class MainActivity extends Activity {
         for (Button b : new Button[]{filteredTab, allTab, lotisseursTab}) {
             if (b == null) continue;
             boolean active = b == selected;
-            b.setTextColor(active ? DARK : MUTED);
-            b.setBackground(rounded(active ? LIME : SOFT, 11, Color.TRANSPARENT));
+            b.setTextColor(active ? DARK : TEXT);
+            b.setBackground(rounded(active ? GOLD : LIGHT, 11,
+                active ? Color.TRANSPARENT : BORDER));
         }
     }
 
     private void buildScreen() {
         getWindow().setStatusBarColor(DARK);
         getWindow().setNavigationBarColor(DARK);
+        getWindow().getDecorView().setSystemUiVisibility(0);
         main = new LinearLayout(this);
         main.setOrientation(LinearLayout.VERTICAL);
         main.setPadding(dp(12), dp(9), dp(12), dp(8));
         main.setBackgroundColor(LIGHT);
 
         LinearLayout masthead = section(DARK, 18, Color.TRANSPARENT);
-        masthead.addView(heading("TerrainScope", 24, Color.WHITE, true));
-        TextView kicker = heading("RECHERCHE DE TERRAINS  ·  INDRE-ET-LOIRE", 10, LIME, true);
-        place(masthead, kicker, 1, 2);
-        masthead.addView(heading("Application Android · version d'essai", 11,
-            Color.rgb(203, 220, 211), false));
+        LinearLayout brandLine = row();
+        brandLine.setGravity(Gravity.CENTER_VERTICAL);
+        ImageView brandIcon = new ImageView(this);
+        brandIcon.setContentDescription("Logo TerraNova");
+        brandIcon.setImageResource(R.drawable.terranova_logo);
+        brandLine.addView(brandIcon, new LinearLayout.LayoutParams(dp(64), dp(64)));
+        LinearLayout brandText = new LinearLayout(this);
+        brandText.setOrientation(LinearLayout.VERTICAL);
+        TextView wordmark = heading("TerraNova", 27, GOLD, true);
+        wordmark.setTypeface(Typeface.create("serif", Typeface.BOLD));
+        brandText.addView(wordmark);
+        brandText.addView(heading("Recherche de terrains", 12, MUTED, false));
+        LinearLayout.LayoutParams wordmarkSize = new LinearLayout.LayoutParams(0,-2,1f);
+        wordmarkSize.setMargins(dp(10),0,0,0);
+        brandLine.addView(brandText, wordmarkSize);
+        masthead.addView(brandLine);
         place(main, masthead, 0, 7);
 
-        LinearLayout search = section(Color.WHITE, 16, Color.rgb(223, 235, 224));
-        search.addView(heading("RECHERCHER DES TERRAINS", 11, GREEN, true));
+        LinearLayout search = section(LIGHT, 16, BORDER);
+        search.addView(heading("RECHERCHER UNE COMMUNE", 11, GOLD, true));
         LinearLayout fields = row();
         fields.setGravity(Gravity.CENTER_VERTICAL);
         cityInput = new EditText(this);
@@ -170,29 +188,36 @@ public final class MainActivity extends Activity {
         cityInput.setHintTextColor(MUTED);
         cityInput.setHint("Commune · ex. Monnaie");
         cityInput.setPadding(dp(11), 0, dp(9), 0);
-        cityInput.setBackground(rounded(LIGHT, 10, Color.rgb(207, 225, 211)));
+        cityInput.setBackground(rounded(SOFT, 10, BORDER));
         LinearLayout.LayoutParams c = new LinearLayout.LayoutParams(0, dp(49), 1.45f);
         c.setMargins(0, 0, dp(7), 0);
         fields.addView(cityInput, c);
         siteSpinner = new Spinner(this);
-        ArrayAdapter<String> choices = new ArrayAdapter<>(
-            this, android.R.layout.simple_spinner_dropdown_item, SITES);
+        ArrayAdapter<String> choices = new ArrayAdapter<String>(
+            this, android.R.layout.simple_spinner_dropdown_item, SITES) {
+            @Override public View getView(int position, View old, ViewGroup parent) {
+                TextView title = (TextView) super.getView(position, old, parent);
+                title.setTextColor(TEXT);
+                title.setTextSize(13);
+                return title;
+            }
+        };
         siteSpinner.setAdapter(choices);
         siteSpinner.setPadding(dp(8), 0, dp(5), 0);
-        siteSpinner.setBackground(rounded(LIGHT, 10, Color.rgb(207, 225, 211)));
+        siteSpinner.setBackground(rounded(SOFT, 10, BORDER));
         fields.addView(siteSpinner, new LinearLayout.LayoutParams(0, dp(49), 1f));
         place(search, fields, 7, 8);
 
         LinearLayout actions = row();
-        Button openSite = action("Rechercher sur le site ↗", true);
+        Button openSite = action("Rechercher ↗", true);
         openSite.setOnClickListener(v -> openSelectedSite());
         addControl(actions, openSite, 1.15f);
-        Button importSite = action("Récupérer les annonces", false);
+        Button importSite = action("Importer la page", false);
         importSite.setOnClickListener(v -> importVisiblePage());
         addControl(actions, importSite, 1.1f);
         place(search, actions, 0, 6);
 
-        Button reset = action("Nouvelle commune / vider la recherche", false);
+        Button reset = action("Effacer cette recherche", false);
         reset.setTextSize(11);
         reset.setMinimumHeight(dp(39));
         reset.setOnClickListener(v -> reset());
@@ -201,7 +226,7 @@ public final class MainActivity extends Activity {
 
         LinearLayout tabbar = row();
         tabbar.setPadding(dp(4), dp(4), dp(4), dp(4));
-        tabbar.setBackground(rounded(SOFT, 15, Color.TRANSPARENT));
+        tabbar.setBackground(rounded(SOFT, 15, BORDER));
         filteredTab = action("Annonces triées", true);
         filteredTab.setTextSize(11);
         filteredTab.setOnClickListener(v -> {
@@ -222,15 +247,14 @@ public final class MainActivity extends Activity {
             chooseTab(lotisseursTab);
             browser.loadUrl(TERRAIN_SCOPE);
             showBrowser();
-            status.setText("Les lotisseurs restent accessibles dans TerrainScope existant.");
+            status.setText("Catalogue des 18 lotisseurs : version TerrainScope conservée.");
         });
         addControl(tabbar, lotisseursTab, .8f);
         place(main, tabbar, 0, 7);
 
         status = heading("Prêt pour une recherche de terrains.", 12, TEXT, false);
         status.setPadding(dp(12), dp(9), dp(12), dp(9));
-        status.setBackground(rounded(Color.rgb(237, 247, 233), 12,
-            Color.rgb(212, 230, 209)));
+        status.setBackground(rounded(LIGHT, 12, BORDER));
         place(main, status, 0, 8);
 
         browser = new WebView(this);
@@ -256,7 +280,7 @@ public final class MainActivity extends Activity {
                         ". Vérifie la catégorie Terrain et la commune avant d'importer.");
             }
         });
-        browser.setBackground(rounded(Color.WHITE, 13, Color.rgb(225, 233, 225)));
+        browser.setBackground(rounded(LIGHT, 13, BORDER));
         main.addView(browser, new LinearLayout.LayoutParams(-1, 0, 1f));
 
         results = new ScrollView(this);
@@ -381,7 +405,7 @@ public final class MainActivity extends Activity {
             " constructeur(s) écarté(s), " + counts.get(ListingEngine.State.DUPLICATE) +
             " doublon(s) regroupé(s), " + counts.get(ListingEngine.State.TO_VERIFY) +
             " annonce(s) à vérifier · priorité : Le Bon Coin → SeLoger → Bien’ici.", 13, true);
-        summary.setTextColor(GREEN);
+        summary.setTextColor(GOLD);
         cards.addView(summary);
         if (current.isEmpty()) {
             TextView empty = text(imported.isEmpty()
@@ -400,7 +424,7 @@ public final class MainActivity extends Activity {
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
         panel.setPadding(dp(12), dp(11), dp(12), dp(12));
-        panel.setBackground(rounded(Color.WHITE, 14, Color.rgb(218, 230, 221)));
+        panel.setBackground(rounded(LIGHT, 14, BORDER));
         panel.setElevation(dp(2));
         LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(-1, -2);
         layout.setMargins(0, dp(8), 0, dp(4));
@@ -410,12 +434,13 @@ public final class MainActivity extends Activity {
             record.state == ListingEngine.State.TO_VERIFY ? " · COMMUNE À VÉRIFIER" :
             ListingEngine.isLotisseur(item) ? " · LOTISSEUR" : "";
         TextView origin = text(item.source + statusText, 12, true);
-        origin.setTextColor(record.state == ListingEngine.State.BUILDER ? Color.rgb(162, 51, 51) : GREEN);
+        origin.setTextColor(record.state == ListingEngine.State.BUILDER ? Color.rgb(235, 136, 130) : GOLD);
         panel.addView(origin);
         panel.addView(text(item.title, 15, true));
-        String price = item.priceEuros > 0 ? item.priceEuros + " €" : "Prix à vérifier";
-        String area = item.areaM2 > 0 ? item.areaM2 + " m²" : "Surface à vérifier";
-        panel.addView(text(item.city + " · " + area + " · " + price, 13, false));
+        String price = item.priceEuros > 0 ? String.format(Locale.FRANCE,"%,d €",item.priceEuros) : "Prix à vérifier";
+        String area = item.areaM2 > 0 ? String.format(Locale.FRANCE,"%,.0f m²",item.areaM2) : "Surface à vérifier";
+        panel.addView(text(item.city + " · " + area, 13, false));
+        panel.addView(heading(price, 20, GOLD, true));
         if (!item.seller.isEmpty()) panel.addView(text("Annonceur : " + item.seller, 12, false));
         if (!record.reason.isEmpty()) panel.addView(text(record.reason, 12, false));
         if (!record.otherSources.isEmpty())
@@ -522,7 +547,7 @@ public final class MainActivity extends Activity {
         TextView t = new TextView(this);
         t.setText(value);
         t.setTextSize(size);
-        t.setTextColor(Color.rgb(37, 61, 48));
+        t.setTextColor(TEXT);
         t.setPadding(dp(3), dp(3), dp(3), dp(5));
         if (bold) t.setTypeface(null, Typeface.BOLD);
         return t;
