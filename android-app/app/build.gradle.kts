@@ -10,8 +10,8 @@ android {
         applicationId = "fr.terranova.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "0.4.0-terranova-auto-luxe"
+        versionCode = 5
+        versionName = "0.4.1-terranova-luxe-photos"
     }
 
     // La clé signant les mises à jour doit rester identique entre builds.
