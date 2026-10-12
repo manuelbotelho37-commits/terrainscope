@@ -3,8 +3,9 @@
 **Identité visuelle TerraNova luxe** : bleu nuit (#0B1620), or (#D4AF37),
 vert nature (#1E7F53), gris ardoise (#2B3642).
 L'application Android affiche **TerraNova** et utilise une icône vectorielle
-fondée sur l'emblème approuvé. L'image haute définition approuvée sera
-intégrée à l'APK définitif après validation de la récupération des annonces.
+fondée sur l'emblème approuvé. L'icône luxe approuvée est désormais intégrée à l'APK Android en WebP
+et utilisée pour le lanceur et l'en-tête. Son rendu haute définition reste
+à contrôler sur le Samsung.
 Les captures de maquette présentant des prix et quantités sont uniquement
 illustratives ; l'application n'enregistre ni n'affiche de faux résultats.
 
