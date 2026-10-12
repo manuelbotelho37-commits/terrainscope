@@ -17,6 +17,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.AutoCompleteTextView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Spinner;
@@ -55,7 +56,8 @@ public final class MainActivity extends Activity {
     private final Map<String, String> selogerPaths = new HashMap<>();
     private final LinkedHashMap<String, ListingEngine.Listing> imported = new LinkedHashMap<>();
 
-    private EditText cityInput;
+    private AutoCompleteTextView cityInput;
+    private final ArrayList<String> communeNames = new ArrayList<>();
     private Spinner siteSpinner;
     private WebView browser;
     private LinearLayout main;
@@ -181,7 +183,10 @@ public final class MainActivity extends Activity {
         search.addView(heading("RECHERCHER UNE COMMUNE", 11, GOLD, true));
         LinearLayout fields = row();
         fields.setGravity(Gravity.CENTER_VERTICAL);
-        cityInput = new EditText(this);
+        cityInput = new AutoCompleteTextView(this);
+        cityInput.setThreshold(2);
+        cityInput.setAdapter(new ArrayAdapter<String>(this,
+            android.R.layout.simple_dropdown_item_1line, communeNames));
         cityInput.setSingleLine(true);
         cityInput.setTextSize(15);
         cityInput.setTextColor(TEXT);
@@ -492,6 +497,8 @@ public final class MainActivity extends Activity {
             JSONArray array = new JSONArray(readAsset("communes-37.json"));
             for (int i = 0; i < array.length(); i++) {
                 JSONObject city = array.getJSONObject(i);
+                String name = city.optString("nom");
+                if (!name.isEmpty()) communeNames.add(name);
                 JSONArray postals = city.optJSONArray("codesPostaux");
                 if (postals != null && postals.length() > 0)
                     postalCodes.put(ListingEngine.normalize(city.optString("nom")), postals.getString(0));
