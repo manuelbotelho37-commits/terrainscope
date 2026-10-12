@@ -379,7 +379,8 @@ public final class MainActivity extends Activity {
             " : " + current.size() + " affichée(s) / " + imported.size() +
             " récupérée(s)\n" + counts.get(ListingEngine.State.BUILDER) +
             " constructeur(s) écarté(s), " + counts.get(ListingEngine.State.DUPLICATE) +
-            " doublon(s) regroupé(s) · priorité : Le Bon Coin → SeLoger → Bien’ici.", 13, true);
+            " doublon(s) regroupé(s), " + counts.get(ListingEngine.State.TO_VERIFY) +
+            " annonce(s) à vérifier · priorité : Le Bon Coin → SeLoger → Bien’ici.", 13, true);
         summary.setTextColor(GREEN);
         cards.addView(summary);
         if (current.isEmpty()) {
@@ -405,6 +406,7 @@ public final class MainActivity extends Activity {
         cards.addView(panel, layout);
         String statusText = record.state == ListingEngine.State.BUILDER ? " · CONSTRUCTEUR" :
             record.state == ListingEngine.State.DUPLICATE ? " · DOUBLON" :
+            record.state == ListingEngine.State.TO_VERIFY ? " · COMMUNE À VÉRIFIER" :
             ListingEngine.isLotisseur(item) ? " · LOTISSEUR" : "";
         TextView origin = text(item.source + statusText, 12, true);
         origin.setTextColor(record.state == ListingEngine.State.BUILDER ? Color.rgb(162, 51, 51) : GREEN);
