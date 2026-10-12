@@ -979,106 +979,137 @@ public final class MainActivity extends Activity {
         List<ListingEngine.Result> current = filtered
             ? ListingEngine.filtered(classified) : new ArrayList<>(classified);
         if (!filtered && !sourceFilter.isEmpty())
-            current.removeIf(result -> !ListingEngine.normalize(result.listing.source)
+            current.removeIf(r -> !ListingEngine.normalize(r.listing.source)
                 .equals(ListingEngine.normalize(sourceFilter)));
         showResults();
         cards.removeAllViews();
         Map<ListingEngine.State, Integer> counts = ListingEngine.counts(classified);
-        TextView summary = text((filtered ? "Annonces triées" :
-            (sourceFilter.isEmpty() ? "Toutes les annonces" : "Annonces · " + sourceFilter)) +
-            " : " + current.size() + " affichée(s) / " + imported.size() +
-            " récupérée(s)\n" + counts.get(ListingEngine.State.BUILDER) +
-            " constructeur(s) écarté(s), " + counts.get(ListingEngine.State.DUPLICATE) +
-            " doublon(s) regroupé(s), " + counts.get(ListingEngine.State.TO_VERIFY) +
-            " annonce(s) à vérifier · priorité : Le Bon Coin → SeLoger → Bien’ici.", 13, true);
-        summary.setTextColor(GOLD);
-        cards.addView(summary);
-        TextView coverage = text("Sources consultées : " +
-            (sourcesVisited.isEmpty() ? "aucune importée" : String.join(", ", sourcesVisited)) +
-            " · Les portails non consultés ne valent pas « zéro annonce ».", 12, false);
-        coverage.setTextColor(MUTED);
-        cards.addView(coverage);
-        Button backToSite = action("Consulter la dernière page source ↗", false);
-        backToSite.setTextSize(12);
-        backToSite.setOnClickListener(v -> showBrowser());
-        place(cards, backToSite, 10, 5);
+
+        LinearLayout headingRow = row();
+        headingRow.setGravity(Gravity.CENTER_VERTICAL);
+        TextView title = heading(filtered ? "Terrains sélectionnés" :
+            (sourceFilter.isEmpty() ? "Toutes les annonces" : sourceFilter),
+            17, TEXT, true);
+        title.setTypeface(Typeface.create("serif", Typeface.BOLD));
+        headingRow.addView(title, new LinearLayout.LayoutParams(0, -2, 1f));
+        TextView count = heading(current.size() + " terrain(s)", 11, GOLD, true);
+        headingRow.addView(count);
+        place(cards, headingRow, 5, 2);
+
+        String stats = filtered
+            ? counts.get(ListingEngine.State.BUILDER) + " constructeur(s) écarté(s)  ·  " +
+              counts.get(ListingEngine.State.TO_VERIFY) + " à vérifier"
+            : imported.size() + " annonces récupérées  ·  " +
+              counts.get(ListingEngine.State.BUILDER) + " constructeur(s) exclus  ·  " +
+              counts.get(ListingEngine.State.TO_VERIFY) + " à vérifier";
+        TextView subtitle = heading(stats, 11, MUTED, false);
+        place(cards, subtitle, 0, 6);
         if (current.isEmpty()) {
             TextView empty = text(imported.isEmpty()
-                ? "Aucune annonce récupérée pour le moment. Appuie sur « RECHERCHER LES TERRAINS ». " +
-                  "Si un site bloque la collecte, il sera signalé comme incomplet."
-                : "Aucune annonce retenue dans les pages importées. Ouvre « Toutes les annonces »" +
-                  " pour contrôler les exclusions.", 13, false);
-            cards.addView(empty);
+                ? "Lance une recherche : les annonces trouvées apparaîtront ici. " +
+                  "Un portail bloqué ne signifie pas qu'aucun terrain n'est disponible."
+                : "Aucun terrain confirmé dans cette sélection. Regarde « Toutes les annonces » " +
+                  "pour examiner les annonces et les motifs d'exclusion.", 12, false);
+            place(cards, empty, 10, 6);
             return;
         }
-        // Sur l'écran intérieur déplié, les cartes sont présentées sur
-        // deux colonnes, comme un catalogue immobilier haut de gamme.
-        boolean landscapeWide = getResources().getConfiguration().screenWidthDp >= 680;
-        if (!landscapeWide) {
-            for (ListingEngine.Result record : current) addCard(record, cards, false);
-        } else {
-            LinearLayout row = null;
-            for (int i = 0; i < current.size(); i++) {
-                if (i % 2 == 0) {
-                    row = row();
-                    place(cards, row, 1, 7);
-                }
-                addCard(current.get(i), row, true);
-            }
-        }
+        // Les fiches restent horizontales sur les deux écrans du Fold,
+        // conformément à la maquette luxueuse choisie.
+        for (ListingEngine.Result r : current) addCard(r);
+        TextView detail = heading(
+            "Liens et photos provenant des annonces d'origine. Disponibilités à confirmer.",
+            10, MUTED, false);
+        place(cards, detail, 10, 7);
     }
 
-    private void addCard(ListingEngine.Result record, LinearLayout parent, boolean compact) {
+    private void addCard(ListingEngine.Result record) {
         ListingEngine.Listing item = record.listing;
-        LinearLayout panel = new LinearLayout(this);
-        panel.setOrientation(LinearLayout.VERTICAL);
-        panel.setPadding(dp(12), dp(11), dp(12), dp(12));
-        panel.setBackground(rounded(PANEL, 17,
+        int width = getResources().getConfiguration().screenWidthDp;
+        boolean wide = width >= 620;
+        int height = wide ? 180 : 149;
+        int photoWidth = wide ? 195 : 126;
+
+        LinearLayout panel = row();
+        panel.setGravity(Gravity.CENTER_VERTICAL);
+        panel.setPadding(dp(5), dp(5), dp(9), dp(5));
+        panel.setBackground(rounded(LIGHT, 15,
             record.state == ListingEngine.State.ACCEPTED ? GOLD_SOFT : BORDER));
-        panel.setElevation(dp(3));
-        LinearLayout.LayoutParams layout = compact
-            ? new LinearLayout.LayoutParams(0, -2, 1f)
-            : new LinearLayout.LayoutParams(-1, -2);
-        layout.setMargins(dp(compact ? 3 : 0), dp(8),
-            dp(compact ? 3 : 0), dp(4));
-        parent.addView(panel, layout);
-        String statusText = record.state == ListingEngine.State.BUILDER ? " · CONSTRUCTEUR" :
-            record.state == ListingEngine.State.DUPLICATE ? " · DOUBLON" :
-            record.state == ListingEngine.State.TO_VERIFY ? " · À VÉRIFIER" :
-            ListingEngine.isLotisseur(item) ? " · LOTISSEUR" : "";
-        TextView origin = text(item.source + statusText, 12, true);
-        origin.setTextColor(record.state == ListingEngine.State.BUILDER ? Color.rgb(235, 136, 130) : GOLD);
-        panel.addView(origin);
+        LinearLayout.LayoutParams outer = new LinearLayout.LayoutParams(-1, dp(height));
+        outer.setMargins(0, dp(5), 0, dp(5));
+        cards.addView(panel, outer);
+
+        // La partie gauche montre UNIQUEMENT la photo réelle du portail.
+        // Si elle manque, aucun terrain fictif n'est affiché.
+        FrameLayout visual = new FrameLayout(this);
+        visual.setBackground(rounded(PANEL, 11, Color.TRANSPARENT));
+        LinearLayout.LayoutParams photoSize = new LinearLayout.LayoutParams(
+            dp(photoWidth), -1);
+        photoSize.setMargins(0, 0, dp(12), 0);
+        panel.addView(visual, photoSize);
         if (!item.imageUrl.isEmpty()) {
-            ImageView image = new ImageView(this);
-            image.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            image.setBackground(rounded(SOFT, 13, BORDER));
-            image.setClipToOutline(true);
-            image.setContentDescription("Photographie de l'annonce " + item.title);
-            LinearLayout.LayoutParams frame = new LinearLayout.LayoutParams(
-                -1, dp(compact ? 158 : 198));
-            frame.setMargins(0, dp(8), 0, dp(8));
-            panel.addView(image, frame);
-            PhotoLoader.show(image, item.imageUrl);
+            ImageView photo = new ImageView(this);
+            photo.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            photo.setBackground(rounded(SOFT, 11, Color.TRANSPARENT));
+            photo.setClipToOutline(true);
+            photo.setContentDescription("Photo de l'annonce " + item.title);
+            visual.addView(photo, new FrameLayout.LayoutParams(-1, -1));
+            PhotoLoader.show(photo, item.imageUrl);
+        } else {
+            TextView missing = heading("PHOTO\nNON FOURNIE", 10, MUTED, false);
+            missing.setGravity(Gravity.CENTER);
+            visual.addView(missing, new FrameLayout.LayoutParams(-1, -1));
         }
-        TextView itemTitle = heading(item.title, 16, TEXT, true);
-        place(panel, itemTitle, 5, 3);
-        String price = item.priceEuros > 0 ? String.format(Locale.FRANCE,"%,d €",item.priceEuros) : "Prix à vérifier";
-        String area = item.areaM2 > 0 ? String.format(Locale.FRANCE,"%,.0f m²",item.areaM2) : "Surface à vérifier";
-        panel.addView(text(item.city + " · " + area, 13, false));
-        TextView priceTag = heading(price, 23, GOLD, true);
-        priceTag.setTypeface(Typeface.create("serif", Typeface.BOLD));
-        place(panel, priceTag, 5, 5);
-        if (!item.seller.isEmpty()) panel.addView(text("Annonceur : " + item.seller, 12, false));
-        if (!record.reason.isEmpty()) panel.addView(text(record.reason, 12, false));
-        if (!record.otherSources.isEmpty())
-            panel.addView(text("Autres sites : " + String.join(", ", record.otherSources), 12, false));
-        Button open = action("Voir l’annonce d’origine ↗", true);
-        open.setOnClickListener(v -> {
+
+        LinearLayout info = new LinearLayout(this);
+        info.setOrientation(LinearLayout.VERTICAL);
+        info.setGravity(Gravity.CENTER_VERTICAL);
+        panel.addView(info, new LinearLayout.LayoutParams(0, -1, 1f));
+
+        String badge = record.state == ListingEngine.State.BUILDER ? "EXCLU · CONSTRUCTEUR" :
+            record.state == ListingEngine.State.TO_VERIFY ? "À VÉRIFIER" :
+            record.state == ListingEngine.State.DUPLICATE ? "DOUBLON" :
+            ListingEngine.isLotisseur(item) ? "LOTISSEUR" : "CONSERVÉ";
+        TextView statusBadge = heading("●  " + badge, 9,
+            record.state == ListingEngine.State.BUILDER ? Color.rgb(238, 150, 141) :
+            record.state == ListingEngine.State.ACCEPTED ? GOLD : MUTED, true);
+        statusBadge.setSingleLine(true);
+        statusBadge.setEllipsize(TextUtils.TruncateAt.END);
+        info.addView(statusBadge);
+
+        TextView title = heading(item.title, wide ? 15 : 13, TEXT, true);
+        title.setTypeface(Typeface.create("serif", Typeface.BOLD));
+        title.setMaxLines(2);
+        title.setEllipsize(TextUtils.TruncateAt.END);
+        place(info, title, 3, 2);
+
+        TextView origin = heading(item.source + "  ·  " + item.city, 10, MUTED, false);
+        origin.setSingleLine(true);
+        origin.setEllipsize(TextUtils.TruncateAt.END);
+        info.addView(origin);
+        TextView area = heading(
+            item.areaM2 > 0 ? String.format(Locale.FRANCE, "%,.0f m²", item.areaM2) :
+                "Surface à vérifier", 11, MUTED, false);
+        info.addView(area);
+
+        TextView price = heading(
+            item.priceEuros > 0 ? String.format(Locale.FRANCE, "%,d €", item.priceEuros) :
+                "Prix à vérifier", wide ? 21 : 18, GOLD, true);
+        price.setTypeface(Typeface.create("serif", Typeface.BOLD));
+        info.addView(price);
+
+        TextView seller = heading(item.seller.isEmpty() ? "Annonceur à vérifier  ↗" :
+            item.seller + "  ↗", 10, MUTED, false);
+        seller.setSingleLine(true);
+        seller.setEllipsize(TextUtils.TruncateAt.END);
+        info.addView(seller);
+        panel.setContentDescription(item.title + ", " + item.city +
+            ", " + price.getText() + ", " + badge + ". Ouvrir l'annonce d'origine.");
+        panel.setOnClickListener(v -> {
             try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(item.url))); }
-            catch (Exception exception) { status.setText("Lien inaccessible : " + item.url); }
+            catch (Exception error) {
+                status.setText("Impossible d'ouvrir ce lien : " + item.url);
+            }
         });
-        panel.addView(open);
     }
 
     private void reset() {
