@@ -179,6 +179,29 @@ const onlyMarketing = extract("www.seloger.com", "Monnaie", [{
 check(!onlyMarketing.listings[0].cityConfirmed,
   "Une commune citée uniquement dans une publicité n'est pas confirmée");
 
+// iad : le prix et la surface sont dans le parent du lien de l'annonce.
+const iadUrl = "https://www.iadfrance.fr/annonce/terrain-vente-monnaie-1328m2/r1976940";
+const iadLink = {
+  href:iadUrl, innerText:"Terrain à bâtir à Monnaie (37380)",
+  textContent:"Terrain à bâtir à Monnaie (37380)",
+  getClientRects:()=>[1],
+  matches: s=>s==="a[href]",
+  getAttribute: key=>key==="href"?"/annonce/terrain-vente-monnaie-1328m2/r1976940":"",
+  querySelectorAll:()=>[]
+};
+const iadCard = {
+  innerText:"138 500 € Terrain à bâtir à Monnaie (37380) 1 328 m² de terrain Alice Ravinet",
+  textContent:"138 500 € Terrain à bâtir à Monnaie (37380) 1 328 m² de terrain Alice Ravinet",
+  querySelector:s=>s.includes("h2")?{textContent:"Terrain à bâtir à Monnaie (37380)"}:null,
+  querySelectorAll:s=>s==="a[href]"?[iadLink]:[]
+};
+iadLink.parentElement=iadCard;
+const iad = extract("www.iadfrance.fr","Monnaie",[],[iadLink]);
+check(iad.retrieved===1,"Annonce iad isolée détectée via son lien");
+check(iad.listings[0].priceEuros===138500,"Prix iad retrouvé dans le parent");
+check(iad.listings[0].areaM2===1328,"Surface iad retrouvée dans le parent");
+check(iad.listings[0].cityConfirmed,"Commune iad confirmée");
+
 const empty = extract("www.leboncoin.fr", "Monnaie");
 check(empty.retrieved === 0, "page vide lisible, distincte du stock réel");
 console.log("TerrainScope: " + checks + " vérifications de lecture des fiches réussies.");
