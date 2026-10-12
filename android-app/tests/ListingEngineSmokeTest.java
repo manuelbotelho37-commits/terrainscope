@@ -81,6 +81,16 @@ public final class ListingEngineSmokeTest {
               "Accents et apostrophes normalisés");
         check(ListingEngine.counts(duplicates).get(ListingEngine.State.DUPLICATE)==2,
               "Compteur doublons");
+        ListingEngine.Listing nearby = new ListingEngine.Listing(
+            "IAD", "https://www.iadfrance.fr/annonce/terrain-vente/999",
+            "Terrain à Vernou-sur-Brenne (37210)", "Monnaie", "Agent IAD", "",
+            "", "", 35000, 700, false);
+        List<ListingEngine.Result> nearbyResults = ListingEngine.classify(Arrays.asList(lbc, nearby));
+        check(status(nearbyResults, "IAD")==ListingEngine.State.TO_VERIFY,
+            "Annonce de commune voisine retenue pour vérification seulement");
+        check(ListingEngine.filtered(nearbyResults).size()==1,
+            "Les communes voisines ne contaminent pas les terrains triés");
+
         System.out.println("TerrainScope : " + assertions + " vérifications du moteur réussies.");
     }
 }
