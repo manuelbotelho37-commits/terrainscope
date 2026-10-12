@@ -91,6 +91,41 @@ public final class ListingEngineSmokeTest {
         check(ListingEngine.filtered(nearbyResults).size()==1,
             "Les communes voisines ne contaminent pas les terrains triés");
 
+        // Cas Monnaie observés sur les portails : agences, constructeurs,
+        // aménageurs, même surface/prix répliqués sur plusieurs sites.
+        ListingEngine.Listing bsk = listing("SeLoger","Terrain constructible",
+            "SOPHIE VIALE BSK IMMOBILIER","Monnaie",145000,838,"",
+            "https://www.seloger.com/annonce/838-bsk");
+        check(!ListingEngine.isBuilder(bsk),"Agence BSK reste visible");
+        ListingEngine.Listing logis = listing("SeLoger","Terrain viabilisé",
+            "LOGIS AVENIR","Monnaie",55600,215,"",
+            "https://www.seloger.com/annonce/logis-215");
+        check(ListingEngine.isBuilder(logis),"Logis Avenir reconnu comme constructeur");
+        ListingEngine.Listing villadim = listing("Le Bon Coin","Terrain à bâtir",
+            "Villadim Aménagement et Promotion","Monnaie",78300,406,"",
+            "https://www.leboncoin.fr/ad/ventes_immobilieres/123");
+        check(!ListingEngine.isBuilder(villadim),"Villadim reste dans les terrains");
+        check(ListingEngine.isLotisseur(villadim),"Villadim reconnu comme lotisseur");
+        ListingEngine.Listing cmcic = listing("SeLoger","Terrain viabilisé",
+            "CREDIT MUTUEL AMENAGEMENT FONCIER TOURS","Monnaie",79000,360,"",
+            "https://www.seloger.com/annonce/cmcic");
+        check(ListingEngine.isLotisseur(cmcic),"Crédit Mutuel Aménagement reste lotisseur");
+        ListingEngine.Listing bskRepeat = listing("Bien’ici","Terrain constructible",
+            "BSK IMMOBILIER","Monnaie",145000,838,"",
+            "https://www.bienici.com/annonce/vente/838-bsk");
+        List<ListingEngine.Result> afterTri = ListingEngine.classify(
+            Arrays.asList(bskRepeat, logis, villadim, bsk));
+        check(ListingEngine.filtered(afterTri).size()==2,
+            "Un terrain BSK et un terrain Villadim, sans Logis Avenir ni doublon");
+        check(status(afterTri,"Bien’ici")==ListingEngine.State.DUPLICATE,
+            "Doublon agence BSK repéré sur Bien'ici");
+        check(afterTri.stream().filter(r->r.listing==bsk).findFirst().get().state ==
+              ListingEngine.State.ACCEPTED,
+            "SeLoger conserve BSK après tri");
+        check(afterTri.stream().filter(r->r.listing==logis).findFirst().get().state ==
+              ListingEngine.State.BUILDER,
+            "SeLoger écarte Logis Avenir après tri");
+
         System.out.println("TerrainScope : " + assertions + " vérifications du moteur réussies.");
     }
 }
