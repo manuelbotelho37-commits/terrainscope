@@ -1,13 +1,19 @@
 name: Tester et construire TerraNova Android
 
-# Notifications par e-mail évitées : aucun test automatique à chaque commit.
-# Lancer le contrôle uniquement à la demande.
+# Les mises à jour compilent automatiquement quand le code Android change.
+# L'ancien site web TerrainScope (branche main) n'est pas concerné.
 on:
+  push:
+    branches: [android-capture-prototype]
+    paths:
+      - 'android-app/**'
+      - '.github/workflows/android-prototype.yml'
   workflow_dispatch:
   workflow_call:
 
 permissions:
-  contents: read
+  contents: write
+  actions: write
 
 # Une seule construction en cours par branche : éviter d'épuiser les
 # machines GitHub en démarrant dix émulateurs pour dix petites corrections.
@@ -25,6 +31,18 @@ jobs:
         with:
           # Construire toujours TerraNova, jamais l'ancienne PWA de main.
           ref: android-capture-prototype
+
+      - name: Supprimer le journal ancien contenant un mot de passe divulgué
+        # Un précédent build a affiché par erreur un mot de passe décodé.
+        # Ce job tente de purger ce journal pour éviter l'accès public.
+        if: github.event_name == 'push'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method DELETE "repos/${GITHUB_REPOSITORY}/actions/runs/38317497455" || {
+            echo "::warning::Nettoyage journal 38317497455 à terminer manuellement."
+          }
 
       - name: Installer Java 17
         uses: actions/setup-java@v4
@@ -148,6 +166,30 @@ jobs:
           "$APKSIGNER" verify --verbose --print-certs "$SIGNED" | tee "$RUNNER_TEMP/terranova-apk-verification.txt"
           test -s "$SIGNED"
           echo "APK signé par le PKCS12 GitHub et validé cryptographiquement par apksigner."
+      - name: Publier une adresse de téléchargement stable
+        # La même URL téléchargera toujours le dernier APK TerraNova signé.
+        # La clé privée ne quitte jamais les secrets Actions.
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          APK="$(find android-app/app/build/outputs/apk/terranova -maxdepth 1 -type f -name 'TerraNova-*-signe.apk' | head -n 1)"
+          test -n "$APK" && test -s "$APK"
+          VERSION="$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' android-app/app/build.gradle.kts | head -n 1)"
+          VERSION_CODE="$(sed -n 's/.*versionCode = \([0-9]*\).*/\1/p' android-app/app/build.gradle.kts | head -n 1)"
+          test -n "$VERSION" && test -n "$VERSION_CODE"
+          cp "$APK" "$RUNNER_TEMP/TerraNova.apk"
+          TAG="terranova-android-latest"
+          RELEASE_NOTES="TerraNova Android $VERSION. Version Android : $VERSION_CODE. APK signé avec la clé permanente GitHub. Android demandera la confirmation d'installation."
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$RUNNER_TEMP/TerraNova.apk" --clobber
+            gh release edit "$TAG" --title "TerraNova Android $VERSION" --notes "$RELEASE_NOTES" --latest
+          else
+            gh release create "$TAG" "$RUNNER_TEMP/TerraNova.apk" --title "TerraNova Android $VERSION" --notes "$RELEASE_NOTES" --target android-capture-prototype --latest
+          fi
+          echo "APK public prêt : https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/TerraNova.apk"
+
       - name: Vérifier le démarrage sur un émulateur Android
         # Le runner Android GitHub peut planter (adb Broken pipe) avant même
         # d'installer l'APK : ne pas cacher cette limite, ni bloquer l'APK
