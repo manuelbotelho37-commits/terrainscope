@@ -38,8 +38,11 @@ jobs:
           mkdir -p android-app/build/engine-smoke
           javac -encoding UTF-8 -d android-app/build/engine-smoke \
             android-app/app/src/main/java/fr/terrainscope/app/ListingEngine.java \
-            android-app/tests/ListingEngineSmokeTest.java
+            android-app/app/src/main/java/fr/terrainscope/app/SearchUrls.java \
+            android-app/tests/ListingEngineSmokeTest.java \
+            android-app/tests/SearchUrlsSmokeTest.java
           java -cp android-app/build/engine-smoke fr.terrainscope.app.ListingEngineSmokeTest
+          java -cp android-app/build/engine-smoke fr.terrainscope.app.SearchUrlsSmokeTest
 
       - name: Installer Android API 35
         run: |
