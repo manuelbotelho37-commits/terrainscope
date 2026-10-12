@@ -37,6 +37,14 @@
     if (!item || records.length >= 200) return;
     const title = clean(item.title), url = absolute(item.url), details = clean(item.description);
     if (!url || !/^https?:/.test(url) || !title) return;
+    // Ne jamais transformer le lien « rechercher d'autres terrains » ou la
+    // page de résultats elle-même en annonce consultable.
+    const parsed = new URL(url);
+    const path = parsed.pathname.toLowerCase();
+    if (url === base || /\/(?:recherche|cl)\//.test(path) ||
+        /\/annonces-immobilieres\/vente\/terrain\/[^/]+-37\/?$/.test(path)) return;
+    if (!/\/(?:annonce(?:s)?|ad|ventes_immobilieres|annonce-immobiliere|annonce-immo)(?:\/|[-])/.test(path))
+      return;
     // Attention : « Maison 6 pièces, terrain 655 m² » n'est PAS un terrain.
     // Seule une fiche de terrain (type de bien indiqué dans son titre) entre
     // dans la collecte. L'expression « terrain » dans la description seule
