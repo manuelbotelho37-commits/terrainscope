@@ -315,6 +315,44 @@ const refusedNext = extract("www.seloger.com","Monnaie",[],[],
 check(refusedNext.nextPageUrl==="",
   "Ne pas suivre un autre domaine pendant la pagination automatique");
 
+const photoJson = extract("www.bienici.com","Monnaie",[{
+  "@type":"RealEstateListing",
+  name:"Achat terrain 374 m² à Monnaie",
+  url:"https://www.bienici.com/annonce/vente/terrain-photo-374",
+  image:["https://images.bienici.com/photo-terrain-374.jpg"],
+  offers:{price:71000,seller:{name:"CONSTRUCTIONS IDEALE DEMEURE"}},
+  address:{addressLocality:"Monnaie",postalCode:"37380"}
+}]);
+check(photoJson.listings[0].imageUrl==="https://images.bienici.com/photo-terrain-374.jpg",
+  "Photo originale JSON-LD conservée sur la fiche Bien'ici");
+check(photoJson.listings[0].seller==="CONSTRUCTIONS IDEALE DEMEURE",
+  "Identité CID récupérée avec la photo sur l'annonce Monnaie 374 m²");
+const logoImg = {
+  src:"https://www.bienici.com/logo-agence.png",naturalWidth:80,
+  getAttribute:name => name==="alt"?"Logo de l'agence":
+    name==="src"?"https://www.bienici.com/logo-agence.png":""
+};
+const fieldImg = {
+  src:"https://cdn.bienici.com/terrain-photo.jpg",naturalWidth:820,
+  getAttribute:name => name==="alt"?"Photo du terrain":
+    name==="src"?"https://cdn.bienici.com/terrain-photo.jpg":""
+};
+const actualPhotoCard = {
+  innerText:"Achat terrain 374 m² à Monnaie 37380 71 000 € CONSTRUCTIONS IDEALE DEMEURE",
+  getClientRects:()=>[1], matches:()=>false,
+  querySelector: selector=>selector.includes("h2")?{textContent:"Achat terrain 374 m² à Monnaie"}:null,
+  querySelectorAll: selector=>selector==="img"?[logoImg,fieldImg]:
+    selector==="a[href]"?[{
+      href:"https://www.bienici.com/annonce/vente/terrain-photo-cid",
+      textContent:"Voir le terrain",
+      getAttribute:key=>key==="href"?"/annonce/vente/terrain-photo-cid":""
+    }]:[]
+};
+const cardWithPhoto = extract("www.bienici.com","Monnaie",[],[actualPhotoCard]);
+check(cardWithPhoto.listings.length===1 &&
+  cardWithPhoto.listings[0].imageUrl==="https://cdn.bienici.com/terrain-photo.jpg",
+  "Le véritable terrain prime sur le logo de l'agence");
+
 const empty = extract("www.leboncoin.fr", "Monnaie");
 check(empty.retrieved === 0, "page vide lisible, distincte du stock réel");
 console.log("TerrainScope: " + checks + " vérifications de lecture des fiches réussies.");
