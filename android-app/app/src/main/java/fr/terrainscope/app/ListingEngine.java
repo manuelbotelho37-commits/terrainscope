@@ -99,6 +99,19 @@ public final class ListingEngine {
         return OFFER.matcher(text).find();
     }
 
+    public static boolean requiresBuildabilityCheck(Listing item) {
+        String title = normalize(item.title);
+        String description = normalize(item.description);
+        // Un terrain de loisir / agricole n'est pas un terrain à bâtir.
+        // Le conserver dans « Toutes » mais pas parmi les opportunités client.
+        return containsPhrase(title,"terrain de loisirs") ||
+            containsPhrase(title,"terrain loisirs") ||
+            containsPhrase(title,"terrain agricole") ||
+            containsPhrase(title,"terrain non constructible") ||
+            containsPhrase(description,"terrain non constructible") ||
+            containsPhrase(description,"terrain a usage de loisirs");
+    }
+
     public static boolean isLotisseur(Listing item) {
         String text = normalize(item.seller + " " + item.title);
         for (String name : LOTISSEURS) if (containsPhrase(text, name)) return true;
@@ -156,6 +169,11 @@ public final class ListingEngine {
             if (!r.listing.cityConfirmed) {
                 r.state = State.TO_VERIFY;
                 r.reason = "Commune non confirmée sur la fiche : vérifier avant de présenter";
+                continue;
+            }
+            if (requiresBuildabilityCheck(r.listing)) {
+                r.state = State.TO_VERIFY;
+                r.reason = "Terrain non constructible, agricole ou de loisirs : vérifier avant de proposer";
                 continue;
             }
             Result original = null;
