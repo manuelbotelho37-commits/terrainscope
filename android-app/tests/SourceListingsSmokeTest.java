@@ -45,6 +45,40 @@ public final class SourceListingsSmokeTest {
             "Source indisponible : zéro import, sans inventer d'annonce");
         check(SourceListings.select(classified, "", true).size() == 4,
             "Les annonces triées ne conservent que les quatre terrains admis");
-        System.out.println("TerraNova : onglets par source testés, CID conservé dans Toutes et exclu du tri.");
+        ListingEngine.Listing expensive = new ListingEngine.Listing(
+            "Le Bon Coin", "https://example.org/expensive",
+            "Terrain cher", "Azay-sur-Cher", "Agence Alpha",
+            "", "", "A", 180000, 600, true);
+        ListingEngine.Listing cheap = new ListingEngine.Listing(
+            "SeLoger", "https://example.org/cheap",
+            "Terrain abordable", "Azay-sur-Cher", "Agence Beta",
+            "", "", "B", 49000, 350, true);
+        ListingEngine.Listing mid = new ListingEngine.Listing(
+            "Bien’ici", "https://example.org/mid",
+            "Terrain moyen", "Azay-sur-Cher", "Agence Gamma",
+            "", "", "C", 93000, 450, true);
+        ListingEngine.Listing unknown = new ListingEngine.Listing(
+            "SeLoger", "https://example.org/unknown",
+            "Terrain prix inconnu", "Azay-sur-Cher", "Agence Delta",
+            "", "", "D", 0, 400, true);
+        List<ListingEngine.Result> prices = ListingEngine.classify(
+            Arrays.asList(expensive, unknown, mid, cheap));
+        List<ListingEngine.Result> allSorted = SourceListings.select(prices, "", false);
+        check(allSorted.get(0).listing == cheap &&
+              allSorted.get(1).listing == mid &&
+              allSorted.get(2).listing == expensive &&
+              allSorted.get(3).listing == unknown,
+              "Toutes : 49 000 € puis 93 000 € puis 180 000 €, prix inconnu à la fin");
+        List<ListingEngine.Result> acceptedSorted = SourceListings.select(prices, "", true);
+        check(acceptedSorted.size() == 4 &&
+              acceptedSorted.get(0).listing == cheap &&
+              acceptedSorted.get(3).listing == unknown,
+              "Annonces triées : du moins cher au plus cher");
+        List<ListingEngine.Result> sourceSorted = SourceListings.select(prices, "SeLoger", false);
+        check(sourceSorted.size() == 2 &&
+              sourceSorted.get(0).listing == cheap &&
+              sourceSorted.get(1).listing == unknown,
+              "Chaque portail est également trié par prix croissant");
+        System.out.println("TerraNova : onglets et prix croissants testés, CID exclu du tri.");
     }
 }
