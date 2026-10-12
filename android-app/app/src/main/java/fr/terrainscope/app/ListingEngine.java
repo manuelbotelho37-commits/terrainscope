@@ -52,7 +52,8 @@ public final class ListingEngine {
 
     private static final String[] BRANDS = {
         "mikit", "ericlor", "natilia", "tradibudget", "villadeale", "primea",
-        "constructions ideale demeure", "cid", "maisons de stephanie",
+        "constructions ideale demeure", "construction ideale demeure", "cid",
+        "cid construction", "cid constructions", "maisons de stephanie",
         "maison de stephanie", "alysia", "alicya", "france confort",
         "pierre et terre", "le masson", "maison laure", "maisons laure",
         "mb habitat", "maisons i tours", "maison i tours",
@@ -101,6 +102,14 @@ public final class ListingEngine {
         boolean sellerUnknown = seller.isEmpty() || seller.equals("pro") ||
             seller.equals("professionnel") || seller.equals("immobilier neuf") ||
             seller.equals("annonceur professionnel");
+        // Les portails affichent parfois « CONSTRUCTIONS IDEALE DEMEURE »
+        // sous la photo, sans champ annonceur structuré. C'est une identité
+        // commerciale explicite, à distinguer du simple sigle générique CID.
+        if (sellerUnknown &&
+            (containsPhrase(details, "constructions ideale demeure") ||
+             containsPhrase(details, "construction ideale demeure") ||
+             containsPhrase(details, "cid construction") ||
+             containsPhrase(details, "cid constructions"))) return true;
         boolean constructionPitch =
             containsPhrase(details, "vous propose de realiser votre projet de construction") ||
             containsPhrase(details, "vous propose de construire") ||
@@ -227,6 +236,18 @@ public final class ListingEngine {
             if (requiresBuildabilityCheck(r.listing)) {
                 r.state = State.TO_VERIFY;
                 r.reason = "Terrain non constructible, agricole ou de loisirs : vérifier avant de proposer";
+                continue;
+            }
+            // Si le portail ne fournit pas l'annonceur, impossible de savoir
+            // si la fiche provient d'une agence, d'un particulier ou de CID.
+            // Elle reste dans « Toutes les annonces », jamais supprimée.
+            String sellerName = normalize(r.listing.seller);
+            if (sellerName.isEmpty() || sellerName.equals("pro") ||
+                sellerName.equals("professionnel") ||
+                sellerName.equals("annonceur professionnel") ||
+                sellerName.equals("immobilier neuf")) {
+                r.state = State.TO_VERIFY;
+                r.reason = "Annonceur non identifié : vérifier avant présentation au client";
                 continue;
             }
             Result original = null;
