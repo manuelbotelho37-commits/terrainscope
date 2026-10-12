@@ -63,6 +63,9 @@ public final class MainActivity extends Activity {
     private final LinkedHashMap<String, ListingEngine.Listing> imported = new LinkedHashMap<>();
     private final LinkedHashSet<String> sourcesVisited = new LinkedHashSet<>();
     private final LinkedHashSet<String> sourcesOpened = new LinkedHashSet<>();
+    private final Map<String, TextView> sourcePills = new LinkedHashMap<>();
+    private final LinkedHashSet<String> failedSourceNames = new LinkedHashSet<>();
+    private String sourceFilter = "";
     private final LinkedHashSet<String> enabledSources = new LinkedHashSet<>();
     private final LinkedHashMap<String, Button> sourcePills = new LinkedHashMap<>();
 
@@ -313,13 +316,38 @@ public final class MainActivity extends Activity {
         place(search, sourceScroll, 0, 9);
         refreshSourcePills();
 
+        TextView sourcesCaption = heading("SOURCES IMMOBILIÈRES", 10, GOLD, true);
+        place(search, sourcesCaption, 1, 2);
+        android.widget.HorizontalScrollView chipsScroll = new android.widget.HorizontalScrollView(this);
+        chipsScroll.setHorizontalScrollBarEnabled(false);
+        chipsScroll.setFillViewport(true);
+        LinearLayout chips = row();
+        chips.setPadding(0, dp(2), 0, dp(2));
+        for (String site : SITES) {
+            TextView chip = heading(site, 11, TEXT, true);
+            chip.setGravity(Gravity.CENTER);
+            chip.setPadding(dp(15), dp(10), dp(15), dp(10));
+            chip.setBackground(rounded(LIGHT, 19, GOLD_SOFT));
+            LinearLayout.LayoutParams chipSize = new LinearLayout.LayoutParams(-2, dp(39));
+            chipSize.setMargins(0, 0, dp(7), 0);
+            chips.addView(chip, chipSize);
+            sourcePills.put(site, chip);
+            chip.setContentDescription("Afficher les annonces importées de " + site);
+            chip.setOnClickListener(v -> {
+                sourceFilter = site;
+                chooseTab(allTab);
+                displayListings(false);
+            });
+        }
+        chipsScroll.addView(chips, new android.widget.HorizontalScrollView.LayoutParams(-2, -2));
+        place(search, chipsScroll, 2, 9);
         Button searchAll = action("⌕  RECHERCHER LES TERRAINS", true);
         searchAll.setTextSize(14);
         searchAll.setOnClickListener(v -> startAutomatedSearch());
         place(search, searchAll, 0, 4);
         LinearLayout helper = row();
-        TextView sources = heading("LE BON COIN  ·  SELOGER  ·  BIEN'ICI  ·  IAD  ·  NOTAIRES",
-            10, MUTED, true);
+        TextView sources = heading("5 sources · collecte automatique · tri intelligent",
+            10, MUTED, false);
         helper.addView(sources, new LinearLayout.LayoutParams(0, -2, 1f));
         Button reset = action("Effacer", false);
         reset.setTextSize(10);
@@ -335,6 +363,7 @@ public final class MainActivity extends Activity {
         filteredTab = action("Annonces triées", true);
         filteredTab.setTextSize(11);
         filteredTab.setOnClickListener(v -> {
+            sourceFilter = "";
             chooseTab(filteredTab);
             displayListings(true);
         });
@@ -342,6 +371,7 @@ public final class MainActivity extends Activity {
         allTab = action("Toutes les annonces", false);
         allTab.setTextSize(11);
         allTab.setOnClickListener(v -> {
+            sourceFilter = "";
             chooseTab(allTab);
             displayListings(false);
         });
@@ -461,6 +491,8 @@ public final class MainActivity extends Activity {
         // Seule une nouvelle saisie explicite efface la recherche précédente.
         // Le passage d'une commune à l'autre dans le même lot ne l'efface pas.
         imported.clear();
+        sourceFilter = "";
+        failedSourceNames.clear();
         sourcesVisited.clear();
         sourcesOpened.clear();
         activeCities.clear();
@@ -477,6 +509,8 @@ public final class MainActivity extends Activity {
      */
     private void startAutomatedSearch() {
         stopScan();
+        sourceFilter = "";
+        failedSourceNames.clear();
         batchSignature = "";
         if (!prepareBatch()) return;
         scanTasks.clear();
@@ -501,6 +535,7 @@ public final class MainActivity extends Activity {
             return;
         }
         scanning = true;
+        refreshSourcePills();
         int run = scanGeneration;
         status.setText("Recherche automatique : 0/" + scanTasks.size() +
             " portails. Les résultats arrivent au fil de la consultation.");
@@ -529,6 +564,7 @@ public final class MainActivity extends Activity {
         }
         String[] task = scanTasks.get(scanTaskIndex);
         activeCity = task[1];
+        refreshSourcePills();
         scanPageNumber = 1;
         scanPageUrls.clear();
         sourcesOpened.add(task[0] + " · " + task[1]);
@@ -560,6 +596,8 @@ public final class MainActivity extends Activity {
             if (!scanning || run != scanGeneration || taskIndex != scanTaskIndex) return;
             if (webError) {
                 scanBlocked++;
+                failedSourceNames.add(scanTasks.get(scanTaskIndex)[0]);
+                refreshSourcePills();
                 scanTaskIndex++;
                 startNextScanTask(run);
                 return;
@@ -598,7 +636,11 @@ public final class MainActivity extends Activity {
                 try {
                     Object decoded = new JSONTokener(reply).nextValue();
                     JSONObject json = new JSONObject((String) decoded);
-                    if (json.optBoolean("accessBlocked")) scanBlocked++;
+                    if (json.optBoolean("accessBlocked")) {
+                        scanBlocked++;
+                        failedSourceNames.add(scanTasks.get(scanTaskIndex)[0]);
+                        refreshSourcePills();
+                    }
                     else {
                         receiveImport(reply, host.toLowerCase(Locale.ROOT), true);
                         nextUrl = json.optString("nextPageUrl", "");
@@ -782,6 +824,7 @@ public final class MainActivity extends Activity {
             }
             String checkedSource = result.optString("source", sourceHost);
             sourcesVisited.add(checkedSource + " · " + activeCity);
+            refreshSourcePills();
             int displayedCount = result.isNull("declaredCount") ? -1 :
                 result.optInt("declaredCount", -1);
             int extractedCount = result.optInt("retrieved", 0);
@@ -806,6 +849,25 @@ public final class MainActivity extends Activity {
         } catch (Exception error) {
             status.setText("Cette page n’a pas pu être lue. Ce n’est PAS « zéro terrain disponible ». " +
                 "Cause : " + error.getMessage());
+        }
+    }
+
+    private void refreshSourcePills() {
+        for (String site : SITES) {
+            TextView chip = sourcePills.get(site);
+            if (chip == null) continue;
+            int count = 0;
+            for (ListingEngine.Listing listing : imported.values())
+                if (ListingEngine.normalize(listing.source)
+                    .equals(ListingEngine.normalize(site))) count++;
+            boolean failed = failedSourceNames.contains(site);
+            boolean active = scanning && scanTaskIndex < scanTasks.size()
+                && scanTasks.get(scanTaskIndex)[0].equals(site);
+            String prefix = failed ? "! " : active ? "◉ " : count > 0 ? "✓ " : "";
+            chip.setText(prefix + site + (count > 0 ? "  " + count : ""));
+            chip.setTextColor(active ? DARK : failed ? Color.rgb(240, 168, 147) : TEXT);
+            chip.setBackground(rounded(active ? GOLD : LIGHT, 19,
+                active ? Color.TRANSPARENT : failed ? Color.rgb(162, 82, 68) : GOLD_SOFT));
         }
     }
 
@@ -884,11 +946,15 @@ public final class MainActivity extends Activity {
         List<ListingEngine.Result> classified =
             ListingEngine.classify(new ArrayList<>(imported.values()));
         List<ListingEngine.Result> current = filtered
-            ? ListingEngine.filtered(classified) : classified;
+            ? ListingEngine.filtered(classified) : new ArrayList<>(classified);
+        if (!filtered && !sourceFilter.isEmpty())
+            current.removeIf(result -> !ListingEngine.normalize(result.listing.source)
+                .equals(ListingEngine.normalize(sourceFilter)));
         showResults();
         cards.removeAllViews();
         Map<ListingEngine.State, Integer> counts = ListingEngine.counts(classified);
-        TextView summary = text((filtered ? "Annonces triées" : "Toutes les annonces") +
+        TextView summary = text((filtered ? "Annonces triées" :
+            (sourceFilter.isEmpty() ? "Toutes les annonces" : "Annonces · " + sourceFilter)) +
             " : " + current.size() + " affichée(s) / " + imported.size() +
             " récupérée(s)\n" + counts.get(ListingEngine.State.BUILDER) +
             " constructeur(s) écarté(s), " + counts.get(ListingEngine.State.DUPLICATE) +
@@ -958,6 +1024,8 @@ public final class MainActivity extends Activity {
     private void reset() {
         stopScan();
         imported.clear();
+        sourceFilter = "";
+        failedSourceNames.clear();
         sourcesVisited.clear();
         sourcesOpened.clear();
         activeCities.clear();
