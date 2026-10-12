@@ -10,6 +10,8 @@ let checks = 0;
 function extract(host, city, jsonDocuments = [], cards = []) {
   const document = {
     title: "Terrains à vendre",
+    body: { innerText: "23 annonces pour la commune recherchée" },
+    querySelector() { return null; },
     querySelectorAll(selector) {
       if (selector === 'script[type="application/ld+json"]') {
         return jsonDocuments.map(data => ({ textContent: JSON.stringify(data) }));
@@ -83,6 +85,22 @@ const standaloneLand = extract("www.leboncoin.fr", "Monnaie", [{
   offers: { price: "89900" }
 }]);
 check(standaloneLand.retrieved === 1, "Vraie annonce de terrain conservée");
+const lbcCard = {
+  innerText: "Immobilier Neuf • Terrain · 406m² • 78 300 € • Monnaie 37380 • Villadim",
+  textContent: "Immobilier Neuf • Terrain · 406m² • 78 300 € • Monnaie 37380 • Villadim",
+  getClientRects: () => [1],
+  matches: sel => sel === "a[href]",
+  href: "https://www.leboncoin.fr/ad/ventes_immobilieres/55555",
+  getAttribute: key => key === "href" ? "/ad/ventes_immobilieres/55555" : "",
+  querySelector: () => null,
+  querySelectorAll: () => []
+};
+const lbc = extract("www.leboncoin.fr", "Monnaie", [], [lbcCard]);
+check(lbc.retrieved === 1, "Carte Le Bon Coin avec lien racine détectée");
+check(lbc.listings[0].areaM2 === 406, "Surface Le Bon Coin");
+check(lbc.listings[0].priceEuros === 78300, "Prix Le Bon Coin");
+check(lbc.declaredCount === 23, "Nombre d'annonces visible détecté");
+
 
 const empty = extract("www.leboncoin.fr", "Monnaie");
 check(empty.retrieved === 0, "page vide lisible, distincte du stock réel");
