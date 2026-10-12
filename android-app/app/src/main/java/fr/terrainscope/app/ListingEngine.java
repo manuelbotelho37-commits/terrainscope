@@ -65,7 +65,7 @@ public final class ListingEngine {
         "touraine logement", "francelot", "khor"
     };
     private static final Pattern OFFER = Pattern.compile(
-        "\\b(?:maison\\s*(?:\\+|et)\\s*terrain|terrain\\s*(?:\\+|et)\\s*maison|" +
+        "\\b(?:maison\\s+(?:et\\s+)?terrain|terrain\\s+(?:et\\s+)?maison|" +
         "ccmi|contrat de construction de maison individuelle|" +
         "projet de maison avec terrain)\\b"
     );
@@ -112,7 +112,7 @@ public final class ListingEngine {
 
     private static String urlKey(String url) {
         // Même fiche relue lors du défilement ou d'une deuxième capture.
-        return clean(url).replaceFirst("#.*$", "").replaceFirst("[?].*$", "").replaceFirst("/$", "");
+        return clean(url).replaceFirst("#.*$", "").replaceFirst("/$", "");
     }
 
     private static boolean conflict(String a, String b) {
