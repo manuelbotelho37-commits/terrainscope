@@ -21,6 +21,19 @@ contains('int columns = screen >= 730 ? 3 : screen >= 470 ? 2 : 1;',"Grille adap
 contains('action("Annonces triées", true)',"Onglet annonces triées");
 contains('action("Toutes les annonces", false)',"Onglet toutes les annonces");
 contains("accessBlocked","Prise en compte des CAPTCHA");
+contains("HorizontalScrollView sourceScroll","Pastilles horizontales des sources");
+contains("refreshSourcePills()","Source active/inactive réellement sélectionnable");
+contains("enabledSources.contains(site)","Sources choisies utilisées par la recherche");
+contains("screenScroller = new ScrollView(this)","Défilement global sur Z Fold 8 ouvert");
+contains("setContentView(screenScroller)","Un seul panneau défilant accessible");
+contains("PhotoLoader.show(image, item.imageUrl)","Vraies photos sur cartes");
+contains("landscapeWide","Deux colonnes en mode Fold déplié");
+const photos = fs.readFileSync(path.join(__dirname,
+  "../app/src/main/java/fr/terrainscope/app/PhotoLoader.java"),"utf8");
+assert.ok(photos.includes("setVisibility(View.GONE)") &&
+    !photos.includes("placeholder.jpg"),
+    "Photo absente : ne jamais inventer une image");
+
 assert.ok(!main.includes('action("Importer la page"'),
   "L'ancien bouton Importer ne doit plus apparaître.");
 assert.equal(catalog.developers.length,18,"Le catalogue doit compter 18 lotisseurs");
