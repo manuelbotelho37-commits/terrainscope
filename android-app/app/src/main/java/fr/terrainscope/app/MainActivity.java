@@ -66,7 +66,13 @@ public final class MainActivity extends Activity {
     private final LinkedHashSet<String> sourcesVisited = new LinkedHashSet<>();
     private final LinkedHashSet<String> sourcesOpened = new LinkedHashSet<>();
     private final LinkedHashSet<String> failedSourceNames = new LinkedHashSet<>();
+    // Les cinq filtres de consultation sont distincts des cinq cases de collecte.
+    // Ainsi, désactiver un site pour la PROCHAINE recherche ne masque pas ses annonces déjà lues.
+    private static final String ALL_RESULTS = "Toutes";
     private String sourceFilter = "";
+    private LinearLayout resultSourceBar;
+    private final LinkedHashMap<String, LinearLayout> resultSourceTiles = new LinkedHashMap<>();
+    private final LinkedHashMap<String, TextView> resultSourceCaptions = new LinkedHashMap<>();
     private final LinkedHashSet<String> enabledSources = new LinkedHashSet<>();
     private final LinkedHashMap<String, LinearLayout> sourcePills = new LinkedHashMap<>();
     private final LinkedHashMap<String, TextView> sourceChecks = new LinkedHashMap<>();
@@ -227,6 +233,62 @@ public final class MainActivity extends Activity {
                 check.setTextColor(failed ? Color.rgb(242, 143, 125) : GOLD);
             }
         }
+    }
+
+    /** Les filtres ci-dessous CONSULTENT les résultats ; les cases du haut choisissent les sites à interroger. */
+    private void openResultsForSource(String site) {
+        sourceFilter = ALL_RESULTS.equals(site) ? "" : site;
+        chooseTab(allTab);
+        displayListings(false); // Tous les statuts, y compris constructeurs et à vérifier.
+    }
+
+    private void refreshResultSourceTabs() {
+        if (resultSourceTiles.isEmpty()) return;
+        List<ListingEngine.Result> all = ListingEngine.classify(new ArrayList<>(imported.values()));
+        for (Map.Entry<String, LinearLayout> entry : resultSourceTiles.entrySet()) {
+            String site = entry.getKey();
+            boolean active = sourceFilter.isEmpty()
+                ? ALL_RESULTS.equals(site) : site.equals(sourceFilter);
+            int count = ALL_RESULTS.equals(site) ? all.size() : SourceListings.count(all, site);
+            entry.getValue().setBackground(rounded(active ? GOLD : LIGHT, 11,
+                active ? GOLD : BORDER));
+            TextView caption = resultSourceCaptions.get(site);
+            if (caption != null) {
+                caption.setText((ALL_RESULTS.equals(site) ? "Toutes" :
+                    "IAD".equals(site) ? "iad" : site) + "  " + count);
+                caption.setTextColor(active ? DARK : TEXT);
+            }
+            entry.getValue().setContentDescription(
+                "Voir les annonces " + (ALL_RESULTS.equals(site) ? "de tous les sites" : "de " + site) +
+                ", " + count + " fiches importées.");
+        }
+    }
+
+    private void addResultsSourceTile(LinearLayout strip, String site) {
+        boolean everySite = ALL_RESULTS.equals(site);
+        LinearLayout tile = row();
+        tile.setGravity(Gravity.CENTER_VERTICAL);
+        tile.setPadding(dp(9), dp(5), dp(9), dp(5));
+        LinearLayout.LayoutParams tileSize = new LinearLayout.LayoutParams(
+            dp(everySite ? 94 : 124), dp(48));
+        tileSize.setMargins(0, 0, dp(6), 0);
+        strip.addView(tile, tileSize);
+        if (!everySite) {
+            ImageView siteLogo = new ImageView(this);
+            siteLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            siteLogo.setContentDescription("Logo officiel " + site);
+            LinearLayout.LayoutParams logoSize = new LinearLayout.LayoutParams(dp(22), dp(22));
+            logoSize.setMargins(0, 0, dp(6), 0);
+            tile.addView(siteLogo, logoSize);
+            PhotoLoader.show(siteLogo, officialIcon(sourceDomain(site)));
+        }
+        TextView caption = heading("", 10, TEXT, true);
+        caption.setSingleLine(true);
+        caption.setEllipsize(TextUtils.TruncateAt.END);
+        tile.addView(caption, new LinearLayout.LayoutParams(0, -2, 1f));
+        resultSourceTiles.put(site, tile);
+        resultSourceCaptions.put(site, caption);
+        tile.setOnClickListener(v -> openResultsForSource(site));
     }
 
     private void buildScreen() {
@@ -482,6 +544,22 @@ public final class MainActivity extends Activity {
 
         results = new LinearLayout(this);
         results.setOrientation(LinearLayout.VERTICAL);
+
+        // Même navigation sur Fold fermé et ouvert : bande compacte défilante
+        // horizontalement, sans ScrollView verticale imbriquée.
+        resultSourceBar = section(PANEL, 13, Color.TRANSPARENT);
+        resultSourceBar.setPadding(dp(6), dp(5), dp(6), dp(6));
+        place(resultSourceBar, heading("VOIR LES ANNONCES DE CHAQUE SITE", 10, GOLD, true), 0, 5);
+        HorizontalScrollView siteScroller = new HorizontalScrollView(this);
+        siteScroller.setHorizontalScrollBarEnabled(false);
+        siteScroller.setFillViewport(false);
+        LinearLayout strip = row();
+        addResultsSourceTile(strip, ALL_RESULTS);
+        for (String site : SITES) addResultsSourceTile(strip, site);
+        siteScroller.addView(strip, new HorizontalScrollView.LayoutParams(-2, -2));
+        resultSourceBar.addView(siteScroller, new LinearLayout.LayoutParams(-1, -2));
+        place(results, resultSourceBar, 0, 2);
+
         cards = new LinearLayout(this);
         cards.setPadding(dp(3), dp(10), dp(3), dp(10));
         cards.setOrientation(LinearLayout.VERTICAL);
@@ -589,8 +667,9 @@ public final class MainActivity extends Activity {
             scanning = false;
             boolean found = !ListingEngine.filtered(ListingEngine.classify(
                 new ArrayList<>(imported.values()))).isEmpty();
-            chooseTab(found ? filteredTab : allTab);
-            displayListings(found);
+            boolean inspectingSite = !sourceFilter.isEmpty();
+            chooseTab(inspectingSite ? allTab : found ? filteredTab : allTab);
+            displayListings(!inspectingSite && found);
             status.setText("Recherche terminée : " + imported.size() + " annonces récupérées sur " +
                 scanTasks.size() + " recherches ciblées ; " + scanBlocked +
                 " source(s) en échec, " + scanLimited +
@@ -878,8 +957,9 @@ public final class MainActivity extends Activity {
                 List<ListingEngine.Result> classified =
                     ListingEngine.classify(new ArrayList<>(imported.values()));
                 boolean hasSelected = !ListingEngine.filtered(classified).isEmpty();
-                chooseTab(hasSelected ? filteredTab : allTab);
-                displayListings(hasSelected);
+                boolean inspectingSite = !sourceFilter.isEmpty();
+                chooseTab(inspectingSite ? allTab : hasSelected ? filteredTab : allTab);
+                displayListings(!inspectingSite && hasSelected);
                 if (!hasSelected) report += " · Aucune fiche validée : contrôle dans Toutes les annonces.";
             }
             if (!automated) status.setText(report);
@@ -891,6 +971,7 @@ public final class MainActivity extends Activity {
 
     private void displayDevelopers() {
         showResults();
+        resultSourceBar.setVisibility(View.GONE);
         cards.removeAllViews();
         TextView label = heading("RÉSEAU FONCIER  ·  18 PARTENAIRES", 10, GOLD, true);
         place(cards, label, 7, 2);
@@ -976,12 +1057,11 @@ public final class MainActivity extends Activity {
     private void displayListings(boolean filtered) {
         List<ListingEngine.Result> classified =
             ListingEngine.classify(new ArrayList<>(imported.values()));
-        List<ListingEngine.Result> current = filtered
-            ? ListingEngine.filtered(classified) : new ArrayList<>(classified);
-        if (!filtered && !sourceFilter.isEmpty())
-            current.removeIf(r -> !ListingEngine.normalize(r.listing.source)
-                .equals(ListingEngine.normalize(sourceFilter)));
+        List<ListingEngine.Result> current =
+            SourceListings.select(classified, filtered ? "" : sourceFilter, filtered);
         showResults();
+        resultSourceBar.setVisibility(View.VISIBLE);
+        refreshResultSourceTabs();
         cards.removeAllViews();
         Map<ListingEngine.State, Integer> counts = ListingEngine.counts(classified);
 
@@ -999,13 +1079,20 @@ public final class MainActivity extends Activity {
         String stats = filtered
             ? counts.get(ListingEngine.State.BUILDER) + " constructeur(s) écarté(s)  ·  " +
               counts.get(ListingEngine.State.TO_VERIFY) + " à vérifier"
-            : imported.size() + " annonces récupérées  ·  " +
-              counts.get(ListingEngine.State.BUILDER) + " constructeur(s) exclus  ·  " +
-              counts.get(ListingEngine.State.TO_VERIFY) + " à vérifier";
+            : (sourceFilter.isEmpty() ? imported.size() : current.size()) +
+              " annonces importées" + (sourceFilter.isEmpty() ? "" : " depuis " + sourceFilter) +
+              "  ·  " +
+              current.stream().filter(r -> r.state == ListingEngine.State.BUILDER).count() +
+              " constructeur(s) exclus  ·  " +
+              current.stream().filter(r -> r.state == ListingEngine.State.TO_VERIFY).count() +
+              " à vérifier";
         TextView subtitle = heading(stats, 11, MUTED, false);
         place(cards, subtitle, 0, 6);
         if (current.isEmpty()) {
-            TextView empty = text(imported.isEmpty()
+            TextView empty = text(!sourceFilter.isEmpty()
+                ? "Aucune annonce importée depuis " + sourceFilter +
+                  " lors de cette recherche. Le site peut être non consultable, bloqué ou sans fiche détectée : cela ne prouve pas qu'aucun terrain n'existe."
+                : imported.isEmpty()
                 ? "Lance une recherche : les annonces trouvées apparaîtront ici. " +
                   "Un portail bloqué ne signifie pas qu'aucun terrain n'est disponible."
                 : "Aucun terrain confirmé dans cette sélection. Regarde « Toutes les annonces » " +
