@@ -65,12 +65,15 @@ jobs:
           javac -encoding UTF-8 -d android-app/build/engine-smoke \
             android-app/app/src/main/java/fr/terrainscope/app/ListingEngine.java \
             android-app/app/src/main/java/fr/terrainscope/app/SourceListings.java \
+            android-app/app/src/main/java/fr/terrainscope/app/DeveloperListings.java \
             android-app/app/src/main/java/fr/terrainscope/app/SearchUrls.java \
             android-app/tests/ListingEngineSmokeTest.java \
             android-app/tests/SourceListingsSmokeTest.java \
+            android-app/tests/DeveloperListingsSmokeTest.java \
             android-app/tests/SearchUrlsSmokeTest.java
           java -cp android-app/build/engine-smoke fr.terrainscope.app.ListingEngineSmokeTest
           java -cp android-app/build/engine-smoke fr.terrainscope.app.SourceListingsSmokeTest
+          java -cp android-app/build/engine-smoke fr.terrainscope.app.DeveloperListingsSmokeTest
           node -e "const fs=require('fs');const a=JSON.parse(fs.readFileSync('android-app/app/src/main/assets/communes-37.json','utf8'));fs.writeFileSync('android-app/build/communes-37-test.tsv',a.map(x=>[x.nom,x.codesPostaux[0]].join(String.fromCharCode(9))).join(String.fromCharCode(10)));console.log('Communes testées :',a.length)"
           java -cp android-app/build/engine-smoke fr.terrainscope.app.SearchUrlsSmokeTest android-app/build/communes-37-test.tsv
 
@@ -148,7 +151,7 @@ jobs:
           test -s "$UNSIGNED"
           mkdir -p android-app/app/build/outputs/apk/terranova
           ALIGNED="$RUNNER_TEMP/terranova-aligned.apk"
-          SIGNED="android-app/app/build/outputs/apk/terranova/TerraNova-0.5.2-signe.apk"
+          SIGNED="android-app/app/build/outputs/apk/terranova/TerraNova.apk"
           "$ZIPALIGN" -f 4 "$UNSIGNED" "$ALIGNED"
           # Ne JAMAIS passer les mots de passe directement en arguments.
           # env:NOM récupère la valeur protégée dans l'environnement GitHub.
@@ -174,8 +177,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          APK="$(find android-app/app/build/outputs/apk/terranova -maxdepth 1 -type f -name 'TerraNova-*-signe.apk' | head -n 1)"
-          test -n "$APK" && test -s "$APK"
+          APK="android-app/app/build/outputs/apk/terranova/TerraNova.apk"
+          test -s "$APK"
           VERSION="$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' android-app/app/build.gradle.kts | head -n 1)"
           VERSION_CODE="$(sed -n 's/.*versionCode = \([0-9]*\).*/\1/p' android-app/app/build.gradle.kts | head -n 1)"
           test -n "$VERSION" && test -n "$VERSION_CODE"
@@ -205,7 +208,7 @@ jobs:
           cores: 2
           disable-animations: true
           script: |
-            adb install -r android-app/app/build/outputs/apk/terranova/TerraNova-0.5.2-signe.apk
+            adb install -r android-app/app/build/outputs/apk/terranova/TerraNova.apk
             adb shell am start -n fr.terranova.app/fr.terrainscope.app.MainActivity
             sleep 8
             # uiautomator dump lance un second processus Android : l'émulateur
@@ -230,6 +233,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: TerraNova-Android-Prototype-APK
-          path: android-app/app/build/outputs/apk/terranova/TerraNova-0.5.2-signe.apk
+          path: android-app/app/build/outputs/apk/terranova/TerraNova.apk
           retention-days: 7
           if-no-files-found: error
