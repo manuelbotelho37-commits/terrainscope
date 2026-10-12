@@ -232,7 +232,7 @@ public final class MainActivity extends Activity {
                     item.optString("description", ""), item.optString("address", ""),
                     item.optString("lot", ""), item.optLong("priceEuros", 0),
                     item.optDouble("areaM2", 0), item.optBoolean("cityConfirmed", false));
-                String key = url.replaceAll("[?#].*$", "").replaceFirst("/$", "");
+                String key = url.replaceFirst("#.*$", "").replaceFirst("/$", "");
                 if (!listing.title.isEmpty() && !imported.containsKey(key)) {
                     imported.put(key, listing);
                     added++;
