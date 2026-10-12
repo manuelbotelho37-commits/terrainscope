@@ -77,6 +77,10 @@ public final class MainActivity extends Activity {
     private final LinkedHashMap<String, LinearLayout> sourcePills = new LinkedHashMap<>();
     private final LinkedHashMap<String, TextView> sourceChecks = new LinkedHashMap<>();
     private final LinkedHashMap<String, TextView> sourceLabels = new LinkedHashMap<>();
+    private final LinkedHashMap<String, TextView> sourceCountBadges = new LinkedHashMap<>();
+    private final LinkedHashMap<String, TextView> developerCountBadges = new LinkedHashMap<>();
+    private final LinkedHashMap<String, String> developerDomains = new LinkedHashMap<>();
+    private static final int COUNT_GREEN = Color.rgb(16, 151, 90);
 
     private MultiAutoCompleteTextView cityInput;
     private final ArrayList<String> communeNames = new ArrayList<>();
@@ -218,6 +222,39 @@ public final class MainActivity extends Activity {
         }
     }
 
+    /** Pastille verte : annonces réellement récupérées.
+     * Tiret gris = aucun terrain identifié, PAS « aucun terrain en vente ». */
+    private TextView countBubble() {
+        TextView badge = heading("–", 10, Color.WHITE, true);
+        badge.setGravity(Gravity.CENTER);
+        badge.setPadding(0, 0, 0, 0);
+        badge.setBackground(rounded(SOFT, 13, Color.TRANSPARENT));
+        return badge;
+    }
+
+    private void setCountBubble(TextView badge, int count) {
+        if (badge == null) return;
+        badge.setText(count > 0 ? String.valueOf(count) : "–");
+        badge.setBackground(rounded(count > 0 ? COUNT_GREEN : SOFT, 13,
+            Color.TRANSPARENT));
+        badge.setTextColor(Color.WHITE);
+        badge.setContentDescription(count > 0
+            ? count + " terrain(s) identifié(s) parmi les fiches récupérées"
+            : "Aucune fiche attribuée actuellement ; catalogue complet non vérifié");
+    }
+
+    private void refreshDeveloperBadges() {
+        if (developerCountBadges.isEmpty()) return;
+        List<ListingEngine.Result> classified =
+            ListingEngine.classify(new ArrayList<>(imported.values()));
+        for (Map.Entry<String, TextView> entry : developerCountBadges.entrySet()) {
+            String company = entry.getKey();
+            int count = DeveloperListings.count(classified, company,
+                developerDomains.get(company));
+            setCountBubble(entry.getValue(), count);
+        }
+    }
+
     private void refreshSourcePills() {
         for (Map.Entry<String, LinearLayout> entry : sourcePills.entrySet()) {
             String site = entry.getKey();
@@ -234,9 +271,10 @@ public final class MainActivity extends Activity {
             entry.getValue().setAlpha(selected ? 1f : .50f);
             TextView label = sourceLabels.get(site);
             if (label != null) {
-                label.setText(("IAD".equals(site) ? "iad" : site) + (count > 0 ? "  " + count : ""));
+                label.setText("IAD".equals(site) ? "iad" : site);
                 label.setTextColor(selected ? TEXT : MUTED);
             }
+            setCountBubble(sourceCountBadges.get(site), count);
             TextView check = sourceChecks.get(site);
             if (check != null) {
                 check.setText(failed ? "!" : active ? "●" : selected ? "✓" : "");
@@ -328,15 +366,24 @@ public final class MainActivity extends Activity {
                 final String link = dev.getString("url");
                 final String notice = dev.optString("notice", "");
 
+                FrameLayout chipFrame = new FrameLayout(this);
+                LinearLayout.LayoutParams chipSize =
+                    new LinearLayout.LayoutParams(0, dp(70), 1f);
+                chipSize.setMargins(dp(2), 0, dp(2), 0);
+                chipRow.addView(chipFrame, chipSize);
                 LinearLayout pill = new LinearLayout(this);
                 pill.setOrientation(LinearLayout.VERTICAL);
                 pill.setGravity(Gravity.CENTER);
                 pill.setPadding(dp(3), dp(4), dp(3), dp(3));
                 pill.setBackground(rounded(LIGHT, 12, GOLD_SOFT));
-                LinearLayout.LayoutParams size =
-                    new LinearLayout.LayoutParams(0, dp(70), 1f);
-                size.setMargins(dp(2), 0, dp(2), 0);
-                chipRow.addView(pill, size);
+                chipFrame.addView(pill, new FrameLayout.LayoutParams(-1, -1));
+                TextView devBadge = countBubble();
+                FrameLayout.LayoutParams devBadgeSize =
+                    new FrameLayout.LayoutParams(dp(25), dp(23), Gravity.TOP | Gravity.RIGHT);
+                devBadgeSize.setMargins(0, dp(3), dp(4), 0);
+                chipFrame.addView(devBadge, devBadgeSize);
+                developerCountBadges.put(name, devBadge);
+                developerDomains.put(name, domain);
 
                 ImageView logo = new ImageView(this);
                 logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
@@ -353,7 +400,7 @@ public final class MainActivity extends Activity {
                 labelSize.setMargins(0, dp(2), 0, 0);
                 pill.addView(caption, labelSize);
                 pill.setContentDescription(name + " : ouvrir le site officiel");
-                pill.setOnClickListener(v -> {
+                chipFrame.setOnClickListener(v -> {
                     try {
                         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link)));
                         if (!notice.isEmpty())
@@ -363,6 +410,16 @@ public final class MainActivity extends Activity {
                     }
                 });
             }
+            // Cases de remplissage pour que les 18 pastilles restent de même largeur.
+            int missing = (columns - developers.length() % columns) % columns;
+            for (int i = 0; i < missing && chipRow != null; i++) {
+                View spacer = new View(this);
+                LinearLayout.LayoutParams slot =
+                    new LinearLayout.LayoutParams(0, dp(70), 1f);
+                slot.setMargins(dp(2), 0, dp(2), 0);
+                chipRow.addView(spacer, slot);
+            }
+            refreshDeveloperBadges();
         } catch (Exception error) {
             TextView problem = heading(
                 "Catalogue des lotisseurs indisponible : " + error.getMessage(),
@@ -468,13 +525,21 @@ public final class MainActivity extends Activity {
         LinearLayout sourcesRow = row();
         for (String site : SITES) {
             final String caption = "IAD".equals(site) ? "iad" : site;
+            FrameLayout sourceFrame = new FrameLayout(this);
+            LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(0, dp(80), 1f);
+            size.setMargins(dp(2), 0, dp(2), 0);
+            sourcesRow.addView(sourceFrame, size);
             LinearLayout tile = new LinearLayout(this);
             tile.setOrientation(LinearLayout.VERTICAL);
             tile.setGravity(Gravity.CENTER);
             tile.setPadding(dp(2), dp(5), dp(2), dp(4));
-            LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(0, dp(80), 1f);
-            size.setMargins(dp(2), 0, dp(2), 0);
-            sourcesRow.addView(tile, size);
+            sourceFrame.addView(tile, new FrameLayout.LayoutParams(-1, -1));
+            TextView sourceBadge = countBubble();
+            FrameLayout.LayoutParams badgeSize =
+                new FrameLayout.LayoutParams(dp(25), dp(23), Gravity.TOP | Gravity.RIGHT);
+            badgeSize.setMargins(0, dp(3), dp(3), 0);
+            sourceFrame.addView(sourceBadge, badgeSize);
+            sourceCountBadges.put(site, sourceBadge);
 
             FrameLayout mark = new FrameLayout(this);
             LinearLayout.LayoutParams markSize = new LinearLayout.LayoutParams(dp(37), dp(35));
@@ -497,7 +562,7 @@ public final class MainActivity extends Activity {
             sourceLabels.put(site, label);
             sourcePills.put(site, tile);
             tile.setContentDescription("Inclure ou exclure " + caption + " de la recherche");
-            tile.setOnClickListener(v -> {
+            sourceFrame.setOnClickListener(v -> {
                 if (enabledSources.contains(site)) {
                     if (enabledSources.size() == 1) {
                         status.setText("Conserve au moins une source immobilière.");
@@ -524,7 +589,7 @@ public final class MainActivity extends Activity {
         place(search, searchAll, 0, 4);
         addDeveloperPills(search);
         LinearLayout helper = row();
-        TextView sources = heading("Recherche multi-sites · classement automatique",
+        TextView sources = heading("Prix croissants · pastilles : fiches récupérées (décomptes partiels)",
             10, MUTED, false);
         helper.addView(sources, new LinearLayout.LayoutParams(0, -2, 1f));
         Button reset = action("Effacer", false);
@@ -678,6 +743,8 @@ public final class MainActivity extends Activity {
         // Seule une nouvelle saisie explicite efface la recherche précédente.
         // Le passage d'une commune à l'autre dans le même lot ne l'efface pas.
         imported.clear();
+        refreshSourcePills();
+        refreshDeveloperBadges();
         sourceFilter = "";
         failedSourceNames.clear();
         sourcesVisited.clear();
@@ -1015,6 +1082,7 @@ public final class MainActivity extends Activity {
             String checkedSource = result.optString("source", sourceHost);
             sourcesVisited.add(checkedSource + " · " + activeCity);
             refreshSourcePills();
+            refreshDeveloperBadges();
             int displayedCount = result.isNull("declaredCount") ? -1 :
                 result.optInt("declaredCount", -1);
             int extractedCount = result.optInt("retrieved", 0);
@@ -1200,6 +1268,8 @@ public final class MainActivity extends Activity {
     private void reset() {
         stopScan();
         imported.clear();
+        refreshSourcePills();
+        refreshDeveloperBadges();
         sourceFilter = "";
         failedSourceNames.clear();
         sourcesVisited.clear();
