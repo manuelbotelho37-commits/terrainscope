@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 public final class ListingEngine {
     private ListingEngine() {}
 
-    public enum State { ACCEPTED, BUILDER, DUPLICATE }
+    public enum State { ACCEPTED, BUILDER, DUPLICATE, TO_VERIFY }
 
     public static final class Listing {
         public final String source, url, title, city, seller, description, address, lot;
@@ -144,6 +144,14 @@ public final class ListingEngine {
             if (isBuilder(r.listing)) {
                 r.state = State.BUILDER;
                 r.reason = "Constructeur identifié ou offre maison + terrain";
+                continue;
+            }
+            // Un portail peut proposer des villes voisines sous la rubrique
+            // « Ces biens pourraient vous intéresser ». Ne jamais présenter
+            // ces annonces comme appartenant à la commune demandée.
+            if (!r.listing.cityConfirmed) {
+                r.state = State.TO_VERIFY;
+                r.reason = "Commune non confirmée sur la fiche : vérifier avant de présenter";
                 continue;
             }
             Result original = null;
