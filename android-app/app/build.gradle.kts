@@ -7,11 +7,11 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "fr.terrainscope.app"
+        applicationId = "fr.terranova.app"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
-        versionName = "0.1.0-experimental"
+        versionName = "0.2.0-terranova-luxe"
     }
 
     compileOptions {
