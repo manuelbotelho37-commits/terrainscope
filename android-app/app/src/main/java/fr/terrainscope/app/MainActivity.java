@@ -63,7 +63,6 @@ public final class MainActivity extends Activity {
     private final LinkedHashMap<String, ListingEngine.Listing> imported = new LinkedHashMap<>();
     private final LinkedHashSet<String> sourcesVisited = new LinkedHashSet<>();
     private final LinkedHashSet<String> sourcesOpened = new LinkedHashSet<>();
-    private final Map<String, TextView> sourcePills = new LinkedHashMap<>();
     private final LinkedHashSet<String> failedSourceNames = new LinkedHashSet<>();
     private String sourceFilter = "";
     private final LinkedHashSet<String> enabledSources = new LinkedHashSet<>();
@@ -188,9 +187,19 @@ public final class MainActivity extends Activity {
             boolean selected = enabledSources.contains(entry.getKey());
             String name = "IAD".equals(entry.getKey()) ? "iad" : entry.getKey();
             Button pill = entry.getValue();
-            pill.setText((selected ? "✓  " : "+  ") + name);
-            pill.setTextColor(selected ? GOLD : MUTED);
-            pill.setBackground(rounded(selected ? PANEL : LIGHT, 25,
+            int count = 0;
+            for (ListingEngine.Listing listing : imported.values())
+                if (ListingEngine.normalize(listing.source).equals(
+                    ListingEngine.normalize(entry.getKey()))) count++;
+            boolean failed = failedSourceNames.contains(entry.getKey());
+            boolean active = scanning && scanTaskIndex < scanTasks.size() &&
+                scanTasks.get(scanTaskIndex)[0].equals(entry.getKey());
+            pill.setText((failed ? "!  " : active ? "◉  " : selected ? "✓  " : "+  ") +
+                name + (count > 0 ? "  " + count : ""));
+            pill.setTextColor(active ? DARK : failed ? Color.rgb(238, 161, 148) :
+                selected ? GOLD : MUTED);
+            pill.setBackground(rounded(active ? GOLD : selected ? PANEL : LIGHT, 25,
+                active ? Color.TRANSPARENT : failed ? Color.rgb(165, 80, 70) :
                 selected ? GOLD_SOFT : BORDER));
             pill.setContentDescription((selected ? "Source activée : " : "Source désactivée : ") + name);
         }
@@ -316,31 +325,6 @@ public final class MainActivity extends Activity {
         place(search, sourceScroll, 0, 9);
         refreshSourcePills();
 
-        TextView sourcesCaption = heading("SOURCES IMMOBILIÈRES", 10, GOLD, true);
-        place(search, sourcesCaption, 1, 2);
-        android.widget.HorizontalScrollView chipsScroll = new android.widget.HorizontalScrollView(this);
-        chipsScroll.setHorizontalScrollBarEnabled(false);
-        chipsScroll.setFillViewport(true);
-        LinearLayout chips = row();
-        chips.setPadding(0, dp(2), 0, dp(2));
-        for (String site : SITES) {
-            TextView chip = heading(site, 11, TEXT, true);
-            chip.setGravity(Gravity.CENTER);
-            chip.setPadding(dp(15), dp(10), dp(15), dp(10));
-            chip.setBackground(rounded(LIGHT, 19, GOLD_SOFT));
-            LinearLayout.LayoutParams chipSize = new LinearLayout.LayoutParams(-2, dp(39));
-            chipSize.setMargins(0, 0, dp(7), 0);
-            chips.addView(chip, chipSize);
-            sourcePills.put(site, chip);
-            chip.setContentDescription("Afficher les annonces importées de " + site);
-            chip.setOnClickListener(v -> {
-                sourceFilter = site;
-                chooseTab(allTab);
-                displayListings(false);
-            });
-        }
-        chipsScroll.addView(chips, new android.widget.HorizontalScrollView.LayoutParams(-2, -2));
-        place(search, chipsScroll, 2, 9);
         Button searchAll = action("⌕  RECHERCHER LES TERRAINS", true);
         searchAll.setTextSize(14);
         searchAll.setOnClickListener(v -> startAutomatedSearch());
@@ -851,25 +835,6 @@ public final class MainActivity extends Activity {
         } catch (Exception error) {
             status.setText("Cette page n’a pas pu être lue. Ce n’est PAS « zéro terrain disponible ». " +
                 "Cause : " + error.getMessage());
-        }
-    }
-
-    private void refreshSourcePills() {
-        for (String site : SITES) {
-            TextView chip = sourcePills.get(site);
-            if (chip == null) continue;
-            int count = 0;
-            for (ListingEngine.Listing listing : imported.values())
-                if (ListingEngine.normalize(listing.source)
-                    .equals(ListingEngine.normalize(site))) count++;
-            boolean failed = failedSourceNames.contains(site);
-            boolean active = scanning && scanTaskIndex < scanTasks.size()
-                && scanTasks.get(scanTaskIndex)[0].equals(site);
-            String prefix = failed ? "! " : active ? "◉ " : count > 0 ? "✓ " : "";
-            chip.setText(prefix + site + (count > 0 ? "  " + count : ""));
-            chip.setTextColor(active ? DARK : failed ? Color.rgb(240, 168, 147) : TEXT);
-            chip.setBackground(rounded(active ? GOLD : LIGHT, 19,
-                active ? Color.TRANSPARENT : failed ? Color.rgb(162, 82, 68) : GOLD_SOFT));
         }
     }
 
