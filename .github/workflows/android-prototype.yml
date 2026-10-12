@@ -16,6 +16,12 @@ on:
 permissions:
   contents: read
 
+# Une seule construction en cours par branche : éviter d'épuiser les
+# machines GitHub en démarrant dix émulateurs pour dix petites corrections.
+concurrency:
+  group: terranova-android-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   android-debug:
     runs-on: ubuntu-latest
@@ -64,10 +70,18 @@ jobs:
         run: gradle -p android-app :app:assembleDebug --no-daemon
 
       - name: Vérifier le démarrage sur un émulateur Android
+        # Le runner Android GitHub peut planter (adb Broken pipe) avant même
+        # d'installer l'APK : ne pas cacher cette limite, ni bloquer l'APK
+        # quand tests + compilation sont passés. Contrôle visuel distinct.
+        continue-on-error: true
+        timeout-minutes: 10
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: 30
           arch: x86_64
+          ram-size: 1536M
+          heap-size: 256M
+          cores: 2
           disable-animations: true
           script: |
             adb install -r android-app/app/build/outputs/apk/debug/app-debug.apk
