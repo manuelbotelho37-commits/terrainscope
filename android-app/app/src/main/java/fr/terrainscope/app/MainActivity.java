@@ -69,7 +69,8 @@ public final class MainActivity extends Activity {
     private WebView browser;
     private LinearLayout main;
     private LinearLayout cards;
-    private ScrollView results;
+    private LinearLayout results;
+    private ScrollView screenScroller;
     private TextView status;
     private boolean showingBrowser = true;
     private boolean pageLoading = false;
@@ -179,10 +180,20 @@ public final class MainActivity extends Activity {
         getWindow().setStatusBarColor(DARK);
         getWindow().setNavigationBarColor(DARK);
         getWindow().getDecorView().setSystemUiVisibility(0);
+        // Le haut de l'application était fixe : quand les 18 lotisseurs
+        // dépassaient l'écran du Fold déplié, impossible de tout faire défiler.
+        // Un seul ScrollView englobe l'ensemble de l'interface, avec une liste
+        // de résultats en LinearLayout (sans ScrollView imbriquée).
+        screenScroller = new ScrollView(this);
+        screenScroller.setFillViewport(true);
+        screenScroller.setVerticalScrollBarEnabled(true);
+        screenScroller.setSmoothScrollingEnabled(true);
+        screenScroller.setBackgroundColor(DARK);
         main = new LinearLayout(this);
         main.setOrientation(LinearLayout.VERTICAL);
         main.setPadding(dp(12), dp(9), dp(12), dp(8));
         main.setBackgroundColor(DARK);
+        screenScroller.addView(main, new ScrollView.LayoutParams(-1, -2));
 
         LinearLayout masthead = section(PANEL, 20, GOLD_SOFT);
         GradientDrawable heroBackground = new GradientDrawable(
@@ -347,16 +358,17 @@ public final class MainActivity extends Activity {
             }
         });
         browser.setBackground(rounded(LIGHT, 13, BORDER));
-        main.addView(browser, new LinearLayout.LayoutParams(-1, 0, 1f));
+        main.addView(browser, new LinearLayout.LayoutParams(-1, dp(1)));
 
-        results = new ScrollView(this);
+        results = new LinearLayout(this);
+        results.setOrientation(LinearLayout.VERTICAL);
         cards = new LinearLayout(this);
         cards.setPadding(dp(3), dp(10), dp(3), dp(10));
         cards.setOrientation(LinearLayout.VERTICAL);
-        results.addView(cards);
-        main.addView(results, new LinearLayout.LayoutParams(-1, 0, 1f));
+        results.addView(cards, new LinearLayout.LayoutParams(-1, -2));
+        main.addView(results, new LinearLayout.LayoutParams(-1, -2));
         results.setVisibility(View.GONE);
-        setContentView(main);
+        setContentView(screenScroller);
     }
 
     private boolean prepareBatch() {
@@ -906,7 +918,10 @@ public final class MainActivity extends Activity {
     private void showBrowser() {
         showingBrowser = true;
         browser.setVisibility(View.VISIBLE);
-        browser.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 1f));
+        // Une hauteur contrôlée permet au navigateur de défiler lui-même,
+        // sans figer le reste de l'application.
+        browser.setLayoutParams(new LinearLayout.LayoutParams(-1,
+            Math.max(dp(440), getResources().getDisplayMetrics().heightPixels - dp(280))));
         results.setVisibility(View.GONE);
     }
     private void showResults() {
