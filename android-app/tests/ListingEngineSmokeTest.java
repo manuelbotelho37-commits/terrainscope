@@ -177,6 +177,27 @@ public final class ListingEngineSmokeTest {
         check(ListingEngine.filtered(ListingEngine.classify(Arrays.asList(sharedAddressA,sharedAddressB))).size()==1,
             "Adresse précise identique : rapprochement malgré deux agences");
 
+        ListingEngine.Listing independentAgency = new ListingEngine.Listing(
+            "SeLoger","https://www.seloger.com/annonce/agence-proche-logis",
+            "Terrain constructible", "Monnaie", "Agence Touraine",
+            "À proximité d'un ancien programme Logis Avenir, terrain libre de constructeur",
+            "", "",90000,540,true);
+        check(!ListingEngine.isBuilder(independentAgency),
+            "La mention d'un constructeur voisin ne doit pas supprimer une annonce d'agence");
+        ListingEngine.Listing competitorUsingCPR = new ListingEngine.Listing(
+            "SeLoger","https://www.seloger.com/annonce/competitor-cpr",
+            "Projet terrain constructible", "Monnaie", "LOGIS AVENIR",
+            "Comparez vos plans aux projets Maisons CPR",
+            "", "",85000,500,true);
+        check(ListingEngine.isBuilder(competitorUsingCPR),
+            "Un constructeur concurrent reste exclu même si sa description mentionne CPR");
+        ListingEngine.Listing actualCPR = new ListingEngine.Listing(
+            "Le Bon Coin","https://www.leboncoin.fr/ad/ventes_immobilieres/constructeur-cpr",
+            "Terrain constructible", "Monnaie", "Maisons CPR",
+            "Parcelle située près d'un terrain Logis Avenir", "", "",110000,650,true);
+        check(!ListingEngine.isBuilder(actualCPR),
+            "Maisons CPR est conservé même avec la mention d'un concurrent à proximité");
+
         System.out.println("TerrainScope : " + assertions + " vérifications du moteur réussies.");
     }
 }
