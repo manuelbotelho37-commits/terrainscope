@@ -97,11 +97,22 @@ public final class ListingEngine {
                 containsPhrase(seller, "maison cpr") ||
                 containsPhrase(headline, "maisons cpr") ||
                 containsPhrase(headline, "maison cpr")) return false;
+        String details = normalize(item.description);
+        boolean sellerUnknown = seller.isEmpty() || seller.equals("pro") ||
+            seller.equals("professionnel") || seller.equals("immobilier neuf") ||
+            seller.equals("annonceur professionnel");
+        boolean constructionPitch =
+            containsPhrase(details, "vous propose de realiser votre projet de construction") ||
+            containsPhrase(details, "vous propose de construire") ||
+            containsPhrase(details, "propose de construire votre maison") ||
+            containsPhrase(details, "maison neuve avec toutes les prestations") ||
+            containsPhrase(details, "constructeur de maisons individuelles");
         for (String brand : BRANDS) {
             // « près du lotissement Logis Avenir » dans une annonce d'agence
             // ne transforme PAS cette agence en constructeur.
             if (containsPhrase(seller, brand) || containsPhrase(headline, brand)) return true;
-            if (seller.isEmpty() && containsPhrase(full, brand)) return true;
+            if (sellerUnknown && constructionPitch && containsPhrase(details, brand))
+                return true;
         }
         // Un montage maison + terrain (CCMI, projet maison sur parcelle)
         // reste une offre constructeur même si le champ vendeur manque.
