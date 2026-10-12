@@ -299,9 +299,9 @@
       <span class="price-order" title="Les analyses locales ne consomment aucun crédit d’hébergement.">Recherche gratuite · analyse sur ce téléphone</span>
     </div>
     <details id="developerMatchNotice" hidden><summary id="developerMatchSummary">Programmes des lotisseurs</summary><div id="developerMatchDetails"></div></details><p id="criteriaText" class="criteria-text" hidden></p><div class="content-grid">
-      <section class="results" id="mainResults" aria-live="polite"><section id="quickSources" class="quick-sources" hidden><h3>Rechercher sur les sites immobiliers</h3><p>Commence par Le Bon Coin : ce lien ouvre directement sa recherche sur la commune, plutôt qu'une ancienne annonce supprimée indexée par Google. Les offres doivent être confirmées chez le vendeur.</p><div id="quickSourceLinks" class="quick-source-links"></div></section>
-        <details id="googleLeads" class="google-leads" hidden><summary>Autres terrains repérés par Google · à vérifier</summary>
-          <section id="uniquePanel" class="unique-panel" hidden><h3>Résultats Google non vérifiés</h3><p class="unique-intro">Résultats indexés par Google : certains liens peuvent mener à des annonces supprimées ou vendues. L’application ne peut pas confirmer leur disponibilité en temps réel. Les doublons reconnaissables sont regroupés automatiquement.</p><div id="uniqueSummary" class="unique-summary" role="status"></div><div id="uniqueResults" class="unique-results"></div><nav id="uniquePages" class="unique-pages" hidden aria-label="Pages des terrains distincts"></nav><p class="unique-disclaimer">Annonces repérées dans Google, pas l’intégralité des sites. Prix, surface, commune et vendeur à confirmer sur la fiche originale. Deux terrains distincts ne sont pas fusionnés sans indices suffisants.</p></section>
+      <section class="results" id="mainResults" aria-live="polite"><section id="quickSources" class="quick-sources" hidden><h3>Rechercher sur les sites immobiliers</h3><p>Les liens ouvrent les vrais filtres « terrain » des sites. Le bouton facultatif du Bon Coin tente d’écarter 18 marques. Pour SeLoger et Bien’ici, l’exclusion est seulement appliquée aux pistes Google de TerrainScope, pas aux pages des sites.</p><div id="quickSourceLinks" class="quick-source-links"></div></section>
+        <details id="googleLeads" class="google-leads" hidden><summary>Autres terrains repérés · 18 marques écartées · à vérifier</summary>
+          <section id="uniquePanel" class="unique-panel" hidden><h3>Terrains repérés par Google · tri des 18 marques</h3><p class="unique-intro">Les titres et extraits Google sont triés localement pour écarter les 18 marques sélectionnées, sans exclure Maisons CPR. Ce tri ne garantit ni la disponibilité, ni l'identification de tous les constructeurs ; vérifie toujours les annonces d'origine.</p><div id="uniqueSummary" class="unique-summary" role="status"></div><div id="uniqueResults" class="unique-results"></div><nav id="uniquePages" class="unique-pages" hidden aria-label="Pages des terrains distincts"></nav><p class="unique-disclaimer">Annonces repérées dans Google, pas l’intégralité des sites. Prix, surface, commune et vendeur à confirmer sur la fiche originale. Deux terrains distincts ne sont pas fusionnés sans indices suffisants.</p></section>
         </details>
         
         <div id="csePanel" class="box cse-holder" hidden><h3>Autres terrains repérés</h3><div id="cseHint" class="cse-hint">Résultats Google non exhaustifs. Vérifie chaque annonce sur son site d’origine.</div><p id="resultSummary" class="result-summary" aria-live="polite"></p><div id="google-results"></div><nav id="pageNavigator" class="pagination-box" aria-label="Pages de résultats" hidden><strong id="pagePosition"></strong><div id="pageButtons" class="pagination-controls"></div><p>Le nombre de pistes correspond uniquement à cette page.</p></nav></div>
@@ -314,7 +314,7 @@
     <button id="terrainUp" type="button" title="Retour en haut" aria-label="Retour aux critères de recherche">↑</button>
     <button id="terrainDown" type="button" title="Descendre" aria-label="Descendre dans les résultats">↓</button>
   </nav>
-  <footer class="foot">TerrainScope V55 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+  <footer class="foot">TerrainScope V56 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -504,13 +504,13 @@
       // comme tentative complémentaire, jamais comme stock certifié.
       return leboncoinUrl(city)+'?'+new URLSearchParams({text}).toString();
     }
-    // Alternative Google : SeLoger/Bien'ici ne documentent pas de filtre NOT
-    // équivalent. On ne prétend pas filtrer leurs résultats internes : seuls
-    // les résultats indexés par Google sont concernés (non exhaustifs, parfois périmés).
-    function googleSiteWithoutBuildersUrl(city,domain){
-      const place=clean(city).replace(/["“”]/g,'');
-      const negatives=BUILDER_EXCLUSION_TERMS.map(term=>'-'+term).join(' ');
-      return googleUrl('site:'+domain+' "terrain" "'+place+'" '+negatives);
+    // Filtrage local des titres et extraits Google, jamais des sites externes.
+    // Il peut rater un constructeur absent de l'extrait ; n'est pas un filtre temps réel.
+    const BUILDER_EXCLUSION_PHRASES=[...new Set(BUILDER_EXCLUSION_TERMS.map(term=>
+      normalize(term).replace(/[^a-z0-9]+/g,' ').trim()))].filter(Boolean);
+    function matchesExcludedBuilder(text){
+      const value=' '+normalize(text).replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim()+' ';
+      return BUILDER_EXCLUSION_PHRASES.some(phrase=>value.includes(' '+phrase+' '));
     }
     function bieniciTerrainUrl(city){
       const postal=terrainPostal(city);
@@ -841,6 +841,7 @@
       node.prepend(meta);
     }
     // Les résultats Google sont analysés sur la page chargée, et non sur l'ensemble des annonces.
+    // Les 18 marques concernent les extraits visibles. Maisons CPR n'est pas exclu.
     // Le tri est prudent : constructeurs et annonces ambiguës restent hors de l'onglet client.
     const BUILDER_DOMAINS=[
       'maisons-pierre.com','maisons-ericlor.com','maisons-concept.com',
@@ -897,11 +898,13 @@
       const textContent=(title+' '+snippet).replace(/\s+/g,' ').trim();
       const href=node.querySelector('a.gs-title')?.href||'';
       let hostname='';try{hostname=new URL(href).hostname.replace(/^www\./,'')}catch(e){}
+      const ownBrand=hostname==='maisons-cpr.com'||hostname.endsWith('.maisons-cpr.com')
+        || /\bmaisons?\s+cpr\b/i.test(normalize(textContent));
       const builders=BUILDER_DOMAINS.some(d=>hostname===d||hostname.endsWith('.'+d))
         || /constructions?\s+id[eé]ale\s+demeure|id[eé]ale\s+demeure|constructeur\s+partenaire/i.test(textContent);
       const mixedPortal=MIXED_PORTAL_DOMAINS.some(d=>hostname===d||hostname.endsWith('.'+d));
       const place=checkLocation(title,snippet);
-      let kind=builders||BUILDER_WORDS.test(textContent)||builderBrand(textContent)?'constructeurs':
+      let kind=!ownBrand&&(builders||BUILDER_WORDS.test(textContent)||builderBrand(textContent)||matchesExcludedBuilder(textContent))?'constructeurs':
         mixedPortal||place.status!=='match'?'incertains':
         TERRAIN_WORDS.test(textContent)?'terrains':'incertains';
       const directory=directoryPage(title);
@@ -1070,7 +1073,6 @@
           el('developerAccordion').scrollIntoView({behavior:'instant',block:'start'});
         });
         if(main)a.className='main-source';
-        if(label.startsWith('Essayer sans '+BUILDER_EXCLUSION_COUNT+' marques · '))a.className='source-optional';
         if(!url)a.className='unavailable-source';
         a.append(document.createTextNode(label+(url?' ↗':' · lien indisponible')));
         const small=document.createElement('small');small.textContent=help;a.append(small);root.append(a);
@@ -1095,20 +1097,14 @@
       for(const city of cities){
         const result=selogerTerrainUrl(city);
         makeLink('2 · SeLoger · '+city,result.url,false,result.exact
-          ?'Terrains à vendre à '+city+' : page SeLoger directe, sans passer par Google. Annonces de constructeurs possibles sur le site externe.'
+          ?'Page officielle des terrains à '+city+'. Les 18 marques ne peuvent pas être masquées directement sur SeLoger ; utilise les pistes filtrées de TerrainScope en complément.'
           :'Aucun lien direct vérifié pour '+city+'. TerrainScope ne renvoie plus vers tout le département.');
-        makeLink('Essayer sans '+BUILDER_EXCLUSION_COUNT+' marques · SeLoger (via Google)',
-          googleSiteWithoutBuildersUrl(city,'seloger.com'),false,
-          'Recherche Google ciblée sur SeLoger et '+city+'. Ce n’est pas un filtre de SeLoger : résultats incomplets ou supprimés possibles.');
       }
       for(const city of cities){
         const direct=bieniciTerrainUrl(city);
         makeLink('3 · Bien’ici · '+city,direct,false,direct
-          ?'Page Bien’ici directe : terrains à '+city+', sans passer par Google.'
+          ?'Page officielle des terrains à '+city+'. Les 18 marques ne peuvent pas être masquées directement sur Bien’ici ; utilise les pistes filtrées de TerrainScope en complément.'
           :'Adresse directe indisponible : code postal manquant, aucune recherche Google trompeuse.');
-        makeLink('Essayer sans '+BUILDER_EXCLUSION_COUNT+' marques · Bien’ici (via Google)',
-          googleSiteWithoutBuildersUrl(city,'bienici.com'),false,
-          'Recherche Google ciblée sur Bien’ici et '+city+'. Ce n’est pas un filtre de Bien’ici : résultats incomplets ou supprimés possibles.');
       }
       for(const city of cities){
         const direct=iadTerrainUrl(city);
