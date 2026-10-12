@@ -82,9 +82,18 @@
     );
     const full = " " + normalized(raw) + " ";
     const name = " " + normalized(title) + " ";
-    const explicitMatches = !explicitLocation ||
-      (" " + explicitLocation + " ").includes(" " + requestedNormalized + " ");
-    const cityInCard = requestedNormalized && !conflictingLocality && (
+    // Des communes du 37 contiennent le nom d'une autre :
+    // « Joué-lès-Tours » NE DOIT PAS être validé comme « Tours ».
+    const misleadingTown = knownCities.some(other =>
+      other !== requestedNormalized &&
+      other.includes(requestedNormalized) &&
+      name.includes(" " + other + " ")
+    );
+    const explicitMatches = !explicitLocation || (
+      explicitLocation === requestedNormalized ||
+      explicitLocation.startsWith(requestedNormalized + " ")
+    );
+    const cityInCard = requestedNormalized && !conflictingLocality && !misleadingTown && (
       explicitLocation
         ? explicitMatches
         : (requestedPostal && full.includes(" " + requestedNormalized + " " + requestedPostal + " ")) ||
@@ -93,7 +102,7 @@
     const current = {
       source, url, title, description: details.slice(0, 1500),
       city: requested, cityConfirmed: !!cityInCard,
-      locationConflict: !!(conflictingLocality || (explicitLocation && !explicitMatches)),
+      locationConflict: !!(conflictingLocality || misleadingTown || (explicitLocation && !explicitMatches)),
       seller: clean(item.seller), address: clean(item.address), lot: clean(item.lot),
       priceEuros: priceNumber,
       areaM2: Number(normalizedArea) || 0
