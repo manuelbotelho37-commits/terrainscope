@@ -89,14 +89,24 @@ public final class ListingEngine {
 
     public static boolean isBuilder(Listing item) {
         String seller = normalize(item.seller);
-        String text = normalize(item.title + " " + item.seller + " " + item.description);
-        // Maisons CPR doit être conservé, même si une autre mention figure dans l'extrait.
-        if (containsPhrase(text, "maisons cpr") || containsPhrase(text, "maison cpr")) return false;
+        String headline = normalize(item.title);
+        String full = normalize(item.title + " " + item.seller + " " + item.description);
+        // CPR est conservé si c'est bien l'annonceur ou le nom de l'offre :
+        // une simple référence à CPR dans un texte concurrent n'y donne pas droit.
+        if (containsPhrase(seller, "maisons cpr") ||
+                containsPhrase(seller, "maison cpr") ||
+                containsPhrase(headline, "maisons cpr") ||
+                containsPhrase(headline, "maison cpr")) return false;
         for (String brand : BRANDS) {
-            if (containsPhrase(text, brand)) return true;
+            // « près du lotissement Logis Avenir » dans une annonce d'agence
+            // ne transforme PAS cette agence en constructeur.
+            if (containsPhrase(seller, brand) || containsPhrase(headline, brand)) return true;
+            if (seller.isEmpty() && containsPhrase(full, brand)) return true;
         }
-        // « terrain libre de constructeur » NE DOIT PAS devenir une exclusion.
-        return OFFER.matcher(text).find();
+        // Un montage maison + terrain (CCMI, projet maison sur parcelle)
+        // reste une offre constructeur même si le champ vendeur manque.
+        // « terrain libre de constructeur » ne satisfait pas OFFER.
+        return OFFER.matcher(full).find();
     }
 
     public static boolean requiresBuildabilityCheck(Listing item) {
