@@ -456,7 +456,7 @@
       ['amboise','37400'],['loches','37600']
     ]);
     function terrainPostal(city){
-      const key=normalize(city).replace(/[’'\\-–—]/g,' ').replace(/[^a-z0-9]+/g,' ').replace(/\\s+/g,' ').trim();
+      const key=normalize(city).replace(/[^a-z0-9]+/g,' ').trim();
       return CITY_POSTAL_CODES.get(key)||CITY_POSTAL_FALLBACK.get(key)||null;
     }
     function leboncoinUrl(city){
