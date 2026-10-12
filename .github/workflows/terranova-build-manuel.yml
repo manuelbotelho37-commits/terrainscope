@@ -1,0 +1,16 @@
+name: TerraNova Android · construire APK manuellement
+
+# Accessible dans Actions > TerraNova Android · construire APK manuellement.
+# Aucun déclenchement sur commit, push, PR, ou horaire.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  construire-terranova:
+    # Le code et les contrôles résident uniquement sur la branche Android.
+    # Le dépôt main conserve intégralement l'ancienne application TerrainScope.
+    uses: manuelbotelho37-commits/terrainscope/.github/workflows/android-prototype.yml@android-capture-prototype
+    secrets: inherit
