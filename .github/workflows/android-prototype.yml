@@ -130,7 +130,7 @@ jobs:
           test -s "$UNSIGNED"
           mkdir -p android-app/app/build/outputs/apk/terranova
           ALIGNED="$RUNNER_TEMP/terranova-aligned.apk"
-          SIGNED="android-app/app/build/outputs/apk/terranova/TerraNova-0.5.1-signe.apk"
+          SIGNED="android-app/app/build/outputs/apk/terranova/TerraNova-0.5.2-signe.apk"
           "$ZIPALIGN" -f 4 "$UNSIGNED" "$ALIGNED"
           # Ne JAMAIS passer les mots de passe directement en arguments.
           # env:NOM récupère la valeur protégée dans l'environnement GitHub.
@@ -163,7 +163,7 @@ jobs:
           cores: 2
           disable-animations: true
           script: |
-            adb install -r android-app/app/build/outputs/apk/terranova/TerraNova-0.5.1-signe.apk
+            adb install -r android-app/app/build/outputs/apk/terranova/TerraNova-0.5.2-signe.apk
             adb shell am start -n fr.terranova.app/fr.terrainscope.app.MainActivity
             sleep 8
             # uiautomator dump lance un second processus Android : l'émulateur
@@ -188,6 +188,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: TerraNova-Android-Prototype-APK
-          path: android-app/app/build/outputs/apk/terranova/TerraNova-0.5.1-signe.apk
+          path: android-app/app/build/outputs/apk/terranova/TerraNova-0.5.2-signe.apk
           retention-days: 7
           if-no-files-found: error
