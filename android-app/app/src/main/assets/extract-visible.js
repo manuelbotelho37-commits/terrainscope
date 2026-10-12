@@ -32,6 +32,21 @@
   const records = [];
   const seen = new Map();
   const absolute = href => { try { return new URL(href, base).href; } catch (_) { return ""; } };
+  // Photo provenant de la fiche ou de sa carte : jamais d'image de remplacement.
+  // Ignorer data:, blob:, logos SVG et protocoles non sécurisés.
+  const photoUrl = input => {
+    const candidate = Array.isArray(input) ? input.find(Boolean) : input;
+    const raw = typeof candidate === "string" ? candidate :
+      (candidate && typeof candidate === "object" ?
+        candidate.contentUrl || candidate.url || candidate.src || "" : "");
+    if (typeof raw !== "string" || !raw.trim() || raw.startsWith("data:")) return "";
+    try {
+      const url = new URL(raw.trim(), base);
+      if (url.protocol !== "https:" || !url.hostname ||
+          /\.(?:svg|gif)(?:\?|$)/i.test(url.pathname)) return "";
+      return url.href;
+    } catch (_) { return ""; }
+  };
   const valueFrom = (el, sel) => clean(el.querySelector(sel)?.textContent);
   function add(item) {
     if (!item || records.length >= 200) return;
@@ -104,6 +119,7 @@
       city: requested, cityConfirmed: !!cityInCard,
       locationConflict: !!(conflictingLocality || misleadingTown || (explicitLocation && !explicitMatches)),
       seller: clean(item.seller), address: clean(item.address), lot: clean(item.lot),
+      imageUrl: photoUrl(item.imageUrl),
       priceEuros: priceNumber,
       areaM2: Number(normalizedArea) || 0
     };
@@ -111,7 +127,7 @@
       // JSON-LD peut ne contenir ni vendeur ni prix alors que la carte HTML
       // les fournit. Une même annonce doit être enrichie, non éliminée.
       const earlier = records[seen.get(key)];
-      for (const field of ["seller", "address", "lot", "description"]) {
+      for (const field of ["seller", "address", "lot", "description", "imageUrl"]) {
         if (!earlier[field] && current[field]) earlier[field] = current[field];
       }
       if (!earlier.priceEuros && current.priceEuros) earlier.priceEuros = current.priceEuros;
@@ -148,7 +164,8 @@
         description:candidate.description || "",
         price:String(offer0.price || candidate.price || ""),
         area:String(candidate.floorSize?.value || candidate.area?.value || ""),
-        seller:sellerName,location, address:typeof address==="string"?address:""});
+        seller:sellerName,location, address:typeof address==="string"?address:"",
+        imageUrl:candidate.image || candidate.thumbnailUrl || value.image});
     }
     for (const key of ["itemListElement", "@graph", "mainEntity", "hasPart", "items"]) {
       if (value[key]) visitJson(value[key], level + 1);
@@ -221,7 +238,15 @@
     const area = valueFrom(card, '[data-testid*="area"], [class*="surface"], [class*="area"]');
     const address = valueFrom(card, '[data-testid*="address"], [class*="address"]');
     const lot = (text.match(/\blot\s*(?:n[°o.]?\s*)?([A-Z]?\d{1,4})\b/i) || [])[1] || "";
-    add({title, url:linked.href, description:text, price, area, seller, address, lot, location:locationText});
+    const picture = card.querySelector("img");
+    const lazySource = picture?.getAttribute?.("data-src") ||
+      picture?.getAttribute?.("data-original") ||
+      picture?.getAttribute?.("data-lazy-src") ||
+      picture?.currentSrc || picture?.getAttribute?.("src") || picture?.src || "";
+    const srcset = picture?.getAttribute?.("srcset") || "";
+    const firstSrcset = srcset ? srcset.split(",")[0].trim().split(/\s+/)[0] : "";
+    add({title, url:linked.href, description:text, price, area, seller, address, lot,
+      location:locationText, imageUrl:lazySource || firstSrcset});
   }
   // Navigation paginée si et seulement si le portail propose un véritable
   // lien « suivant ». Ne pas suivre une publicité ni un autre site.
