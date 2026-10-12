@@ -29,6 +29,8 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import android.widget.ImageView;
 import android.widget.HorizontalScrollView;
+import android.widget.FrameLayout;
+import android.text.TextUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -66,7 +68,9 @@ public final class MainActivity extends Activity {
     private final LinkedHashSet<String> failedSourceNames = new LinkedHashSet<>();
     private String sourceFilter = "";
     private final LinkedHashSet<String> enabledSources = new LinkedHashSet<>();
-    private final LinkedHashMap<String, Button> sourcePills = new LinkedHashMap<>();
+    private final LinkedHashMap<String, LinearLayout> sourcePills = new LinkedHashMap<>();
+    private final LinkedHashMap<String, TextView> sourceChecks = new LinkedHashMap<>();
+    private final LinkedHashMap<String, TextView> sourceLabels = new LinkedHashMap<>();
 
     private MultiAutoCompleteTextView cityInput;
     private final ArrayList<String> communeNames = new ArrayList<>();
@@ -182,26 +186,46 @@ public final class MainActivity extends Activity {
         }
     }
 
+    private static String sourceDomain(String source) {
+        switch (source) {
+            case "Le Bon Coin": return "leboncoin.fr";
+            case "SeLoger": return "seloger.com";
+            case "Bien’ici": return "bienici.com";
+            case "IAD": return "iadfrance.fr";
+            case "Notaires": return "immobilier.notaires.fr";
+            default: return "";
+        }
+    }
+
+    /** Favicons officiels des sites, chargés à la demande ; jamais de faux logo. */
+    private static String officialIcon(String domain) {
+        return "https://www.google.com/s2/favicons?domain=" + domain + "&sz=128";
+    }
+
     private void refreshSourcePills() {
-        for (Map.Entry<String, Button> entry : sourcePills.entrySet()) {
-            boolean selected = enabledSources.contains(entry.getKey());
-            String name = "IAD".equals(entry.getKey()) ? "iad" : entry.getKey();
-            Button pill = entry.getValue();
+        for (Map.Entry<String, LinearLayout> entry : sourcePills.entrySet()) {
+            String site = entry.getKey();
+            boolean selected = enabledSources.contains(site);
+            boolean failed = failedSourceNames.contains(site);
+            boolean active = scanning && scanTaskIndex < scanTasks.size() &&
+                scanTasks.get(scanTaskIndex)[0].equals(site);
             int count = 0;
             for (ListingEngine.Listing listing : imported.values())
                 if (ListingEngine.normalize(listing.source).equals(
-                    ListingEngine.normalize(entry.getKey()))) count++;
-            boolean failed = failedSourceNames.contains(entry.getKey());
-            boolean active = scanning && scanTaskIndex < scanTasks.size() &&
-                scanTasks.get(scanTaskIndex)[0].equals(entry.getKey());
-            pill.setText((failed ? "!  " : active ? "◉  " : selected ? "✓  " : "+  ") +
-                name + (count > 0 ? "  " + count : ""));
-            pill.setTextColor(active ? DARK : failed ? Color.rgb(238, 161, 148) :
-                selected ? GOLD : MUTED);
-            pill.setBackground(rounded(active ? GOLD : selected ? PANEL : LIGHT, 25,
-                active ? Color.TRANSPARENT : failed ? Color.rgb(165, 80, 70) :
-                selected ? GOLD_SOFT : BORDER));
-            pill.setContentDescription((selected ? "Source activée : " : "Source désactivée : ") + name);
+                    ListingEngine.normalize(site))) count++;
+            entry.getValue().setBackground(rounded(active ? Color.rgb(33, 42, 48) : LIGHT,
+                12, active ? GOLD : selected ? GOLD_SOFT : BORDER));
+            entry.getValue().setAlpha(selected ? 1f : .50f);
+            TextView label = sourceLabels.get(site);
+            if (label != null) {
+                label.setText(("IAD".equals(site) ? "iad" : site) + (count > 0 ? "  " + count : ""));
+                label.setTextColor(selected ? TEXT : MUTED);
+            }
+            TextView check = sourceChecks.get(site);
+            if (check != null) {
+                check.setText(failed ? "!" : active ? "●" : selected ? "✓" : "");
+                check.setTextColor(failed ? Color.rgb(242, 143, 125) : GOLD);
+            }
         }
     }
 
@@ -222,37 +246,44 @@ public final class MainActivity extends Activity {
         main.setOrientation(LinearLayout.VERTICAL);
         main.setPadding(dp(12), dp(9), dp(12), dp(8));
         main.setBackgroundColor(DARK);
-        screenScroller.addView(main, new ScrollView.LayoutParams(-1, -2));
+        // Sur le Fold ouvert, conserver les proportions de la maquette mobile :
+        // pas de barre de recherche démesurée occupant toute la tablette.
+        FrameLayout centered = new FrameLayout(this);
+        screenScroller.addView(centered, new ScrollView.LayoutParams(-1, -2));
+        int screenDp = getResources().getConfiguration().screenWidthDp;
+        FrameLayout.LayoutParams contentWidth = new FrameLayout.LayoutParams(
+            dp(Math.min(690, Math.max(300, screenDp - 20))), -2,
+            Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        centered.addView(main, contentWidth);
 
-        LinearLayout masthead = section(PANEL, 20, GOLD_SOFT);
+        LinearLayout masthead = section(DARK, 16, Color.TRANSPARENT);
+        masthead.setPadding(dp(8), dp(7), dp(8), dp(8));
         GradientDrawable heroBackground = new GradientDrawable(
             GradientDrawable.Orientation.TL_BR,
             new int[]{Color.rgb(29, 44, 58), DARK});
         heroBackground.setCornerRadius(dp(20));
-        heroBackground.setStroke(dp(1), GOLD_SOFT);
+        heroBackground.setStroke(dp(0), Color.TRANSPARENT);
         masthead.setBackground(heroBackground);
         LinearLayout brandLine = row();
         brandLine.setGravity(Gravity.CENTER_VERTICAL);
         ImageView brandIcon = new ImageView(this);
         brandIcon.setContentDescription("Logo TerraNova");
         brandIcon.setImageResource(R.drawable.terranova_app_icon);
-        brandLine.addView(brandIcon, new LinearLayout.LayoutParams(dp(64), dp(64)));
+        brandLine.addView(brandIcon, new LinearLayout.LayoutParams(dp(58), dp(58)));
         LinearLayout brandText = new LinearLayout(this);
         brandText.setOrientation(LinearLayout.VERTICAL);
         TextView wordmark = heading("TerraNova", 27, GOLD, true);
         wordmark.setTypeface(Typeface.create("serif", Typeface.BOLD));
         brandText.addView(wordmark);
-        brandText.addView(heading("L'EXCELLENCE FONCIÈRE  ·  TOURAINE", 10, MUTED, true));
-        brandText.addView(heading("Le bon terrain, avant les autres.", 12, TEXT, false));
+        brandText.addView(heading("Recherche de terrains", 12, MUTED, false));
         LinearLayout.LayoutParams wordmarkSize = new LinearLayout.LayoutParams(0,-2,1f);
         wordmarkSize.setMargins(dp(10),0,0,0);
         brandLine.addView(brandText, wordmarkSize);
         masthead.addView(brandLine);
         place(main, masthead, 0, 7);
 
-        LinearLayout search = section(PANEL, 18, BORDER);
-        search.addView(heading("OÙ SOUHAITEZ-VOUS CONSTRUIRE ?", 12, GOLD, true));
-        search.addView(heading("Recherchez une ou plusieurs communes du 37.", 11, MUTED, false));
+        LinearLayout search = section(DARK, 14, Color.TRANSPARENT);
+        search.setPadding(dp(5), dp(3), dp(5), dp(6));
         LinearLayout fields = row();
         fields.setGravity(Gravity.CENTER_VERTICAL);
         cityInput = new MultiAutoCompleteTextView(this);
@@ -264,9 +295,9 @@ public final class MainActivity extends Activity {
         cityInput.setTextSize(15);
         cityInput.setTextColor(TEXT);
         cityInput.setHintTextColor(MUTED);
-        cityInput.setHint("Monnaie, Tours, Chambray-lès-Tours");
+        cityInput.setHint("⌖  Rechercher une ou plusieurs communes");
         cityInput.setPadding(dp(11), 0, dp(9), 0);
-        cityInput.setBackground(rounded(SOFT, 10, BORDER));
+        cityInput.setBackground(rounded(LIGHT, 17, GOLD));
         LinearLayout.LayoutParams c = new LinearLayout.LayoutParams(0, dp(53), 1f);
         c.setMargins(0, 0, dp(7), 0);
         fields.addView(cityInput, c);
@@ -285,52 +316,72 @@ public final class MainActivity extends Activity {
         siteSpinner.setBackground(rounded(SOFT, 10, BORDER));
         siteSpinner.setVisibility(View.GONE);
         fields.addView(siteSpinner, new LinearLayout.LayoutParams(0, dp(1), 0f));
-        place(search, fields, 7, 8);
-        TextView filterLabel = heading("SOURCES IMMOBILIÈRES", 10, GOLD, true);
-        place(search, filterLabel, 5, 3);
-        HorizontalScrollView sourceScroll = new HorizontalScrollView(this);
-        sourceScroll.setHorizontalScrollBarEnabled(false);
-        sourceScroll.setFillViewport(false);
+        place(search, fields, 4, 7);
+        LinearLayout filterRow = row();
+        TextView filterLabel = heading("Sources d'annonces", 11, MUTED, false);
+        filterRow.addView(filterLabel, new LinearLayout.LayoutParams(0, -2, 1f));
+        TextView selectCount = heading("5 sources disponibles", 10, MUTED, false);
+        filterRow.addView(selectCount);
+        place(search, filterRow, 0, 5);
         LinearLayout sourcesRow = row();
         for (String site : SITES) {
-            String caption = "IAD".equals(site) ? "iad" : site;
-            Button pill = new Button(this);
-            pill.setAllCaps(false);
-            pill.setTextSize(11);
-            pill.setTypeface(null, Typeface.BOLD);
-            pill.setMinimumHeight(dp(37));
-            pill.setMinHeight(dp(37));
-            pill.setPadding(dp(13), 0, dp(13), 0);
-            pill.setContentDescription("Inclure ou exclure " + caption + " de la recherche");
-            LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(-2, dp(39));
-            size.setMargins(0, 0, dp(7), 0);
-            sourcesRow.addView(pill, size);
-            sourcePills.put(site, pill);
-            pill.setOnClickListener(v -> {
+            final String caption = "IAD".equals(site) ? "iad" : site;
+            LinearLayout tile = new LinearLayout(this);
+            tile.setOrientation(LinearLayout.VERTICAL);
+            tile.setGravity(Gravity.CENTER);
+            tile.setPadding(dp(2), dp(5), dp(2), dp(4));
+            LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(0, dp(80), 1f);
+            size.setMargins(dp(2), 0, dp(2), 0);
+            sourcesRow.addView(tile, size);
+
+            FrameLayout mark = new FrameLayout(this);
+            LinearLayout.LayoutParams markSize = new LinearLayout.LayoutParams(dp(37), dp(35));
+            tile.addView(mark, markSize);
+            ImageView icon = new ImageView(this);
+            icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            FrameLayout.LayoutParams iconSize = new FrameLayout.LayoutParams(dp(28), dp(28), Gravity.CENTER);
+            mark.addView(icon, iconSize);
+            PhotoLoader.show(icon, officialIcon(sourceDomain(site)));
+            TextView check = heading("✓", 11, GOLD, true);
+            FrameLayout.LayoutParams checkSize = new FrameLayout.LayoutParams(
+                dp(13), dp(14), Gravity.TOP | Gravity.RIGHT);
+            mark.addView(check, checkSize);
+            sourceChecks.put(site, check);
+            TextView label = heading(caption, 9, TEXT, false);
+            label.setMaxLines(1);
+            label.setEllipsize(TextUtils.TruncateAt.END);
+            label.setGravity(Gravity.CENTER);
+            tile.addView(label, new LinearLayout.LayoutParams(-1, dp(22)));
+            sourceLabels.put(site, label);
+            sourcePills.put(site, tile);
+            tile.setContentDescription("Inclure ou exclure " + caption + " de la recherche");
+            tile.setOnClickListener(v -> {
                 if (enabledSources.contains(site)) {
                     if (enabledSources.size() == 1) {
                         status.setText("Conserve au moins une source immobilière.");
                         return;
                     }
                     enabledSources.remove(site);
-                } else {
-                    enabledSources.add(site);
-                }
+                } else enabledSources.add(site);
+                selectCount.setText(enabledSources.size() + " sélectionnée(s)");
                 refreshSourcePills();
-                if (!scanning && status != null)
-                    status.setText(enabledSources.size() + " source(s) sélectionnée(s) · lance une nouvelle recherche.");
             });
         }
-        sourceScroll.addView(sourcesRow);
-        place(search, sourceScroll, 0, 9);
+        place(search, sourcesRow, 0, 9);
         refreshSourcePills();
 
-        Button searchAll = action("⌕  RECHERCHER LES TERRAINS", true);
-        searchAll.setTextSize(14);
+        Button searchAll = action("⌕   Rechercher", true);
+        searchAll.setTextSize(15);
+        searchAll.setBackground(new GradientDrawable(
+            GradientDrawable.Orientation.TL_BR,
+            new int[]{Color.rgb(254, 216, 119), Color.rgb(209, 152, 43)}));
+        GradientDrawable golden = (GradientDrawable) searchAll.getBackground();
+        golden.setCornerRadius(dp(17));
+        golden.setStroke(dp(1), GOLD);
         searchAll.setOnClickListener(v -> startAutomatedSearch());
         place(search, searchAll, 0, 4);
         LinearLayout helper = row();
-        TextView sources = heading("5 sources · collecte automatique · tri intelligent",
+        TextView sources = heading("Recherche multi-sites · classement automatique",
             10, MUTED, false);
         helper.addView(sources, new LinearLayout.LayoutParams(0, -2, 1f));
         Button reset = action("Effacer", false);
@@ -339,7 +390,7 @@ public final class MainActivity extends Activity {
         reset.setOnClickListener(v -> reset());
         helper.addView(reset, new LinearLayout.LayoutParams(dp(84), dp(36)));
         place(search, helper, 0, 1);
-        place(main, search, 0, 7);
+        place(main, search, 0, 4);
 
         LinearLayout tabbar = row();
         tabbar.setPadding(dp(4), dp(4), dp(4), dp(4));
