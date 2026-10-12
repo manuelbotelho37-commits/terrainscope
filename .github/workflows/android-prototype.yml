@@ -79,6 +79,7 @@ jobs:
             mkdir -p android-app/build/visual-test
             timeout 35 adb exec-out screencap -p > android-app/build/visual-test/accueil.png || true
             test -s android-app/build/visual-test/accueil.png
+            python3 android-app/tests/VerifyScreenshot.py android-app/build/visual-test/accueil.png
             adb shell pidof fr.terranova.app | grep -Eq '[0-9]'
 
       - name: Conserver la capture de l'interface Android
