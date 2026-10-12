@@ -138,6 +138,22 @@ public final class ListingEngine {
                 && !normalize(a).equals(normalize(b));
     }
 
+    private static boolean meaningfulSellerMatch(String first, String second) {
+        String a = normalize(first), b = normalize(second);
+        if (a.isEmpty() || b.isEmpty()) return false;
+        // « agence », « particulier » et « professionnel » sont des étiquettes,
+        // pas une identité de vendeur : même prix/surface ne suffit pas.
+        for (String generic : new String[]{"agence", "agence immobiliere",
+                "particulier", "professionnel", "pro", "notaire", "iad"}) {
+            if (a.equals(generic) || b.equals(generic)) return false;
+        }
+        if (a.equals(b)) return true;
+        // « Sophie Viale BSK Immobilier » et « BSK Immobilier » sont compatibles.
+        String shorter = a.length() <= b.length() ? a : b;
+        String longer = a.length() > b.length() ? a : b;
+        return shorter.length() >= 10 && containsPhrase(longer, shorter);
+    }
+
     private static boolean duplicate(Listing a, Listing b) {
         if (!urlKey(a.url).isEmpty() && urlKey(a.url).equals(urlKey(b.url))) return true;
         // Même prix/surface sur un même portail peut correspondre à deux lots distincts.
@@ -145,9 +161,17 @@ public final class ListingEngine {
         if (normalize(a.city).isEmpty() || !normalize(a.city).equals(normalize(b.city))) return false;
         if (a.priceEuros <= 0 || a.priceEuros != b.priceEuros) return false;
         if (a.areaM2 <= 0 || Math.abs(a.areaM2 - b.areaM2) > 0.1) return false;
-        // Des numéros de lot ou des adresses clairement différents = deux terrains.
+        // Même surface/prix dans un lotissement : plusieurs lots peuvent coexister.
+        // Il faut un indice d'identité supplémentaire : adresse exacte,
+        // numéro de lot ET emplacement, ou annonceur réellement identique.
         if (conflict(a.lot, b.lot) || conflict(a.address, b.address)) return false;
-        return true;
+        boolean samePreciseAddress = !normalize(a.address).isEmpty() &&
+            normalize(a.address).equals(normalize(b.address)) &&
+            normalize(a.address).length() >= 12;
+        boolean sameLot = !normalize(a.lot).isEmpty() &&
+            normalize(a.lot).equals(normalize(b.lot));
+        boolean sameSeller = meaningfulSellerMatch(a.seller, b.seller);
+        return samePreciseAddress || sameSeller || (sameLot && sameSeller);
     }
 
     public static List<Result> classify(List<Listing> input) {
@@ -186,7 +210,8 @@ public final class ListingEngine {
             if (original != null) {
                 r.state = State.DUPLICATE;
                 r.preferredSource = original.listing.source;
-                r.reason = "Même commune, prix et surface : référence " + original.listing.source;
+                r.reason = "Même commune, prix, surface et annonceur/adresse : référence " +
+                    original.listing.source;
                 if (!original.otherSources.contains(r.listing.source)
                         && !original.listing.source.equals(r.listing.source)) {
                     original.otherSources.add(r.listing.source);
