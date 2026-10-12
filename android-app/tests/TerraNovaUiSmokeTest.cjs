@@ -30,7 +30,7 @@ check("count > 0 ? COUNT_GREEN : SOFT","Vert seulement pour fiches réellement i
 check("chipRow.addView(spacer, slot)","18 cases de même largeur, même sur dernière ligne");
 check("0, dp(70), 1f","18 pastilles de taille uniforme");
 check("PhotoLoader.show(logo, officialIcon(domain))","Vrais favicons lotisseurs");
-check("pill.setOnClickListener(v -> {","Chacun des 18 lotisseurs est cliquable");
+check("chipFrame.setOnClickListener(v -> {","Chacun des 18 lotisseurs est cliquable");
 check("showSourceIcon(icon, site)","Logos des sources et fallback Notaires");
 check('officialIcon("notaires.fr")',"Favicon de la marque officielle Notaires");
 check("for (String site : SITES)","Cinq sources");
