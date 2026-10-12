@@ -36,6 +36,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -55,6 +56,7 @@ public final class MainActivity extends Activity {
     // Codes de localité SeLoger vérifiés dans la version web existante.
     private final Map<String, String> selogerPaths = new HashMap<>();
     private final LinkedHashMap<String, ListingEngine.Listing> imported = new LinkedHashMap<>();
+    private final LinkedHashSet<String> sourcesVisited = new LinkedHashSet<>();
 
     private AutoCompleteTextView cityInput;
     private final ArrayList<String> communeNames = new ArrayList<>();
@@ -329,6 +331,7 @@ public final class MainActivity extends Activity {
         if (!activeCity.isEmpty() && !ListingEngine.normalize(activeCity)
                 .equals(ListingEngine.normalize(city))) {
             imported.clear();
+            sourcesVisited.clear();
         }
         activeCity = city;
         showLotisseursOnLoad = false;
@@ -372,6 +375,10 @@ public final class MainActivity extends Activity {
             Object decoded = new JSONTokener(encoded).nextValue();
             if (!(decoded instanceof String)) throw new IllegalArgumentException("Pas de données retournées");
             JSONObject result = new JSONObject((String) decoded);
+            if (!ListingEngine.normalize(result.optString("requestedCity"))
+                .equals(ListingEngine.normalize(activeCity))) {
+                throw new IllegalStateException("Cette importation concerne une autre commune ; ouvre le site de nouveau.");
+            }
             JSONArray listings = result.optJSONArray("listings");
             if (listings == null) throw new IllegalArgumentException("Format de données non reconnu");
             int added = 0;
@@ -393,6 +400,8 @@ public final class MainActivity extends Activity {
                     added++;
                 }
             }
+            String checkedSource = result.optString("source", sourceHost);
+            sourcesVisited.add(checkedSource);
             int displayedCount = result.isNull("declaredCount") ? -1 :
                 result.optInt("declaredCount", -1);
             int extractedCount = result.optInt("retrieved", 0);
@@ -404,7 +413,7 @@ public final class MainActivity extends Activity {
                 : " · Vérifie le tri dans les onglets.";
             status.setText(extractedCount + " fiche(s) lue(s)" + total +
                 ", " + added + " nouvelle(s), " + imported.size() +
-                " cumulée(s)." + warning);
+                " cumulée(s). " + sourcesVisited.size() + " source(s) consultée(s)." + warning);
         } catch (Exception error) {
             status.setText("Cette page n’a pas pu être lue. Ce n’est PAS « zéro terrain disponible ». " +
                 "Cause : " + error.getMessage());
@@ -427,6 +436,11 @@ public final class MainActivity extends Activity {
             " annonce(s) à vérifier · priorité : Le Bon Coin → SeLoger → Bien’ici.", 13, true);
         summary.setTextColor(GOLD);
         cards.addView(summary);
+        TextView coverage = text("Sources consultées : " +
+            (sourcesVisited.isEmpty() ? "aucune importée" : String.join(", ", sourcesVisited)) +
+            " · Les portails non consultés ne valent pas « zéro annonce ».", 12, false);
+        coverage.setTextColor(MUTED);
+        cards.addView(coverage);
         if (current.isEmpty()) {
             TextView empty = text(imported.isEmpty()
                 ? "Aucune annonce importée. Ouvre un site, laisse les résultats charger puis " +
@@ -475,6 +489,7 @@ public final class MainActivity extends Activity {
 
     private void reset() {
         imported.clear();
+        sourcesVisited.clear();
         activeCity = "";
         browser.loadUrl("about:blank");
         showBrowser();
