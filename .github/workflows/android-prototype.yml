@@ -88,6 +88,11 @@ jobs:
           key = json.loads(raw)
           path = pathlib.Path(os.environ["RUNNER_TEMP"]) / "terranova-signing.p12"
           path.write_bytes(base64.b64decode(key["keystore"]))
+          path.chmod(0o600)
+          # Le secret GitHub est masqué, mais ses mots de passe DÉCODÉS ne
+          # le sont pas par défaut. Les masquer AVANT d'écrire GITHUB_ENV.
+          for password_field in ("storePassword", "keyPassword"):
+              print("::add-mask::" + key[password_field], flush=True)
           with open(os.environ["GITHUB_ENV"], "a") as out:
               out.write("TERRANOVA_SIGNING_KEYSTORE=" + str(path) + "\n")
               out.write("TERRANOVA_SIGNING_STORE_PASSWORD=" + key["storePassword"] + "\n")
@@ -96,7 +101,10 @@ jobs:
           PY
             echo "Signature permanente TerraNova activée, secret unique."
           elif [ -n "$KEYSTORE_B64" ] && [ -n "$SIGNING_STORE_PASSWORD" ] && [ -n "$SIGNING_KEY_ALIAS" ] && [ -n "$SIGNING_KEY_PASSWORD" ]; then
+            echo "::add-mask::$SIGNING_STORE_PASSWORD"
+            echo "::add-mask::$SIGNING_KEY_PASSWORD"
             printf '%s' "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/terranova-signing.jks"
+            chmod 600 "$RUNNER_TEMP/terranova-signing.jks"
             echo "TERRANOVA_SIGNING_KEYSTORE=$RUNNER_TEMP/terranova-signing.jks" >> "$GITHUB_ENV"
             echo "TERRANOVA_SIGNING_STORE_PASSWORD=$SIGNING_STORE_PASSWORD" >> "$GITHUB_ENV"
             echo "TERRANOVA_SIGNING_KEY_ALIAS=$SIGNING_KEY_ALIAS" >> "$GITHUB_ENV"
@@ -107,30 +115,40 @@ jobs:
             exit 1
           fi
 
-      - name: Construire l'application expérimentale
-        run: gradle -p android-app :app:assembleDebug --no-daemon
+      - name: Compiler la version Android non signée
+        run: gradle -p android-app :app:assembleRelease --no-daemon
 
-      - name: Vérifier la signature et le certificat permanents
+      - name: Signer l'APK avec la clé GitHub et vérifier le certificat
         run: |
-          APK="android-app/app/build/outputs/apk/debug/app-debug.apk"
-          test -s "$APK"
+          set -euo pipefail
           SDK_ROOT="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
           APKSIGNER="$(find "$SDK_ROOT/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
-          test -x "$APKSIGNER"
-          "$APKSIGNER" verify --verbose --print-certs "$APK" > "$RUNNER_TEMP/terranova-apk-verification.txt"
-          # L'archive conservée par l'utilisateur peut être différente d'une
-          # première clé préparée : comparer à LA CLÉ effectivement installée
-          # dans GitHub plutôt qu'à une empreinte issue d'une autre archive.
-          # On ne publie jamais la clé privée ni ses mots de passe.
+          ZIPALIGN="$(find "$SDK_ROOT/build-tools" -type f -name zipalign | sort -V | tail -n 1)"
+          AAPT="$(find "$SDK_ROOT/build-tools" -type f -name aapt | sort -V | tail -n 1)"
+          test -x "$APKSIGNER" && test -x "$ZIPALIGN" && test -x "$AAPT"
+          UNSIGNED="android-app/app/build/outputs/apk/release/app-release-unsigned.apk"
+          test -s "$UNSIGNED"
+          mkdir -p android-app/app/build/outputs/apk/terranova
+          ALIGNED="$RUNNER_TEMP/terranova-aligned.apk"
+          SIGNED="android-app/app/build/outputs/apk/terranova/TerraNova-0.5.1-signe.apk"
+          "$ZIPALIGN" -f 4 "$UNSIGNED" "$ALIGNED"
+          # Ne JAMAIS passer les mots de passe directement en arguments.
+          # env:NOM récupère la valeur protégée dans l'environnement GitHub.
+          "$APKSIGNER" sign --ks "$TERRANOVA_SIGNING_KEYSTORE" \
+            --ks-type PKCS12 --ks-key-alias "$TERRANOVA_SIGNING_KEY_ALIAS" \
+            --ks-pass env:TERRANOVA_SIGNING_STORE_PASSWORD \
+            --key-pass env:TERRANOVA_SIGNING_KEY_PASSWORD \
+            --out "$SIGNED" "$ALIGNED"
+          "$APKSIGNER" verify --verbose --print-certs "$SIGNED" > "$RUNNER_TEMP/terranova-apk-verification.txt"
           APK_SHA256="$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$RUNNER_TEMP/terranova-apk-verification.txt" | head -n 1 | tr -d ':[:space:]' | tr '[:upper:]' '[:lower:]')"
           KEY_SHA256="$(keytool -list -v -keystore "$TERRANOVA_SIGNING_KEYSTORE" -storepass "$TERRANOVA_SIGNING_STORE_PASSWORD" -alias "$TERRANOVA_SIGNING_KEY_ALIAS" | sed -n 's/^[[:space:]]*SHA256:[[:space:]]*//p' | head -n 1 | tr -d ':[:space:]' | tr '[:upper:]' '[:lower:]')"
           test -n "$APK_SHA256" && test -n "$KEY_SHA256"
-          test "$APK_SHA256" = "$KEY_SHA256" || {
-            echo "::error::Le certificat de l'APK ne correspond pas à celui du secret GitHub."
+          if [ "$APK_SHA256" != "$KEY_SHA256" ]; then
+            echo "::error::Le certificat APK ne correspond pas au secret GitHub."
             exit 1
-          }
-          echo "Signature APK valide et identique à la clé GitHub. Empreinte publique SHA-256 : $APK_SHA256"
-
+          fi
+          "$AAPT" dump badging "$SIGNED" | grep -F "package: name='fr.terranova.app' versionCode='7'"
+          echo "Signature permanente vérifiée, certificat APK = certificat du secret GitHub."
       - name: Vérifier le démarrage sur un émulateur Android
         # Le runner Android GitHub peut planter (adb Broken pipe) avant même
         # d'installer l'APK : ne pas cacher cette limite, ni bloquer l'APK
@@ -146,7 +164,7 @@ jobs:
           cores: 2
           disable-animations: true
           script: |
-            adb install -r android-app/app/build/outputs/apk/debug/app-debug.apk
+            adb install -r android-app/app/build/outputs/apk/terranova/TerraNova-0.5.1-signe.apk
             adb shell am start -n fr.terranova.app/fr.terrainscope.app.MainActivity
             sleep 8
             # uiautomator dump lance un second processus Android : l'émulateur
@@ -171,6 +189,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: TerraNova-Android-Prototype-APK
-          path: android-app/app/build/outputs/apk/debug/app-debug.apk
+          path: android-app/app/build/outputs/apk/terranova/TerraNova-0.5.1-signe.apk
           retention-days: 7
           if-no-files-found: error
