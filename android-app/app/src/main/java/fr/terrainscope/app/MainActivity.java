@@ -731,49 +731,71 @@ public final class MainActivity extends Activity {
     private void displayDevelopers() {
         showResults();
         cards.removeAllViews();
-        TextView title = heading("18 lotisseurs · programmes et terrains", 19, GOLD, true);
-        place(cards, title, 0, 8);
-        TextView intro = text(
-            "Catalogue accessible directement dans TerraNova, conservé depuis TerrainScope V58. " +
-            "Ouvre le site de chaque lotisseur pour vérifier ses programmes, ses prix et la disponibilité réelle des lots.",
+        LinearLayout intro = section(PANEL, 18, GOLD_SOFT);
+        TextView kicker = heading("TERRANOVA  /  RÉSEAU FONCIER", 10, GOLD, true);
+        place(intro, kicker, 0, 6);
+        TextView header = heading("18 aménageurs & lotisseurs", 22, TEXT, true);
+        header.setTypeface(Typeface.create("serif", Typeface.BOLD));
+        place(intro, header, 0, 5);
+        TextView subtitle = text(
+            "Retrouvez chaque partenaire et ses programmes. Disponibilités et tarifs à confirmer directement auprès des sources.",
             12, false);
-        intro.setTextColor(MUTED);
-        place(cards, intro, 0, 8);
+        subtitle.setTextColor(MUTED);
+        place(intro, subtitle, 0, 1);
+        place(cards, intro, 0, 12);
         try {
             JSONObject catalog = new JSONObject(readAsset("lotisseurs-37.json"));
             JSONArray developers = catalog.getJSONArray("developers");
+            int screen = getResources().getConfiguration().screenWidthDp;
+            int columns = screen >= 730 ? 3 : screen >= 470 ? 2 : 1;
+            LinearLayout currentRow = null;
             for (int i = 0; i < developers.length(); i++) {
+                if (i % columns == 0) {
+                    currentRow = row();
+                    place(cards, currentRow, 0, 7);
+                }
                 JSONObject developer = developers.getJSONObject(i);
                 String name = developer.getString("name");
                 String site = developer.getString("url");
                 String domain = developer.optString("domain", "");
                 String notice = developer.optString("notice", "");
                 boolean catalogueAvailable = developer.optBoolean("catalogue", true);
-                LinearLayout card = section(LIGHT, 13, BORDER);
-                place(card, heading(name, 16, TEXT, true), 0, 3);
-                TextView website = heading(domain, 12, GOLD, false);
-                place(card, website, 0, 4);
+                LinearLayout tile = section(PANEL, 15, BORDER);
+                tile.setMinimumHeight(dp(columns == 1 ? 110 : 142));
+                LinearLayout.LayoutParams tileSize =
+                    new LinearLayout.LayoutParams(0, -2, 1f);
+                tileSize.setMargins(dp(3), 0, dp(3), 0);
+                currentRow.addView(tile, tileSize);
+                TextView index = heading(String.format(Locale.FRANCE,
+                    "N° %02d   /   %s", i + 1,
+                    catalogueAvailable ? "TERRAINS & PROGRAMMES" : "SITE OFFICIEL"),
+                    9, GOLD, true);
+                place(tile, index, 0, 7);
+                TextView nameView = heading(name, columns >= 3 ? 14 : 16, TEXT, true);
+                place(tile, nameView, 0, 5);
+                TextView host = heading(domain, 11, MUTED, false);
+                place(tile, host, 0, 7);
                 if (!notice.isEmpty()) {
-                    TextView info = text(notice, 12, false);
-                    info.setTextColor(MUTED);
-                    place(card, info, 0, 5);
+                    TextView warning = text(notice, 10, false);
+                    warning.setTextColor(MUTED);
+                    place(tile, warning, 0, 5);
                 }
-                Button go = action(catalogueAvailable ?
-                    "Voir les terrains / programmes ↗" : "Voir le site officiel ↗", true);
-                go.setOnClickListener(v -> {
+                TextView openText = heading("DÉCOUVRIR LES OFFRES   ↗", 10, GOLD, true);
+                place(tile, openText, 3, 0);
+                tile.setContentDescription("Voir les terrains de " + name);
+                tile.setOnClickListener(v -> {
                     try {
                         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(site)));
-                    } catch (Exception error) {
-                        status.setText("Impossible d'ouvrir le site de " + name + ".");
+                    } catch (Exception e) {
+                        status.setText("Ouverture impossible : " + name);
                     }
                 });
-                place(card, go, 4, 0);
-                place(cards, card, 0, 9);
+                tile.setBackground(rounded(PANEL, 15, GOLD_SOFT));
             }
-            status.setText("18 lotisseurs accessibles. Liens conservés de TerrainScope ; disponibilités à vérifier sur les sites officiels.");
+            status.setText("18 lotisseurs en accès direct · liens officiels. Vérifiez les offres sur chaque site.");
         } catch (Exception error) {
-            status.setText("Impossible de lire le catalogue embarqué des lotisseurs : " + error.getMessage());
-            cards.addView(text("Le catalogue n'a pas pu être chargé. Réessaie ou vérifie l'installation.", 13, false));
+            status.setText("Catalogue des lotisseurs illisible : " + error.getMessage());
+            cards.addView(text("Catalogue indisponible. Réessaye après mise à jour.", 13, false));
         }
     }
 
