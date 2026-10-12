@@ -126,6 +126,26 @@ public final class ListingEngineSmokeTest {
               ListingEngine.State.BUILDER,
             "SeLoger écarte Logis Avenir après tri");
 
+        ListingEngine.Listing leisure = listing("IAD","Terrain de loisirs à Monnaie",
+            "Conseiller iad","Monnaie",25000,1400,"","https://www.iadfrance.fr/annonce/leisure");
+        check(ListingEngine.requiresBuildabilityCheck(leisure),
+            "Un terrain de loisirs n'est pas un terrain à bâtir");
+        check(ListingEngine.filtered(ListingEngine.classify(Arrays.asList(leisure))).isEmpty(),
+            "Terrain de loisirs exclu des offres présentées aux clients");
+        ListingEngine.Listing nonBuildable = new ListingEngine.Listing(
+            "Notaires", "https://www.immobilier.notaires.fr/fr/annonce/123",
+            "Terrain à vendre", "Monnaie", "Notaire", "Terrain non constructible",
+            "", "", 35000, 1000, true);
+        check(ListingEngine.requiresBuildabilityCheck(nonBuildable),
+            "Non constructible marqué à vérifier");
+        ListingEngine.Listing genuineLand = new ListingEngine.Listing(
+            "IAD","https://www.iadfrance.fr/annonce/terrain-vente-monnaie-1328m2/r1976940",
+            "Terrain à bâtir à Monnaie","Alice Ravinet","Conseiller iad",
+            "Constructible, possibilité de réaliser une maison", "", "",
+            138500,1328,true);
+        check(!ListingEngine.requiresBuildabilityCheck(genuineLand),
+            "Terrain constructible proposé par iad conservé");
+
         System.out.println("TerrainScope : " + assertions + " vérifications du moteur réussies.");
     }
 }
