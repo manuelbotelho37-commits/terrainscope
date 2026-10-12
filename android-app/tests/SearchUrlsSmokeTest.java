@@ -14,7 +14,7 @@ public final class SearchUrlsSmokeTest {
     }
     private static String post(String... parts) { return String.join("|", parts); }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         Map<String, String> postals = new HashMap<>();
         postals.put("monnaie", "37380");
         postals.put("notre dame d oe", "37390");
