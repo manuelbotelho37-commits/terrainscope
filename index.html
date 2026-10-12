@@ -293,7 +293,7 @@
     <button id="terrainUp" type="button" title="Retour en haut" aria-label="Retour aux critères de recherche">↑</button>
     <button id="terrainDown" type="button" title="Descendre" aria-label="Descendre dans les résultats">↓</button>
   </nav>
-  <footer class="foot">TerrainScope V41 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+  <footer class="foot">TerrainScope V42 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -428,6 +428,36 @@
     const leboncoinUrl=city=>normalize(city)==='joue-les-tours'
       ?'https://www.leboncoin.fr/cl/ventes_immobilieres/cp_joue-les-tours_37300/real_estate_type%3A3'
       :'https://www.leboncoin.fr/recherche?'+new URLSearchParams({text:'terrain '+city,category:'9'}).toString();
+    // Pages « Achat > Terrain » officiellement identifiées chez SeLoger.
+    // L'identifiant ad08fr est propre au site ; on ne l'invente pas pour les autres communes.
+    const SELOGER_TERRAIN_CITIES_37 = {
+      'notre-dame-d-oe':['37390','14697'],
+      'joue-les-tours':['37300','14648'],
+      'chambray-les-tours':['37170','14576'],
+      'tours':['37000','14783'],
+      'monnaie':['37380','14679'],
+      'azay-sur-cher':['37270','14542'],
+      'fondettes':['37230','14635'],
+      'montlouis-sur-loire':['37270','14682'],
+      'azay-le-rideau':['37190','14541'],
+      'saint-pierre-des-corps':['37700','14757'],
+      'montbazon':['37250','14680'],
+      'chinon':['37500','14598'],
+      'savonnieres':['37510','14765'],
+      'saint-cyr-sur-loire':['37540','14739'],
+      'veigne':['37250','14788'],
+      'saint-avertin':['37550','14733'],
+      'loches':['37600','14658'],
+      'amboise':['37400','14530'],
+      'ballan-mire':['37510','14544']
+    };
+    function selogerTerrainUrl(city){
+      const slug=normalize(city).replace(/[’'\\-–—]/g,'-').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+      const known=SELOGER_TERRAIN_CITIES_37[slug];
+      return known
+        ?{url:'https://www.seloger.com/recherche/achat/terrain/centre-val-de-loire/'+slug+'-'+known[0]+'/ad08fr'+known[1],exact:true}
+        :{url:'https://www.seloger.com/recherche/achat/terrain/centre-val-de-loire/indre-et-loire-37/ad06fr38',exact:false};
+    }
     // L'URL IAD /annonces/<ville>-<codepostal>/vente/terrain applique réellement
     // le filtre "Terrain". /annonces/<ville>/vente mène sinon à des maisons.
     const iadTerrainUrl=city=>{
@@ -905,11 +935,10 @@
       // directement sur le site, où l'utilisateur voit les offres actuellement affichées.
       for(const city of cities)makeLink('1 · Le Bon Coin · '+city,leboncoinUrl(city),true,'Recherche directe sur Le Bon Coin, sans lien Google périmé');
       for(const city of cities){
-        const direct=normalize(city)==='joue-les-tours'
-          ?'https://www.seloger.com/recherche/achat/terrain/centre-val-de-loire/joue-les-tours-37300/ad08fr14648'
-          :linkFor([city],'seloger.com');
-        makeLink('2 · SeLoger · '+city,direct,false,normalize(city)==='joue-les-tours'
-          ?'Page SeLoger des terrains à Joué-lès-Tours':'Recherche Google ciblée sur SeLoger');
+        const result=selogerTerrainUrl(city);
+        makeLink('2 · SeLoger · '+city,result.url,false,result.exact
+          ?'Terrains à vendre à '+city+' : page SeLoger directe, sans passer par Google. Annonces de constructeurs possibles sur le site externe.'
+          :'Terrains à vendre dans le 37 : choisir '+city+' sur SeLoger (lien direct pour cette commune non encore identifié).');
       }
       for(const city of cities)makeLink('3 · Bien’ici · '+city,linkFor([city],'bienici.com'),false,'Recherche ciblée Bien’ici via Google');
       for(const city of cities){
@@ -958,7 +987,14 @@
       else addSource('Leboncoin · toutes ces communes (Google)',linkFor(cities,'leboncoin.fr'));
       for(const [name,domain] of PORTALS){
         if(name==='Leboncoin')continue;
-        if(name==='IAD'){
+        if(name==='SeLoger'){
+          for(const city of cities){
+            const result=selogerTerrainUrl(city);
+            addSource(result.exact?'SeLoger · terrains · '+city:'SeLoger · terrains 37 (choisir '+city+')',result.url);
+          }
+          continue;
+        }
+        if(name==='IAD · terrains'){
           for(const city of cities)addSource('IAD · terrains · '+city,iadTerrainUrl(city));
           continue;
         }
