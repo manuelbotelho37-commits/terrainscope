@@ -892,23 +892,19 @@ public final class MainActivity extends Activity {
     private void displayDevelopers() {
         showResults();
         cards.removeAllViews();
-        LinearLayout intro = section(PANEL, 18, GOLD_SOFT);
-        TextView kicker = heading("TERRANOVA  /  RÉSEAU FONCIER", 10, GOLD, true);
-        place(intro, kicker, 0, 6);
-        TextView header = heading("18 aménageurs & lotisseurs", 22, TEXT, true);
-        header.setTypeface(Typeface.create("serif", Typeface.BOLD));
-        place(intro, header, 0, 5);
-        TextView subtitle = text(
-            "Retrouvez chaque partenaire et ses programmes. Disponibilités et tarifs à confirmer directement auprès des sources.",
-            12, false);
+        TextView label = heading("RÉSEAU FONCIER  ·  18 PARTENAIRES", 10, GOLD, true);
+        place(cards, label, 7, 2);
+        TextView headline = heading("Aménageurs & lotisseurs", 23, TEXT, true);
+        headline.setTypeface(Typeface.create("serif", Typeface.BOLD));
+        place(cards, headline, 0, 5);
+        TextView subtitle = text("Sites officiels · terrains et programmes disponibles à vérifier", 11, false);
         subtitle.setTextColor(MUTED);
-        place(intro, subtitle, 0, 1);
-        place(cards, intro, 0, 12);
+        place(cards, subtitle, 0, 9);
         try {
             JSONObject catalog = new JSONObject(readAsset("lotisseurs-37.json"));
             JSONArray developers = catalog.getJSONArray("developers");
-            int screen = getResources().getConfiguration().screenWidthDp;
-            int columns = screen >= 730 ? 3 : screen >= 470 ? 2 : 1;
+            int width = getResources().getConfiguration().screenWidthDp;
+            int columns = width >= 620 ? 3 : 2;
             LinearLayout currentRow = null;
             for (int i = 0; i < developers.length(); i++) {
                 if (i % columns == 0) {
@@ -920,43 +916,60 @@ public final class MainActivity extends Activity {
                 String site = developer.getString("url");
                 String domain = developer.optString("domain", "");
                 String notice = developer.optString("notice", "");
-                boolean catalogueAvailable = developer.optBoolean("catalogue", true);
-                LinearLayout tile = section(PANEL, 15, BORDER);
-                tile.setMinimumHeight(dp(columns == 1 ? 110 : 142));
-                LinearLayout.LayoutParams tileSize =
-                    new LinearLayout.LayoutParams(0, -2, 1f);
+                LinearLayout tile = new LinearLayout(this);
+                tile.setOrientation(LinearLayout.VERTICAL);
+                tile.setGravity(Gravity.CENTER_HORIZONTAL);
+                tile.setPadding(dp(8), dp(10), dp(8), dp(7));
+                tile.setBackground(rounded(LIGHT, 15, GOLD_SOFT));
+                tile.setElevation(dp(1));
+                // Hauteur FIXE : les 18 cases restent parfaitement alignées.
+                LinearLayout.LayoutParams tileSize = new LinearLayout.LayoutParams(
+                    0, dp(174), 1f);
                 tileSize.setMargins(dp(3), 0, dp(3), 0);
                 currentRow.addView(tile, tileSize);
-                TextView index = heading(String.format(Locale.FRANCE,
-                    "N° %02d   /   %s", i + 1,
-                    catalogueAvailable ? "TERRAINS & PROGRAMMES" : "SITE OFFICIEL"),
-                    9, GOLD, true);
-                place(tile, index, 0, 7);
-                TextView nameView = heading(name, columns >= 3 ? 14 : 16, TEXT, true);
-                place(tile, nameView, 0, 5);
-                TextView host = heading(domain, 11, MUTED, false);
-                place(tile, host, 0, 7);
-                if (!notice.isEmpty()) {
-                    TextView warning = text(notice, 10, false);
-                    warning.setTextColor(MUTED);
-                    place(tile, warning, 0, 5);
-                }
-                TextView openText = heading("DÉCOUVRIR LES OFFRES   ↗", 10, GOLD, true);
-                place(tile, openText, 3, 0);
-                tile.setContentDescription("Voir les terrains de " + name);
+
+                ImageView brand = new ImageView(this);
+                brand.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                brand.setContentDescription("Logo du site " + name);
+                LinearLayout.LayoutParams iconSize = new LinearLayout.LayoutParams(dp(48), dp(48));
+                iconSize.setMargins(0, 0, 0, dp(5));
+                tile.addView(brand, iconSize);
+                PhotoLoader.show(brand, officialIcon(domain));
+                
+                TextView nameLabel = heading(name, 13, TEXT, true);
+                nameLabel.setGravity(Gravity.CENTER);
+                nameLabel.setMaxLines(2);
+                nameLabel.setMinLines(2);
+                nameLabel.setEllipsize(TextUtils.TruncateAt.END);
+                tile.addView(nameLabel, new LinearLayout.LayoutParams(-1, dp(39)));
+
+                TextView domainLabel = heading(domain, 10, MUTED, false);
+                domainLabel.setGravity(Gravity.CENTER);
+                domainLabel.setSingleLine(true);
+                domainLabel.setEllipsize(TextUtils.TruncateAt.END);
+                tile.addView(domainLabel, new LinearLayout.LayoutParams(-1, dp(20)));
+
+                TextView go = heading(notice.isEmpty() ? "VOIR LES TERRAINS  ↗" :
+                    "VOIR LES OFFRES  ↗", 9, GOLD, true);
+                go.setGravity(Gravity.CENTER);
+                go.setSingleLine(true);
+                go.setEllipsize(TextUtils.TruncateAt.END);
+                tile.addView(go, new LinearLayout.LayoutParams(-1, dp(24)));
+                tile.setContentDescription(name + " - " + domain + ". Ouvrir les offres sur le site officiel.");
                 tile.setOnClickListener(v -> {
                     try {
                         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(site)));
-                    } catch (Exception e) {
-                        status.setText("Ouverture impossible : " + name);
+                        if (!notice.isEmpty())
+                            status.setText(name + " : " + notice);
+                    } catch (Exception error) {
+                        status.setText("Site inaccessible : " + name);
                     }
                 });
-                tile.setBackground(rounded(PANEL, 15, GOLD_SOFT));
             }
-            status.setText("18 lotisseurs en accès direct · liens officiels. Vérifiez les offres sur chaque site.");
+            status.setText("18 lotisseurs dans des cartes identiques. Logos chargés depuis les sites ; offres à confirmer.");
         } catch (Exception error) {
-            status.setText("Catalogue des lotisseurs illisible : " + error.getMessage());
-            cards.addView(text("Catalogue indisponible. Réessaye après mise à jour.", 13, false));
+            status.setText("Impossible de lire les 18 lotisseurs : " + error.getMessage());
+            cards.addView(text("Le catalogue est indisponible.", 12, false));
         }
     }
 
