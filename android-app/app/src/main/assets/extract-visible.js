@@ -19,7 +19,7 @@
   const requestedNormalized = normalized(requested);
   const land = /\b(?:terrain(?:s)?|parcelle(?:s)?|lot(?:s)?\s+(?:a|à)\s+(?:batir|bâtir)|lotissement|foncier)\b/i;
   const unrelated = /\b(?:appartement(?:s)?|local commercial|bureaux à vendre|parking|garage à vendre)\b/i;
-  const houseTitle = /\b(?:maison(?:s)?|appartement(?:s)?|villa|villas|pavillon(?:s)?|immeuble(?:s)?|studio|longère)\b/i;
+  const houseTitle = /^(?:(?:vente|a vendre|à vendre)\s+)?(?:maison(?:s)?|appartement(?:s)?|villa|villas|pavillon(?:s)?|immeuble(?:s)?|studio|longère)\b/i;
   const listingLink = /\/(?:annonce|annonces|ad|vente|ventes_immobilieres|immobilier|terrain|terrains|achat)[/-]/i;
   const records = [];
   const seen = new Set();
