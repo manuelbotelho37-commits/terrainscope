@@ -20,6 +20,10 @@ public final class SearchUrlsSmokeTest {
         postals.put("notre dame d oe", "37390");
         postals.put("tours", "37000");
         postals.put("azay le rideau", "37190");
+        postals.put("chinon","37500");
+        postals.put("monts","37260");
+        postals.put("veigne","37250");
+        postals.put("montlouis sur loire","37270");
         Map<String, String> seloger = new HashMap<>();
         seloger.put("monnaie", "monnaie-37380/ad08fr14679");
         SearchUrls search = new SearchUrls(postals, seloger);
@@ -44,7 +48,16 @@ public final class SearchUrlsSmokeTest {
             "https://www.iadfrance.fr/annonces/monnaie-37380/vente/terrain"),
             "IAD terrain par commune");
         verify(search.urlFor("Notaires", "Monnaie") == null,
-            "Notaires sans URL contrôlée : ne pas montrer 35000 annonces");
+            "Notaires Monnaie non confirmé : jamais la page des 35 000 annonces");
+        verify(search.urlFor("Notaires", "Chinon").endsWith("/vente/terrain/chinon-37"),
+            "Chinon : vrais terrains notarials vérifiés");
+        verify(search.urlFor("Notaires", "Monts").endsWith("/vente/terrain/monts-37"),
+            "Monts : vrais terrains notarials vérifiés");
+        verify(search.urlFor("Notaires", "Veigné").endsWith("/vente/terrain/veigne-37"),
+            "Veigné : lien exact terrain notaire");
+        verify(search.urlFor("Notaires", "Montlouis-sur-Loire")
+            .endsWith("/vente/terrain/montlouis-sur-loire-37"),
+            "Montlouis : type terrain et localité correcte");
         verify(search.urlFor("Le Bon Coin", "Commune inventée") == null,
             "Commune absente : ne pas ouvrir une recherche nationale");
         verify(search.urlFor("Le Bon Coin", "") == null, "Commune vide non acceptée");
@@ -65,8 +78,11 @@ public final class SearchUrlsSmokeTest {
                     "Terrain + code postal exact " + city + " " + postal);
                 verify(source.urlFor("Bien’ici", city).endsWith("/terrain"),
                     "Bien’ici type Terrain " + city);
-                verify(source.urlFor("Notaires", city) == null,
-                    "Jamais de page générale notaires " + city);
+                String notary = source.urlFor("Notaires", city);
+                verify(notary == null ||
+                    (notary.startsWith("https://www.immobilier.notaires.fr/fr/annonces-immobilieres/vente/terrain/")
+                     && notary.endsWith("-37")),
+                    "Jamais de recherche notaire nationale " + city);
             }
         }
         System.out.println("TerrainScope: " + count + " vérifications des recherches strictes réussies.");
