@@ -36,8 +36,16 @@ public final class SearchUrls {
             case "IAD":
                 return "https://www.iadfrance.fr/annonces/" + slug + "-" + code + "/vente/terrain";
             case "Notaires":
-                // N'inventer aucun lien filtré pour ce portail.
-                return null;
+                // URLs précises du portail notarial vérifiées pour ces villes.
+                // Pour les autres communes, éviter la page nationale (35 000+ biens).
+                switch (key) {
+                    case "monts": return "https://www.immobilier.notaires.fr/fr/annonces-immobilieres/vente/terrain/monts-37";
+                    case "chinon": return "https://www.immobilier.notaires.fr/fr/annonces-immobilieres/vente/terrain/chinon-37";
+                    case "veigne": return "https://www.immobilier.notaires.fr/fr/annonces-immobilieres/vente/terrain/veigne-37";
+                    case "montlouis sur loire":
+                        return "https://www.immobilier.notaires.fr/fr/annonces-immobilieres/vente/terrain/montlouis-sur-loire-37";
+                    default: return null;
+                }
             default:
                 return null;
         }
