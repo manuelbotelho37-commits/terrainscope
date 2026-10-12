@@ -238,7 +238,20 @@
     const area = valueFrom(card, '[data-testid*="area"], [class*="surface"], [class*="area"]');
     const address = valueFrom(card, '[data-testid*="address"], [class*="address"]');
     const lot = (text.match(/\blot\s*(?:n[°o.]?\s*)?([A-Z]?\d{1,4})\b/i) || [])[1] || "";
-    const picture = card.querySelector("img");
+    // Les cartes contiennent souvent le logo de l'agence ET la photo du
+    // terrain. Donner la priorité à la photographie, jamais au premier logo.
+    const pictures = [...card.querySelectorAll("img")];
+    const meaningful = pictures.filter(img => {
+      const alt = normalized(img.getAttribute?.("alt") || "");
+      const src = img.getAttribute?.("src") || img.currentSrc || "";
+      return !/logo|avatar|icone|icon|portrait|badge|agence|brand/.test(alt) &&
+             !/logo|avatar|placeholder|icon|badge/i.test(src) &&
+             !(img.naturalWidth > 0 && img.naturalWidth < 160);
+    });
+    const picture = meaningful.find(img =>
+      (img.naturalWidth || 0) >= 400 ||
+      /terrain|photo|bien immobilier|annonce/.test(normalized(img.getAttribute?.("alt") || ""))
+    ) || meaningful[0] || null;
     const lazySource = picture?.getAttribute?.("data-src") ||
       picture?.getAttribute?.("data-original") ||
       picture?.getAttribute?.("data-lazy-src") ||
