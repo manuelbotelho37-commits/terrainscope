@@ -48,15 +48,18 @@
     const explicitLocation = normalized(item.location || "");
     const full = " " + normalized(raw) + " ";
     const name = " " + normalized(title) + " ";
+    const explicitMatches = !explicitLocation ||
+      (" " + explicitLocation + " ").includes(" " + requestedNormalized + " ");
     const cityInCard = requestedNormalized && (
       explicitLocation
-        ? (" " + explicitLocation + " ").includes(" " + requestedNormalized + " ")
+        ? explicitMatches
         : (requestedPostal && full.includes(" " + requestedNormalized + " " + requestedPostal + " ")) ||
           name.includes(" " + requestedNormalized + " ")
     );
     const current = {
       source, url, title, description: details.slice(0, 1500),
       city: requested, cityConfirmed: !!cityInCard,
+      locationConflict: !!(explicitLocation && !explicitMatches),
       seller: clean(item.seller), address: clean(item.address), lot: clean(item.lot),
       priceEuros: Number(normalizedPrice) || 0,
       areaM2: Number(normalizedArea) || 0
@@ -70,7 +73,14 @@
       }
       if (!earlier.priceEuros && current.priceEuros) earlier.priceEuros = current.priceEuros;
       if (!earlier.areaM2 && current.areaM2) earlier.areaM2 = current.areaM2;
-      if (current.cityConfirmed) earlier.cityConfirmed = true;
+      // Une adresse structurée sur une autre commune ne doit jamais être
+      // écrasée par une mention promotionnelle de la commune demandée.
+      if (current.locationConflict) {
+        earlier.locationConflict = true;
+        earlier.cityConfirmed = false;
+      } else if (current.cityConfirmed && !earlier.locationConflict) {
+        earlier.cityConfirmed = true;
+      }
     } else {
       seen.set(key, records.length);
       records.push(current);
