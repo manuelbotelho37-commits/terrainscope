@@ -78,6 +78,15 @@ public final class MainActivity extends Activity {
     private String batchSignature = "";
     private final ArrayList<String> activeCities = new ArrayList<>();
     private int cityPosition = 0;
+    private final Handler scanHandler = new Handler(Looper.getMainLooper());
+    private final ArrayList<String[]> scanTasks = new ArrayList<>();
+    private final LinkedHashSet<String> scanPageUrls = new LinkedHashSet<>();
+    private int scanGeneration = 0;
+    private int scanTaskIndex = 0;
+    private int scanPageNumber = 0;
+    private int scanLimited = 0;
+    private int scanBlocked = 0;
+    private boolean scanning = false;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -86,7 +95,7 @@ public final class MainActivity extends Activity {
         buildScreen();
         chooseTab(filteredTab);
         displayListings(true);
-        status.setText("Choisis une commune, ouvre un site puis importe sa page. Aucune annonce fictive.");
+        status.setText("Entrez vos communes et lancez une recherche multi-sites.");
     }
 
 
@@ -323,7 +332,14 @@ public final class MainActivity extends Activity {
             }
             @Override public void onPageFinished(WebView view, String url) {
                 pageLoading = false;
-                if (webError) return;
+                if (webError) {
+                    if (scanning) scanPageLoaded();
+                    return;
+                }
+                if (scanning) {
+                    scanPageLoaded();
+                    return;
+                }
                 if (showingBrowser && activeCity.length() > 0)
                     status.setText("Site chargé pour " + activeCity +
                         ". Vérifie la catégorie Terrain et la commune avant d'importer.");
@@ -385,6 +401,148 @@ public final class MainActivity extends Activity {
         activeCity = cities.get(0);
         batchSignature = raw;
         return true;
+    }
+
+    /** Recherche tous les portails compatibles sans clic d'import.
+     * Aucun contournement d'anti-robot : un site bloqué est signalé.
+     * Les pages supplémentaires sont parcourues dans une limite contrôlée.
+     */
+    private void startAutomatedSearch() {
+        stopScan();
+        batchSignature = "";
+        if (!prepareBatch()) return;
+        scanTasks.clear();
+        scanPageUrls.clear();
+        scanTaskIndex = 0;
+        scanPageNumber = 0;
+        scanLimited = 0;
+        scanBlocked = 0;
+        SearchUrls urls = new SearchUrls(postalCodes, selogerPaths);
+        for (String city : activeCities) {
+            for (String site : SITES) {
+                String url = urls.urlFor(site, city);
+                if (url != null) scanTasks.add(new String[]{site, city, url});
+                else sourcesVisited.add(site + " · " + city + " (non vérifiable)");
+            }
+        }
+        chooseTab(filteredTab);
+        displayListings(true);
+        if (scanTasks.isEmpty()) {
+            status.setText("Aucune source avec URL précise disponible. Rien n'a été présenté comme zéro terrain.");
+            return;
+        }
+        scanning = true;
+        int run = scanGeneration;
+        status.setText("Recherche automatique : 0/" + scanTasks.size() +
+            " portails. Les résultats arrivent au fil de la consultation.");
+        startNextScanTask(run);
+    }
+
+    private void stopScan() {
+        scanning = false;
+        scanGeneration++;
+        scanHandler.removeCallbacksAndMessages(null);
+    }
+
+    private void startNextScanTask(int run) {
+        if (!scanning || run != scanGeneration) return;
+        if (scanTaskIndex >= scanTasks.size()) {
+            scanning = false;
+            boolean found = !ListingEngine.filtered(ListingEngine.classify(
+                new ArrayList<>(imported.values()))).isEmpty();
+            chooseTab(found ? filteredTab : allTab);
+            displayListings(found);
+            status.setText("Recherche terminée : " + imported.size() + " annonces récupérées sur " +
+                scanTasks.size() + " recherches ciblées ; " + scanBlocked +
+                " source(s) en échec, " + scanLimited +
+                " parcours limité(s). Les sites peuvent afficher d'autres annonces.");
+            return;
+        }
+        String[] task = scanTasks.get(scanTaskIndex);
+        activeCity = task[1];
+        scanPageNumber = 1;
+        scanPageUrls.clear();
+        sourcesOpened.add(task[0] + " · " + task[1]);
+        scanPageUrls.add(task[2]);
+        status.setText("Recherche " + (scanTaskIndex+1) + "/" + scanTasks.size() +
+            " · " + task[0] + " · " + task[1] + " · " + imported.size() + " annonces reçues");
+        pageLoading = true;
+        webError = false;
+        browser.loadUrl(task[2]);
+    }
+
+    private void scanPageLoaded() {
+        final int run = scanGeneration;
+        final int taskIndex = scanTaskIndex;
+        scanHandler.postDelayed(() -> {
+            if (!scanning || run != scanGeneration || taskIndex != scanTaskIndex) return;
+            if (webError) {
+                scanBlocked++;
+                scanTaskIndex++;
+                startNextScanTask(run);
+                return;
+            }
+            // Amorcer le chargement paresseux des cartes avant de lire le DOM.
+            browser.evaluateJavascript(
+                "(function(){window.scrollTo(0, document.body.scrollHeight);return true})()",
+                ignored -> scanHandler.postDelayed(() -> collectScanPage(run, taskIndex), 850));
+        }, 1200);
+    }
+
+    private void collectScanPage(int run, int taskIndex) {
+        if (!scanning || run != scanGeneration || taskIndex != scanTaskIndex) return;
+        if (webError || browser.getProgress() < 90) {
+            scanBlocked++;
+            scanTaskIndex++;
+            startNextScanTask(run);
+            return;
+        }
+        String host = Uri.parse(browser.getUrl() == null ? "" : browser.getUrl()).getHost();
+        if (host == null || !approvedHost(host.toLowerCase(Locale.ROOT))) {
+            scanBlocked++;
+            scanTaskIndex++;
+            startNextScanTask(run);
+            return;
+        }
+        try {
+            String payload = "window.__terrainScopeRequestedCity=" + JSONObject.quote(activeCity) + ";\n" +
+                "window.__terrainScopeRequestedPostal=" +
+                JSONObject.quote(postalCodes.getOrDefault(ListingEngine.normalize(activeCity), "")) + ";\n" +
+                "window.__terrainScopeKnownCities=" + new JSONArray(communeNames).toString() +
+                ";\n" + readAsset("extract-visible.js");
+            browser.evaluateJavascript(payload, reply -> {
+                if (!scanning || run != scanGeneration || taskIndex != scanTaskIndex) return;
+                String nextUrl = "";
+                try {
+                    Object decoded = new JSONTokener(reply).nextValue();
+                    JSONObject json = new JSONObject((String) decoded);
+                    if (json.optBoolean("accessBlocked")) scanBlocked++;
+                    else {
+                        receiveImport(reply, host.toLowerCase(Locale.ROOT), true);
+                        nextUrl = json.optString("nextPageUrl", "");
+                    }
+                } catch (Exception failed) {
+                    scanBlocked++;
+                }
+                String currentHost = Uri.parse(browser.getUrl() == null ? "" : browser.getUrl()).getHost();
+                Uri next = Uri.parse(nextUrl);
+                boolean sameHost = currentHost != null && currentHost.equalsIgnoreCase(next.getHost());
+                if (sameHost && scanPageNumber < 4 && !scanPageUrls.contains(nextUrl)) {
+                    scanPageUrls.add(nextUrl);
+                    scanPageNumber++;
+                    pageLoading = true;
+                    browser.loadUrl(nextUrl);
+                    return;
+                }
+                if (sameHost && scanPageNumber >= 4) scanLimited++;
+                scanTaskIndex++;
+                startNextScanTask(run);
+            });
+        } catch (Exception e) {
+            scanBlocked++;
+            scanTaskIndex++;
+            startNextScanTask(run);
+        }
     }
 
     private void openSelectedSite() {
@@ -691,6 +849,7 @@ public final class MainActivity extends Activity {
     }
 
     private void reset() {
+        stopScan();
         imported.clear();
         sourcesVisited.clear();
         sourcesOpened.clear();
@@ -806,6 +965,7 @@ public final class MainActivity extends Activity {
         else super.onBackPressed();
     }
     @Override protected void onDestroy() {
+        stopScan();
         browser.destroy();
         super.onDestroy();
     }
