@@ -2,10 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
     <application
-        android:label="TerrainScope"
+        android:label="TerraNova"
+        android:icon="@drawable/terranova_logo"
+        android:roundIcon="@drawable/terranova_logo"
         android:allowBackup="false"
         android:usesCleartextTraffic="false"
-        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        android:theme="@android:style/Theme.Material.NoActionBar">
         <activity android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
