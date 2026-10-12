@@ -49,4 +49,16 @@ assert.ok(!main.includes("results = new ScrollView(this)"),
   "Interdire le défilement imbriqué qui bloque les lotisseurs");
 assert.ok(!main.includes("new LinearLayout.LayoutParams(-1, 0, 1f)"),
   "Interdire les zones de résultats de hauteur nulle sur Fold déplié");
+assert.equal((main.match(/private void refreshSourcePills\(\)/g)||[]).length, 1,
+  "Une seule méthode gère les cinq pastilles.");
+assert.equal((main.match(/place\(search, sourceScroll, 0, 9\)/g)||[]).length, 1,
+  "Une seule ligne de cinq pastilles sur l'accueil.");
+assert.equal((main.match(/sourcePills = new LinkedHashMap/g)||[]).length, 1,
+  "Une seule collection de pastilles, sans conflit de type.");
+contains("PhotoLoader.show(image, item.imageUrl)",
+  "Carte de terrain enrichie avec la vraie photo.");
+contains('image.setScaleType(ImageView.ScaleType.CENTER_CROP)',
+  "Photographie recadrée au format des fiches luxe.");
+contains("scanTasks.get(scanTaskIndex)[0].equals(entry.getKey())",
+  "Pastille active pendant la recherche multi-sites.");
 console.log("TerraNova luxe : 22 contrôles UI, dont défilement Fold 8, valides.");
