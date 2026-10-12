@@ -808,7 +808,9 @@
       'primea.fr','maisons-stephanie.fr','mikit.fr','natilia.fr',
       'maisons-tradibudget.com','villadeale.fr','maisons-cpr.com'
     ];
-    const BUILDER_WORDS=/\b(?:constructeur(?:s)?\s+(?:de\s+)?maison|constructeur\s+de\s+maisons|constructeur\s+de\s+maisons\s+individuelles|maison\s*(?:\+|et|avec|sur)\s*(?:son\s+)?terrain|terrain\s*(?:\+|et|avec)\s*(?:une\s+)?maison|maison\s+(?:neuve|\u00e0\s+construire)|projet\s+de\s+construction|construction\s+de\s+(?:votre|ma|une)\s+maison|offre\s+maison\s+terrain|maisons\s+(?:pierre|ericlor|concept|france confort|st\u00e9phanie|cpr)|maisons\s+individuelles|mod\u00e8le\s+de\s+maison|terrain\s+avec\s+projet\s+de\s+maison|maisons\s+primea|prim\u00e9a|villad\u00e9ale|mikit|natilia)\b/i;
+    // Ne pas confondre une agence qui écrit « projet de construction »
+    // avec un constructeur. Cibler les marques et offres maison + terrain.
+    const BUILDER_WORDS=/\b(?:constructeur\s+de\s+maisons?\s+individuelles|terrain\s+propos[eé]\s+par\s+un\s+partenaire\s+foncier|terrain\s+s[eé]lectionn[eé]\s+par\s+le\s+constructeur|contrat\s+de\s+construction\s+de\s+maison\s+individuelle|offre\s+maison\s*(?:\+|et)\s*terrain|maison\s*(?:\+|et)\s*terrain|terrain\s*(?:\+|et)\s*maison|mikit|ericlor|natilia|villad[eé]ale|tradibudget|prim[eé]a)\b/i;
     const MIXED_PORTAL_DOMAINS=['nos-terrains.com','terrain-construction.com'];
     // Classement affiché au client, indépendant du classement Google.
     const PRIORITY_DOMAINS=['leboncoin.fr','seloger.com','bienici.com','iadfrance.fr',
