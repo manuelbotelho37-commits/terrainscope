@@ -245,6 +245,22 @@ check(correctPrice.listings.length===1 && correctPrice.listings[0].priceEuros===
   "Prix total 65 900 € distinct du prix 213 €/m²");
 check(correctPrice.listings[0].areaM2===310,"Surface 310 m² correctement calculée");
 
+const categoryLink = extract("www.bienici.com","Monnaie",[{
+  name:"Terrain constructible à Monnaie, voir toutes nos annonces",
+  description:"Terrains à bâtir disponibles à Monnaie",
+  url:"https://www.bienici.com/recherche/achat/monnaie-37380/terrain",
+  offers:{price:"90000"}
+}]);
+check(categoryLink.retrieved===0,"Ne jamais prendre un lien de recherche pour une annonce");
+
+const searchPageAsJSON = extract("www.seloger.com","Monnaie",[{
+  name:"Terrain constructible Monnaie",
+  description:"Résultats",
+  url:"https://www.seloger.com/recherche/achat/terrain/centre-val-de-loire/monnaie-37380/ad08fr14679",
+  offers:{price:"90000"}
+}]);
+check(searchPageAsJSON.retrieved===0,"Le titre d'une page de recherche ne constitue pas une fiche terrain");
+
 const empty = extract("www.leboncoin.fr", "Monnaie");
 check(empty.retrieved === 0, "page vide lisible, distincte du stock réel");
 console.log("TerrainScope: " + checks + " vérifications de lecture des fiches réussies.");
