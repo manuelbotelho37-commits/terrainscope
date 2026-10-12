@@ -149,7 +149,6 @@
     if(node.dataset.locationStatus==='nearby')return null;
     const price=getPrice(title+' '+description);
     const area=getArea(title+' '+description);
-    if(price===null&&area===null)return null;
     return {url,title,description,city,price,area,source:sourceName(url),
       rank:rank(url),otherLinks:[]};
   }
@@ -184,8 +183,11 @@
     if(!out||!summary||!pages)return;
     // Afficher uniquement les pistes issues du portail sélectionné.
     // Ces fiches viennent de l'index Google, PAS du catalogue complet du portail.
+    // Une parcelle présente sur plusieurs portails reste accessible via chaque filtre.
+    const includesSource=(item,source)=>!source||item.source===source||
+      item.otherLinks.some(link=>link.source===source);
     const unique=state.sourceFilter
-      ?state.unique.filter(item=>item.source===state.sourceFilter)
+      ?state.unique.filter(item=>includesSource(item,state.sourceFilter))
       :state.unique;
     const number=unique.length;
     const pagesCount=Math.max(1,Math.ceil(number/PAGE_SIZE));
@@ -193,8 +195,8 @@
     const status=state.active?'Recherche en cours · '+(SOURCES[state.stage]?.name||'autres sources'):
       'Recherche Google terminée';
     const scope=state.sourceFilter?' · Source : '+state.sourceFilter:' · Toutes sources';
-    summary.textContent=number+' piste(s) de terrain trouvée(s) dans l’index Google'+scope+
-      ' · '+status+' · Disponibilité NON vérifiée, recherche non exhaustive';
+    summary.textContent=number+' fiche(s) repérée(s) dans l’index Google'+scope+
+      ' · '+status+' · Le site peut présenter davantage d’annonces';
     const chooser=get('googleSourceFilters');
     if(chooser)for(const btn of chooser.querySelectorAll('button[data-filter-source]')){
       const selected=btn.dataset.filterSource===state.sourceFilter;
@@ -206,7 +208,7 @@
       const p=document.createElement('p');p.className='unique-empty';
       p.textContent=state.active?'Recherche de terrains en cours sur les sites…':
         state.sourceFilter
-          ?'Aucune annonce individuelle exploitable repérée sur '+state.sourceFilter+' pour cette recherche. Cela ne signifie pas qu’aucun terrain n’y est publié : consulte au besoin son catalogue complet non filtré.'
+          ?'Aucune fiche individuelle repérée dans Google pour '+state.sourceFilter+'. Ce n’est PAS le nombre de terrains à vendre sur le site : ouvre le catalogue complet pour vérifier les annonces d’agences et de lotisseurs.'
           :'Aucune annonce individuelle exploitable repérée dans l’index Google pour cette recherche. Consulte au besoin les accès directs non filtrés.';
       out.append(p);pages.hidden=true;return;
     }
@@ -215,7 +217,10 @@
       const card=document.createElement('article');card.className='unique-card';
       const header=document.createElement('div');header.className='unique-card-header';
       const source=document.createElement('strong');source.className='unique-source';
-      source.textContent=item.source;
+      const preferred=state.sourceFilter&&item.source!==state.sourceFilter
+        ?item.otherLinks.find(link=>link.source===state.sourceFilter)
+        :null;
+      source.textContent=preferred?state.sourceFilter:item.source;
       const price=document.createElement('strong');price.className='unique-price';
       price.textContent=item.price?money(item.price):'Prix à consulter';
       header.append(source,price);
@@ -226,10 +231,12 @@
       const freshness=document.createElement('p');freshness.className='unique-freshness';
       freshness.textContent='Lien issu de Google · annonce peut être désactivée · disponibilité à vérifier';
       const actions=document.createElement('div');actions.className='unique-actions';
-      actions.append(cardLink(item.url,'Vérifier cette annonce ↗','unique-open'));
-      if(item.otherLinks.length){
+      actions.append(cardLink(preferred?.url||item.url,'Vérifier cette annonce ↗','unique-open'));
+      const also=[item.source,...item.otherLinks.map(x=>x.source)]
+        .filter(name=>name!==(preferred?state.sourceFilter:item.source));
+      if(also.length){
         const count=document.createElement('span');count.className='unique-shared';
-        count.textContent='Aussi publié sur '+[...new Set(item.otherLinks.map(x=>x.source))].join(', ');
+        count.textContent='Aussi publié sur '+[...new Set(also)].join(', ');
         actions.append(count);
       }
       card.append(header,title,details,freshness,actions);
@@ -277,7 +284,10 @@
       finish();return;
     }
     const item=SOURCES[state.stage],cities=lastSearch?.cities||[];
-    const q=query(cities)+(item.domain?' site:'+item.domain:'');
+    // Mieux cibler les fiches Bien’ici, sans prétendre couvrir leur catalogue.
+    const q=query(cities)+(item.domain
+      ?' site:'+(item.domain==='bienici.com'?'bienici.com/annonce/vente/':item.domain)
+      :'');
     state.started=true;
     state.stageTimer=setTimeout(()=>nextStage(),MAX_STAGE_MS);
     get('uniquePanel').hidden=false;
