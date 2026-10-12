@@ -29,7 +29,7 @@
     const title = clean(item.title), url = absolute(item.url), details = clean(item.description);
     if (!url || !/^https?:/.test(url) || !title) return;
     if (!land.test(title + " " + details) || unrelated.test(title)) return;
-    const key = url.split("?")[0].replace(/\/$/, "");
+    const key = url.split("#")[0].replace(/\/$/, "");
     if (seen.has(key)) return;
     seen.add(key);
     const raw = title + " " + details;
