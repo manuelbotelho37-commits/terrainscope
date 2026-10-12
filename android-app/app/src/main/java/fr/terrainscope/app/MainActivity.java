@@ -339,7 +339,9 @@ public final class MainActivity extends Activity {
             String script = readAsset("extract-visible.js");
             // Pas de JavascriptInterface exposée aux sites tiers : seule la WebView
             // renvoie le JSON à l’application après cet appui explicite.
-            String payload = "window.__terrainScopeRequestedCity=" + JSONObject.quote(city) + ";\n" + script;
+            String payload = "window.__terrainScopeRequestedCity=" + JSONObject.quote(city) + ";\n" +
+                "window.__terrainScopeRequestedPostal=" +
+                JSONObject.quote(postalCodes.getOrDefault(ListingEngine.normalize(city), "")) + ";\n" + script;
             status.setText("Lecture des annonces de la page actuellement affichée…");
             browser.evaluateJavascript(payload, reply -> receiveImport(reply, host));
         } catch (Exception error) {
