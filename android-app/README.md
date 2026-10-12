@@ -13,21 +13,28 @@ illustratives ; l'application n'enregistre ni n'affiche de faux résultats.
 (GitHub Pages, branche main) reste inchangé. En particulier, la rubrique
 **Lotisseurs · programmes et terrains** reste disponible avec ses 18 organismes.
 
-## Objectif fonctionnel
+## Objectif fonctionnel (TerraNova 0.4.0)
 
-1. Saisir une commune d'Indre-et-Loire (272 communes avec codes postaux embarqués).
-2. Ouvrir Le Bon Coin, SeLoger, Bien'ici, iad ou les notaires dans le navigateur intégré.
-3. Attendre la liste de résultats, puis toucher **Importer la page**. Les fiches
-   accessibles dans le DOM/JSON-LD de cette page sont **copiées en mémoire de
-   l'application**, sans serveur ni stockage permanent.
-4. Passer éventuellement à la page suivante / faire défiler et réimporter.
-5. Répéter sur les autres portails. Le moteur recalcule alors les exclusions
-   de constructeurs et la suppression des doublons.
-6. **Annonces triées** : terrains de particuliers, agences, notaires ou
-   lotisseurs, sans constructeur connu et sans doublon retenu ailleurs.
-7. **Toutes les annonces** : audit complet des annonces réellement récupérées,
-   y compris constructeurs et doublons, avec la raison du classement.
-8. **Lotisseurs** : ouvre la version web existante, sans modifier son module.
+1. Saisir une ou plusieurs communes du 37, séparées par des virgules.
+2. Appuyer **une seule fois** sur **Rechercher les terrains**.
+3. TerraNova ouvre successivement, en arrière-plan, les recherches de
+   Le Bon Coin, SeLoger, Bien'ici, iad et notaires **lorsqu'une URL locale
+   vérifiée existe**, puis lit les annonces HTML/JSON-LD accessibles.
+4. Les liens « page suivante » disponibles peuvent être suivis automatiquement
+   (maximum 4 pages par couple commune/site). Le chargement d'une page
+   est limité à 18 secondes pour ne pas bloquer la recherche entière.
+5. **Annonces triées** : terrains issus des pages récupérées, avec les
+   constructeurs exclus, doublons prouvés regroupés et incertitudes signalées.
+6. **Toutes les annonces** : l'ensemble des fiches effectivement lues,
+   y compris les exclusions et leur motif.
+7. **18 lotisseurs** : catalogue embarqué directement dans TerraNova sous
+   forme de tuiles bleu nuit et or ; accès vers leurs sites officiels.
+
+**Limite majeure :** ce système n'a pas d'accès API universel aux portails.
+Le moteur ne garantit pas de lire toutes les annonces, ni celles chargées
+derrière une authentification, un CAPTCHA ou un parcours de plus de quatre
+pages. Ce n'est pas un moyen de contourner leurs restrictions. Un portail
+indisponible n'est **jamais** comptabilisé comme « zéro terrain ».
 
 ## Règle de doublons
 
@@ -56,9 +63,8 @@ reste visible avec une indication « à vérifier », et non supprimée à tort.
 ## Contraintes importantes
 
 - Aucun service externe de scraping, crédit, abonnement ou clé payante.
-- Cette version expérimentale **n'importe PAS automatiquement l'intégralité
-  des annonces de chaque portail**. Elle lit seulement les annonces présentes
-  dans la page ouverte dans la WebView. Les sites peuvent masquer les données,
+- La collecte est désormais lancée automatiquement par une seule recherche,
+  mais elle ne lit que les annonces accessibles dans chaque page WebView ; Les sites peuvent masquer les données,
   bloquer la WebView, imposer un CAPTCHA, une connexion ou modifier leur HTML.
 - Les URL de recherche par commune sont générées lorsque leurs structures
   sont connues. Pour SeLoger hors des communes disposant d'un identifiant exact
