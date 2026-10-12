@@ -796,7 +796,8 @@ public final class MainActivity extends Activity {
                     item.optString("city", cleanCity()), item.optString("seller", ""),
                     item.optString("description", ""), item.optString("address", ""),
                     item.optString("lot", ""), item.optLong("priceEuros", 0),
-                    item.optDouble("areaM2", 0), item.optBoolean("cityConfirmed", false));
+                    item.optDouble("areaM2", 0), item.optBoolean("cityConfirmed", false),
+                    item.optString("imageUrl", ""));
                 String key = url.replaceFirst("#.*$", "").replaceFirst("/$", "");
                 if (listing.title.isEmpty()) continue;
                 ListingEngine.Listing previous = imported.get(key);
@@ -818,7 +819,8 @@ public final class MainActivity extends Activity {
                         previous.lot.isEmpty() ? listing.lot : previous.lot,
                         previous.priceEuros > 0 ? previous.priceEuros : listing.priceEuros,
                         previous.areaM2 > 0 ? previous.areaM2 : listing.areaM2,
-                        listing.cityConfirmed
+                        previous.cityConfirmed || listing.cityConfirmed,
+                        previous.imageUrl.isEmpty() ? listing.imageUrl : previous.imageUrl
                     ));
                 }
             }
@@ -980,10 +982,24 @@ public final class MainActivity extends Activity {
             cards.addView(empty);
             return;
         }
-        for (ListingEngine.Result record : current) addCard(record);
+        // Sur l'écran intérieur déplié, les cartes sont présentées sur
+        // deux colonnes, comme un catalogue immobilier haut de gamme.
+        boolean landscapeWide = getResources().getConfiguration().screenWidthDp >= 680;
+        if (!landscapeWide) {
+            for (ListingEngine.Result record : current) addCard(record, cards, false);
+        } else {
+            LinearLayout row = null;
+            for (int i = 0; i < current.size(); i++) {
+                if (i % 2 == 0) {
+                    row = row();
+                    place(cards, row, 1, 7);
+                }
+                addCard(current.get(i), row, true);
+            }
+        }
     }
 
-    private void addCard(ListingEngine.Result record) {
+    private void addCard(ListingEngine.Result record, LinearLayout parent, boolean compact) {
         ListingEngine.Listing item = record.listing;
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
@@ -991,9 +1007,12 @@ public final class MainActivity extends Activity {
         panel.setBackground(rounded(PANEL, 17,
             record.state == ListingEngine.State.ACCEPTED ? GOLD_SOFT : BORDER));
         panel.setElevation(dp(3));
-        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(-1, -2);
-        layout.setMargins(0, dp(8), 0, dp(4));
-        cards.addView(panel, layout);
+        LinearLayout.LayoutParams layout = compact
+            ? new LinearLayout.LayoutParams(0, -2, 1f)
+            : new LinearLayout.LayoutParams(-1, -2);
+        layout.setMargins(dp(compact ? 3 : 0), dp(8),
+            dp(compact ? 3 : 0), dp(4));
+        parent.addView(panel, layout);
         String statusText = record.state == ListingEngine.State.BUILDER ? " · CONSTRUCTEUR" :
             record.state == ListingEngine.State.DUPLICATE ? " · DOUBLON" :
             record.state == ListingEngine.State.TO_VERIFY ? " · À VÉRIFIER" :
@@ -1001,6 +1020,18 @@ public final class MainActivity extends Activity {
         TextView origin = text(item.source + statusText, 12, true);
         origin.setTextColor(record.state == ListingEngine.State.BUILDER ? Color.rgb(235, 136, 130) : GOLD);
         panel.addView(origin);
+        if (!item.imageUrl.isEmpty()) {
+            ImageView image = new ImageView(this);
+            image.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            image.setBackground(rounded(SOFT, 13, BORDER));
+            image.setClipToOutline(true);
+            image.setContentDescription("Photographie de l'annonce " + item.title);
+            LinearLayout.LayoutParams frame = new LinearLayout.LayoutParams(
+                -1, dp(compact ? 158 : 198));
+            frame.setMargins(0, dp(8), 0, dp(8));
+            panel.addView(image, frame);
+            PhotoLoader.show(image, item.imageUrl);
+        }
         TextView itemTitle = heading(item.title, 16, TEXT, true);
         place(panel, itemTitle, 5, 3);
         String price = item.priceEuros > 0 ? String.format(Locale.FRANCE,"%,d €",item.priceEuros) : "Prix à vérifier";
