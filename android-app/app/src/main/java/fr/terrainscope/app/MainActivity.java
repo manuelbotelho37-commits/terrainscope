@@ -70,7 +70,6 @@ public final class MainActivity extends Activity {
     private ScrollView results;
     private TextView status;
     private boolean showingBrowser = true;
-    private boolean showLotisseursOnLoad = false;
     private boolean pageLoading = false;
     private boolean webError = false;
     private String activeCity = "";
@@ -263,16 +262,13 @@ public final class MainActivity extends Activity {
             displayListings(false);
         });
         addControl(tabbar, allTab, 1.15f);
-        lotisseursTab = action("Lotisseurs", false);
+        lotisseursTab = action("🏘 18 lotisseurs", false);
         lotisseursTab.setTextSize(11);
         lotisseursTab.setOnClickListener(v -> {
             chooseTab(lotisseursTab);
-            showLotisseursOnLoad = true;
-            browser.loadUrl(TERRAIN_SCOPE);
-            showBrowser();
-            status.setText("Ouverture du catalogue des 18 lotisseurs…");
+            displayDevelopers();
         });
-        addControl(tabbar, lotisseursTab, .8f);
+        addControl(tabbar, lotisseursTab, 1.12f);
         place(main, tabbar, 0, 7);
 
         status = heading("Prêt pour une recherche de terrains.", 12, TEXT, false);
@@ -320,16 +316,6 @@ public final class MainActivity extends Activity {
             @Override public void onPageFinished(WebView view, String url) {
                 pageLoading = false;
                 if (webError) return;
-                if (showLotisseursOnLoad && url.startsWith(TERRAIN_SCOPE)) {
-                    showLotisseursOnLoad = false;
-                    view.evaluateJavascript(
-                        "(function(){var b=document.getElementById('lotisseursTop');" +
-                        "var d=document.getElementById('developerAccordion');" +
-                        "if(b && d){if(!d.open)b.click();" +
-                        "b.scrollIntoView({block:'center'});return true;}return false;})()",
-                        ignored -> status.setText("Catalogue des lotisseurs ouvert dans TerrainScope."));
-                    return;
-                }
                 if (showingBrowser && activeCity.length() > 0)
                     status.setText("Site chargé pour " + activeCity +
                         ". Vérifie la catégorie Terrain et la commune avant d'importer.");
@@ -412,7 +398,6 @@ public final class MainActivity extends Activity {
         }
         activeCity = city;
         sourcesOpened.add(site + " · " + city);
-        showLotisseursOnLoad = false;
         pageLoading = true;
         webError = false;
         showBrowser();
@@ -574,6 +559,55 @@ public final class MainActivity extends Activity {
         } catch (Exception error) {
             status.setText("Cette page n’a pas pu être lue. Ce n’est PAS « zéro terrain disponible ». " +
                 "Cause : " + error.getMessage());
+        }
+    }
+
+    private void displayDevelopers() {
+        showResults();
+        cards.removeAllViews();
+        TextView title = heading("18 lotisseurs · programmes et terrains", 19, GOLD, true);
+        place(cards, title, 0, 8);
+        TextView intro = text(
+            "Catalogue accessible directement dans TerraNova, conservé depuis TerrainScope V58. " +
+            "Ouvre le site de chaque lotisseur pour vérifier ses programmes, ses prix et la disponibilité réelle des lots.",
+            12, false);
+        intro.setTextColor(MUTED);
+        place(cards, intro, 0, 8);
+        try {
+            JSONObject catalog = new JSONObject(readAsset("lotisseurs-37.json"));
+            JSONArray developers = catalog.getJSONArray("developers");
+            for (int i = 0; i < developers.length(); i++) {
+                JSONObject developer = developers.getJSONObject(i);
+                String name = developer.getString("name");
+                String site = developer.getString("url");
+                String domain = developer.optString("domain", "");
+                String notice = developer.optString("notice", "");
+                boolean catalogueAvailable = developer.optBoolean("catalogue", true);
+                LinearLayout card = section(LIGHT, 13, BORDER);
+                place(card, heading(name, 16, TEXT, true), 0, 3);
+                TextView website = heading(domain, 12, GOLD, false);
+                place(card, website, 0, 4);
+                if (!notice.isEmpty()) {
+                    TextView info = text(notice, 12, false);
+                    info.setTextColor(MUTED);
+                    place(card, info, 0, 5);
+                }
+                Button go = action(catalogueAvailable ?
+                    "Voir les terrains / programmes ↗" : "Voir le site officiel ↗", true);
+                go.setOnClickListener(v -> {
+                    try {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(site)));
+                    } catch (Exception error) {
+                        status.setText("Impossible d'ouvrir le site de " + name + ".");
+                    }
+                });
+                place(card, go, 4, 0);
+                place(cards, card, 0, 9);
+            }
+            status.setText("18 lotisseurs accessibles. Liens conservés de TerrainScope ; disponibilités à vérifier sur les sites officiels.");
+        } catch (Exception error) {
+            status.setText("Impossible de lire le catalogue embarqué des lotisseurs : " + error.getMessage());
+            cards.addView(text("Le catalogue n'a pas pu être chargé. Réessaie ou vérifie l'installation.", 13, false));
         }
     }
 
