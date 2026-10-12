@@ -3,6 +3,10 @@ name: Tester et construire TerraNova Android
 # Notifications par e-mail évitées : aucun test automatique à chaque commit.
 # Lancer le contrôle uniquement à la demande.
 on:
+  push:
+    branches: [android-capture-prototype]
+    paths:
+      - '.github/workflows/android-prototype.yml'
   workflow_dispatch:
 
 permissions:
@@ -33,6 +37,9 @@ jobs:
 
       - name: Vérifier les 18 lotisseurs intégrés
         run: node android-app/tests/LotisseursSmokeTest.cjs
+
+      - name: Valider la nouvelle interface luxe et la recherche automatique
+        run: node android-app/tests/TerraNovaUiSmokeTest.cjs
 
       - name: Tester le tri et les doublons sans Android
         run: |
