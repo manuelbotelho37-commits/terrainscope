@@ -833,14 +833,14 @@ public final class MainActivity extends Activity {
             " · Les portails non consultés ne valent pas « zéro annonce ».", 12, false);
         coverage.setTextColor(MUTED);
         cards.addView(coverage);
-        Button backToSite = action("← Retour au site · charger d'autres annonces", false);
+        Button backToSite = action("Consulter la dernière page source ↗", false);
         backToSite.setTextSize(12);
         backToSite.setOnClickListener(v -> showBrowser());
         place(cards, backToSite, 10, 5);
         if (current.isEmpty()) {
             TextView empty = text(imported.isEmpty()
-                ? "Aucune annonce importée. Ouvre un site, laisse les résultats charger puis " +
-                  "appuie sur « Importer la page ». Ce n’est pas le nombre de terrains en vente."
+                ? "Aucune annonce récupérée pour le moment. Appuie sur « RECHERCHER LES TERRAINS ». " +
+                  "Si un site bloque la collecte, il sera signalé comme incomplet."
                 : "Aucune annonce retenue dans les pages importées. Ouvre « Toutes les annonces »" +
                   " pour contrôler les exclusions.", 13, false);
             cards.addView(empty);
@@ -854,8 +854,9 @@ public final class MainActivity extends Activity {
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
         panel.setPadding(dp(12), dp(11), dp(12), dp(12));
-        panel.setBackground(rounded(LIGHT, 14, BORDER));
-        panel.setElevation(dp(2));
+        panel.setBackground(rounded(PANEL, 17,
+            record.state == ListingEngine.State.ACCEPTED ? GOLD_SOFT : BORDER));
+        panel.setElevation(dp(3));
         LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(-1, -2);
         layout.setMargins(0, dp(8), 0, dp(4));
         cards.addView(panel, layout);
@@ -866,11 +867,14 @@ public final class MainActivity extends Activity {
         TextView origin = text(item.source + statusText, 12, true);
         origin.setTextColor(record.state == ListingEngine.State.BUILDER ? Color.rgb(235, 136, 130) : GOLD);
         panel.addView(origin);
-        panel.addView(text(item.title, 15, true));
+        TextView itemTitle = heading(item.title, 16, TEXT, true);
+        place(panel, itemTitle, 5, 3);
         String price = item.priceEuros > 0 ? String.format(Locale.FRANCE,"%,d €",item.priceEuros) : "Prix à vérifier";
         String area = item.areaM2 > 0 ? String.format(Locale.FRANCE,"%,.0f m²",item.areaM2) : "Surface à vérifier";
         panel.addView(text(item.city + " · " + area, 13, false));
-        panel.addView(heading(price, 20, GOLD, true));
+        TextView priceTag = heading(price, 23, GOLD, true);
+        priceTag.setTypeface(Typeface.create("serif", Typeface.BOLD));
+        place(panel, priceTag, 5, 5);
         if (!item.seller.isEmpty()) panel.addView(text("Annonceur : " + item.seller, 12, false));
         if (!record.reason.isEmpty()) panel.addView(text(record.reason, 12, false));
         if (!record.otherSources.isEmpty())
@@ -894,8 +898,9 @@ public final class MainActivity extends Activity {
         activeCity = "";
         cityInput.setText("");
         browser.loadUrl("about:blank");
-        showBrowser();
-        status.setText("Nouvelle recherche vide. Aucune annonce précédente conservée.");
+        chooseTab(filteredTab);
+        displayListings(true);
+        status.setText("Nouvelle recherche prête. Saisis une commune puis lance la collecte multi-sites.");
     }
 
     private void showBrowser() {
