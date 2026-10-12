@@ -293,7 +293,7 @@
     <button id="terrainUp" type="button" title="Retour en haut" aria-label="Retour aux critères de recherche">↑</button>
     <button id="terrainDown" type="button" title="Descendre" aria-label="Descendre dans les résultats">↓</button>
   </nav>
-  <footer class="foot">TerrainScope V42 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+  <footer class="foot">TerrainScope V43 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -452,11 +452,11 @@
       'ballan-mire':['37510','14544']
     };
     function selogerTerrainUrl(city){
-      const slug=normalize(city).replace(/[’'\\-–—]/g,'-').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+      const slug=normalize(city).replace(/[’']/g,'-').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
       const known=SELOGER_TERRAIN_CITIES_37[slug];
       return known
         ?{url:'https://www.seloger.com/recherche/achat/terrain/centre-val-de-loire/'+slug+'-'+known[0]+'/ad08fr'+known[1],exact:true}
-        :{url:'https://www.seloger.com/recherche/achat/terrain/centre-val-de-loire/indre-et-loire-37/ad06fr38',exact:false};
+        :{url:null,exact:false};
     }
     // L'URL IAD /annonces/<ville>-<codepostal>/vente/terrain applique réellement
     // le filtre "Terrain". /annonces/<ville>/vente mène sinon à des maisons.
@@ -920,15 +920,17 @@
     function updateQuickSources(cities){
       const root=el('quickSourceLinks');root.replaceChildren();
       const makeLink=(label,url,main,help,internal=false)=>{
-        const a=document.createElement('a');a.href=url;
-        if(!internal){a.target='_blank';a.rel='noopener noreferrer'}
+        const a=document.createElement(url?'a':'div');
+        if(url)a.href=url;
+        if(!internal&&url){a.target='_blank';a.rel='noopener noreferrer'}
         else if(url==='#developerAccordion')a.addEventListener('click',event=>{
           event.preventDefault();
           el('developerAccordion').open=true;
           el('developerAccordion').scrollIntoView({behavior:'instant',block:'start'});
         });
         if(main)a.className='main-source';
-        a.append(document.createTextNode(label+' ↗'));
+        if(!url)a.className='unavailable-source';
+        a.append(document.createTextNode(label+(url?' ↗':' · lien indisponible')));
         const small=document.createElement('small');small.textContent=help;a.append(small);root.append(a);
       };
       // Le Bon Coin : ne plus ouvrir d'anciennes URLs Google, consulter la recherche
@@ -938,7 +940,7 @@
         const result=selogerTerrainUrl(city);
         makeLink('2 · SeLoger · '+city,result.url,false,result.exact
           ?'Terrains à vendre à '+city+' : page SeLoger directe, sans passer par Google. Annonces de constructeurs possibles sur le site externe.'
-          :'Terrains à vendre dans le 37 : choisir '+city+' sur SeLoger (lien direct pour cette commune non encore identifié).');
+          :'Aucun lien direct vérifié pour '+city+'. TerrainScope ne renvoie plus vers tout le département.');
       }
       for(const city of cities)makeLink('3 · Bien’ici · '+city,linkFor([city],'bienici.com'),false,'Recherche ciblée Bien’ici via Google');
       for(const city of cities){
@@ -990,7 +992,7 @@
         if(name==='SeLoger'){
           for(const city of cities){
             const result=selogerTerrainUrl(city);
-            addSource(result.exact?'SeLoger · terrains · '+city:'SeLoger · terrains 37 (choisir '+city+')',result.url);
+            if(result.url)addSource('SeLoger · terrains · '+city,result.url);
           }
           continue;
         }
