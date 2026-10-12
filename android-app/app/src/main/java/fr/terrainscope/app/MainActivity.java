@@ -471,6 +471,13 @@ public final class MainActivity extends Activity {
                 .equals(ListingEngine.normalize(activeCity))) {
                 throw new IllegalStateException("Cette importation concerne une autre commune ; ouvre le site de nouveau.");
             }
+            if (result.optBoolean("accessBlocked", false)) {
+                status.setText("Ce site demande une vérification humaine (CAPTCHA) ou refuse l'accès. " +
+                    "Aucune annonce n'a pu être récupérée : cela ne signifie PAS zéro terrain. " +
+                    "Complète le contrôle sur le site puis réessaie, ou passe au suivant.");
+                showBrowser();
+                return;
+            }
             JSONArray listings = result.optJSONArray("listings");
             if (listings == null) throw new IllegalArgumentException("Format de données non reconnu");
             int added = 0;
