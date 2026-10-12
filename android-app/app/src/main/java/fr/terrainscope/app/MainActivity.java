@@ -349,10 +349,18 @@ public final class MainActivity extends Activity {
                     added++;
                 }
             }
-            status.setText(added + " annonce(s) ajoutée(s), " + imported.size() +
-                " annonces récupérées au total. " + result.optInt("retrieved", 0) +
-                " fiches détectées sur la page, " + result.optInt("scannedCards", 0) +
-                " cartes examinées. Si des annonces manquent, essaie la page suivante.");
+            int displayedCount = result.isNull("declaredCount") ? -1 :
+                result.optInt("declaredCount", -1);
+            int extractedCount = result.optInt("retrieved", 0);
+            String total = displayedCount > 0
+                ? " sur " + displayedCount + " annonce(s) affichée(s) par le site"
+                : " détectée(s) sur cette page";
+            String warning = displayedCount > extractedCount
+                ? " · Import PARTIEL : ne pas confondre avec le total des terrains disponibles."
+                : " · Vérifie le tri dans les onglets.";
+            status.setText(extractedCount + " fiche(s) lue(s)" + total +
+                ", " + added + " nouvelle(s), " + imported.size() +
+                " cumulée(s)." + warning);
         } catch (Exception error) {
             status.setText("Cette page n’a pas pu être lue. Ce n’est PAS « zéro terrain disponible ». " +
                 "Cause : " + error.getMessage());
