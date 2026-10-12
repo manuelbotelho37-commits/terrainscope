@@ -22,7 +22,8 @@ function extract(host, city, jsonDocuments = [], cards = []) {
   };
   const context = {
     document, window: { __terrainScopeRequestedCity: city,
-      __terrainScopeRequestedPostal: city === "Monnaie" ? "37380" : city === "Tours" ? "37000" : "" },
+      __terrainScopeRequestedPostal: city === "Monnaie" ? "37380" : city === "Tours" ? "37000" : "",
+      __terrainScopeKnownCities: ["Monnaie", "Crotelles", "Tours", "Veigné", "Chanceaux-sur-Choisille"] },
     location: { hostname: host, href: "https://" + host + "/recherche/achat/" },
     URL
   };
@@ -167,6 +168,18 @@ const conflicted = extract("www.seloger.com", "Monnaie",
   }}]}], [htmlSupplement]);
 check(!conflicted.listings[0].cityConfirmed,
   "Un HTML trompeur ne doit pas écraser la commune structurée Crotelles");
+
+const wrongIndexCity = extract("www.seloger.com", "Monnaie", [{
+  itemListElement: [{item: {
+    name:"Terrain constructible à Monnaie 37380",
+    description:"A SEULEMENT 5 MINUTES DE MONNAIE !! Opportunité à Crotelles (37380)",
+    address:{addressLocality:"Monnaie",postalCode:"37380"},
+    url:"https://www.seloger.com/annonce/terrain-crotelles-indexe-monnaie",
+    offers:{price:"70000",seller:{name:"Agence BSK IMMOBILIER"}}
+  }}]
+}]);
+check(wrongIndexCity.retrieved===1 && !wrongIndexCity.listings[0].cityConfirmed,
+  "Texte réel Crotelles prioritaire même quand l'annonce est indexée Monnaie 37380");
 
 const onlyMarketing = extract("www.seloger.com", "Monnaie", [{
   itemListElement:[{item:{
