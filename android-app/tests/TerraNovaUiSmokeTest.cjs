@@ -24,4 +24,16 @@ contains("accessBlocked","Prise en compte des CAPTCHA");
 assert.ok(!main.includes('action("Importer la page"'),
   "L'ancien bouton Importer ne doit plus apparaître.");
 assert.equal(catalog.developers.length,18,"Le catalogue doit compter 18 lotisseurs");
-console.log("TerraNova luxe : 15 contrôles UI et fonctionnement valides.");
+// Régression Z Fold 8 : aucune hauteur restante pondérée ni liste en
+// ScrollView imbriquée ; tout le contenu doit défiler avec le bandeau.
+contains("screenScroller = new ScrollView(this)", "Défilement vertical global");
+contains("screenScroller.addView(main", "Panneaux inclus dans le défilement");
+contains("setContentView(screenScroller)", "ScrollView racine affiché");
+contains("results = new LinearLayout(this)", "Résultats sans défilement imbriqué");
+contains("main.addView(results, new LinearLayout.LayoutParams(-1, -2))",
+  "Liste complète en hauteur naturelle");
+assert.ok(!main.includes("results = new ScrollView(this)"),
+  "Interdire le défilement imbriqué qui bloque les lotisseurs");
+assert.ok(!main.includes("new LinearLayout.LayoutParams(-1, 0, 1f)"),
+  "Interdire les zones de résultats de hauteur nulle sur Fold déplié");
+console.log("TerraNova luxe : 22 contrôles UI, dont défilement Fold 8, valides.");
