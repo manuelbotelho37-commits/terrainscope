@@ -69,6 +69,9 @@ public final class MainActivity extends Activity {
     private boolean showingBrowser = true;
     private boolean showLotisseursOnLoad = false;
     private String activeCity = "";
+    private String batchSignature = "";
+    private final ArrayList<String> activeCities = new ArrayList<>();
+    private int cityPosition = 0;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -183,7 +186,7 @@ public final class MainActivity extends Activity {
         place(main, masthead, 0, 7);
 
         LinearLayout search = section(LIGHT, 16, BORDER);
-        search.addView(heading("RECHERCHER UNE COMMUNE", 11, GOLD, true));
+        search.addView(heading("COMMUNE(S) · SÉPARE PAR UNE VIRGULE", 11, GOLD, true));
         LinearLayout fields = row();
         fields.setGravity(Gravity.CENTER_VERTICAL);
         cityInput = new AutoCompleteTextView(this);
@@ -194,7 +197,7 @@ public final class MainActivity extends Activity {
         cityInput.setTextSize(15);
         cityInput.setTextColor(TEXT);
         cityInput.setHintTextColor(MUTED);
-        cityInput.setHint("Commune · ex. Monnaie");
+        cityInput.setHint("Monnaie, Tours, Chambray-lès-Tours");
         cityInput.setPadding(dp(11), 0, dp(9), 0);
         cityInput.setBackground(rounded(SOFT, 10, BORDER));
         LinearLayout.LayoutParams c = new LinearLayout.LayoutParams(0, dp(49), 1.45f);
@@ -226,7 +229,7 @@ public final class MainActivity extends Activity {
         place(search, actions, 0, 6);
 
         LinearLayout secondary = row();
-        Button nextSite = action("Site suivant →", true);
+        Button nextSite = action("Site / commune suivante →", true);
         nextSite.setTextSize(11);
         nextSite.setOnClickListener(v -> openNextSite());
         addControl(secondary, nextSite, 1f);
@@ -317,8 +320,53 @@ public final class MainActivity extends Activity {
         setContentView(main);
     }
 
+    private boolean prepareBatch() {
+        String raw = cityInput.getText().toString().trim();
+        if (!raw.isEmpty() && raw.equals(batchSignature) && !activeCities.isEmpty()) return true;
+        if (raw.isEmpty()) {
+            status.setText("Saisis une ou plusieurs communes, séparées par une virgule.");
+            return false;
+        }
+        ArrayList<String> cities = new ArrayList<>();
+        LinkedHashSet<String> known = new LinkedHashSet<>();
+        for (String token : raw.split("[,;]")) {
+            String key = ListingEngine.normalize(token);
+            if (key.isEmpty()) continue;
+            if (!postalCodes.containsKey(key)) {
+                status.setText("Commune inconnue dans le 37 : « " + token.trim() +
+                    " ». Vérifie son orthographe.");
+                return false;
+            }
+            if (known.add(key)) {
+                String official = token.trim();
+                for (String candidate : communeNames) {
+                    if (ListingEngine.normalize(candidate).equals(key)) {
+                        official = candidate;
+                        break;
+                    }
+                }
+                cities.add(official);
+            }
+        }
+        if (cities.isEmpty()) {
+            status.setText("Ajoute au moins une commune de l'Indre-et-Loire.");
+            return false;
+        }
+        // Seule une nouvelle saisie explicite efface la recherche précédente.
+        // Le passage d'une commune à l'autre dans le même lot ne l'efface pas.
+        imported.clear();
+        sourcesVisited.clear();
+        activeCities.clear();
+        activeCities.addAll(cities);
+        cityPosition = 0;
+        activeCity = cities.get(0);
+        batchSignature = raw;
+        return true;
+    }
+
     private void openSelectedSite() {
-        String city = cleanCity();
+        if (!prepareBatch()) return;
+        String city = activeCity;
         if (city.isEmpty()) {
             status.setText("Saisis d’abord la commune exacte.");
             cityInput.requestFocus();
@@ -333,11 +381,6 @@ public final class MainActivity extends Activity {
                 "source indisponible tant que le filtrage géographique n'est pas vérifié.");
             return;
         }
-        if (!activeCity.isEmpty() && !ListingEngine.normalize(activeCity)
-                .equals(ListingEngine.normalize(city))) {
-            imported.clear();
-            sourcesVisited.clear();
-        }
         activeCity = city;
         showLotisseursOnLoad = false;
         showBrowser();
@@ -348,26 +391,39 @@ public final class MainActivity extends Activity {
     }
 
     private void openNextSite() {
-        String city = cleanCity();
-        if (city.isEmpty()) {
-            status.setText("Sélectionne une commune avant de passer au site suivant.");
-            return;
-        }
+        if (!prepareBatch()) return;
         SearchUrls searches = new SearchUrls(postalCodes, selogerPaths);
         int start = siteSpinner.getSelectedItemPosition();
-        for (int offset = 1; offset <= SITES.length; offset++) {
+        for (int offset = 1; offset < SITES.length; offset++) {
             int next = (start + offset) % SITES.length;
-            if (searches.urlFor(SITES[next], city) != null) {
+            String source = SITES[next];
+            if (searches.urlFor(source, activeCity) != null &&
+                    !sourcesVisited.contains(source + " · " + activeCity)) {
                 siteSpinner.setSelection(next);
                 openSelectedSite();
                 return;
             }
         }
-        status.setText("Aucune nouvelle source avec un lien Terrain confirmé pour cette commune.");
+        if (cityPosition + 1 < activeCities.size()) {
+            cityPosition++;
+            activeCity = activeCities.get(cityPosition);
+            siteSpinner.setSelection(0);
+            openSelectedSite();
+            return;
+        }
+        status.setText("Fin du parcours : " + activeCities.size() +
+            " commune(s), " + sourcesVisited.size() +
+            " page(s) importée(s). Tu peux consulter les annonces triées.");
+        chooseTab(filteredTab);
+        displayListings(true);
     }
 
     private void importVisiblePage() {
-        String city = cleanCity();
+        if (!cityInput.getText().toString().trim().equals(batchSignature)) {
+            status.setText("Communes modifiées : relance Rechercher avant d'importer.");
+            return;
+        }
+        String city = activeCity;
         if (city.isEmpty() || !ListingEngine.normalize(city)
                 .equals(ListingEngine.normalize(activeCity))) {
             status.setText("Commune changée : ouvre d’abord le bon site avec les nouveaux critères.");
@@ -445,7 +501,7 @@ public final class MainActivity extends Activity {
                 }
             }
             String checkedSource = result.optString("source", sourceHost);
-            sourcesVisited.add(checkedSource);
+            sourcesVisited.add(checkedSource + " · " + activeCity);
             int displayedCount = result.isNull("declaredCount") ? -1 :
                 result.optInt("declaredCount", -1);
             int extractedCount = result.optInt("retrieved", 0);
@@ -547,7 +603,11 @@ public final class MainActivity extends Activity {
     private void reset() {
         imported.clear();
         sourcesVisited.clear();
+        activeCities.clear();
+        cityPosition = 0;
+        batchSignature = "";
         activeCity = "";
+        cityInput.setText("");
         browser.loadUrl("about:blank");
         showBrowser();
         status.setText("Nouvelle recherche vide. Aucune annonce précédente conservée.");
@@ -570,7 +630,7 @@ public final class MainActivity extends Activity {
         }
         return false;
     }
-    private String cleanCity() { return cityInput.getText().toString().trim(); }
+    private String cleanCity() { return activeCity; }
     private static String slug(String city) {
         return ListingEngine.normalize(city).replace(' ', '-');
     }
