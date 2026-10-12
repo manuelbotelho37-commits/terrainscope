@@ -55,7 +55,7 @@
     const priceNumber = candidates.length ? Math.max(...candidates) :
       Number((money.match(/^\s*[\d\s\u00a0.]+\s*$/) ? money : "")
         .replace(/[^\d]/g, "")) || 0;
-    const areaMatch = area.match(/(\d[\d\s\u00a0]*(?:[,.]\d+)?)\s*m(?:²|2)\b?/i);
+    const areaMatch = area.match(/(\d[\d\s\u00a0]*(?:[,.]\d+)?)\s*m(?:²|2)/i);
     const areaCandidate = areaMatch ? areaMatch[1] : area;
     const normalizedArea = areaCandidate.replace(/[\s\u00a0]/g, "").replace(",", ".").replace(/[^\d.]/g, "");
     // La commune mentionnée seulement dans une description commerciale
