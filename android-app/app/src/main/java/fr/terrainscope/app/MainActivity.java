@@ -28,6 +28,7 @@ import android.widget.Spinner;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import android.widget.ImageView;
+import android.widget.HorizontalScrollView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -62,6 +63,8 @@ public final class MainActivity extends Activity {
     private final LinkedHashMap<String, ListingEngine.Listing> imported = new LinkedHashMap<>();
     private final LinkedHashSet<String> sourcesVisited = new LinkedHashSet<>();
     private final LinkedHashSet<String> sourcesOpened = new LinkedHashSet<>();
+    private final LinkedHashSet<String> enabledSources = new LinkedHashSet<>();
+    private final LinkedHashMap<String, Button> sourcePills = new LinkedHashMap<>();
 
     private MultiAutoCompleteTextView cityInput;
     private final ArrayList<String> communeNames = new ArrayList<>();
@@ -94,6 +97,7 @@ public final class MainActivity extends Activity {
         super.onCreate(state);
         loadCommuneIndex();
         loadSeLogerPaths();
+        for (String site : SITES) enabledSources.add(site);
         buildScreen();
         chooseTab(filteredTab);
         displayListings(true);
@@ -173,6 +177,19 @@ public final class MainActivity extends Activity {
             b.setTextColor(active ? DARK : TEXT);
             b.setBackground(rounded(active ? GOLD : LIGHT, 11,
                 active ? Color.TRANSPARENT : BORDER));
+        }
+    }
+
+    private void refreshSourcePills() {
+        for (Map.Entry<String, Button> entry : sourcePills.entrySet()) {
+            boolean selected = enabledSources.contains(entry.getKey());
+            String name = "IAD".equals(entry.getKey()) ? "iad" : entry.getKey();
+            Button pill = entry.getValue();
+            pill.setText((selected ? "✓  " : "+  ") + name);
+            pill.setTextColor(selected ? GOLD : MUTED);
+            pill.setBackground(rounded(selected ? PANEL : LIGHT, 25,
+                selected ? GOLD_SOFT : BORDER));
+            pill.setContentDescription((selected ? "Source activée : " : "Source désactivée : ") + name);
         }
     }
 
@@ -257,6 +274,44 @@ public final class MainActivity extends Activity {
         siteSpinner.setVisibility(View.GONE);
         fields.addView(siteSpinner, new LinearLayout.LayoutParams(0, dp(1), 0f));
         place(search, fields, 7, 8);
+        TextView filterLabel = heading("SOURCES IMMOBILIÈRES", 10, GOLD, true);
+        place(search, filterLabel, 5, 3);
+        HorizontalScrollView sourceScroll = new HorizontalScrollView(this);
+        sourceScroll.setHorizontalScrollBarEnabled(false);
+        sourceScroll.setFillViewport(false);
+        LinearLayout sourcesRow = row();
+        for (String site : SITES) {
+            String caption = "IAD".equals(site) ? "iad" : site;
+            Button pill = new Button(this);
+            pill.setAllCaps(false);
+            pill.setTextSize(11);
+            pill.setTypeface(null, Typeface.BOLD);
+            pill.setMinimumHeight(dp(37));
+            pill.setMinHeight(dp(37));
+            pill.setPadding(dp(13), 0, dp(13), 0);
+            pill.setContentDescription("Inclure ou exclure " + caption + " de la recherche");
+            LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(-2, dp(39));
+            size.setMargins(0, 0, dp(7), 0);
+            sourcesRow.addView(pill, size);
+            sourcePills.put(site, pill);
+            pill.setOnClickListener(v -> {
+                if (enabledSources.contains(site)) {
+                    if (enabledSources.size() == 1) {
+                        status.setText("Conserve au moins une source immobilière.");
+                        return;
+                    }
+                    enabledSources.remove(site);
+                } else {
+                    enabledSources.add(site);
+                }
+                refreshSourcePills();
+                if (!scanning && status != null)
+                    status.setText(enabledSources.size() + " source(s) sélectionnée(s) · lance une nouvelle recherche.");
+            });
+        }
+        sourceScroll.addView(sourcesRow);
+        place(search, sourceScroll, 0, 9);
+        refreshSourcePills();
 
         Button searchAll = action("⌕  RECHERCHER LES TERRAINS", true);
         searchAll.setTextSize(14);
@@ -433,6 +488,7 @@ public final class MainActivity extends Activity {
         SearchUrls urls = new SearchUrls(postalCodes, selogerPaths);
         for (String city : activeCities) {
             for (String site : SITES) {
+                if (!enabledSources.contains(site)) continue;
                 String url = urls.urlFor(site, city);
                 if (url != null) scanTasks.add(new String[]{site, city, url});
                 else sourcesVisited.add(site + " · " + city + " (non vérifiable)");
