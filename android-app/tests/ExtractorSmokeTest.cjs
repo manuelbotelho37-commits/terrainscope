@@ -7,10 +7,10 @@ const path = require("node:path");
 const code = fs.readFileSync(path.resolve(__dirname, "../app/src/main/assets/extract-visible.js"), "utf8");
 let checks = 0;
 
-function extract(host, city, jsonDocuments = [], cards = []) {
+function extract(host, city, jsonDocuments = [], cards = [], pageText = "23 annonces pour la commune recherchée") {
   const document = {
     title: "Terrains à vendre",
-    body: { innerText: "23 annonces pour la commune recherchée" },
+    body: { innerText: pageText },
     querySelector() { return null; },
     querySelectorAll(selector) {
       if (selector === 'script[type="application/ld+json"]') {
@@ -215,6 +215,13 @@ check(iad.listings[0].priceEuros===138500,"Prix iad retrouvé dans le parent");
 check(iad.listings[0].areaM2===1328,"Surface iad retrouvée dans le parent");
 check(iad.listings[0].cityConfirmed,"Commune iad confirmée");
 
+const blockedByCaptcha = extract("www.leboncoin.fr","Monnaie",[],[],
+  "Vérifiez que vous êtes humain : CAPTCHA nécessaire pour accéder à la liste.");
+check(blockedByCaptcha.retrieved===0 && blockedByCaptcha.accessBlocked,
+  "Page avec CAPTCHA : blocage reconnu, pas zéro terrain");
+const deniedByServer = extract("www.seloger.com","Monnaie",[],[],
+  "Access denied — Too many requests.");
+check(deniedByServer.accessBlocked,"Refus d'accès serveur identifié");
 const empty = extract("www.leboncoin.fr", "Monnaie");
 check(empty.retrieved === 0, "page vide lisible, distincte du stock réel");
 console.log("TerrainScope: " + checks + " vérifications de lecture des fiches réussies.");
