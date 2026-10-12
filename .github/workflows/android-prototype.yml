@@ -1,8 +1,12 @@
 name: Tester et construire TerraNova Android
 
-# Aucun test automatique à chaque modification : GitHub pouvait envoyer
-# un e-mail à chaque exécution ou échec. Lancer les tests manuellement seulement.
+# Exécution PONCTUELLE pour fabriquer l'APK 0.3.0 ce soir.
+# Le déclencheur push est immédiatement retiré après cette compilation.
 on:
+  push:
+    branches: [android-capture-prototype]
+    paths:
+      - '.github/workflows/android-prototype.yml'
   workflow_dispatch:
 
 permissions:
@@ -62,6 +66,8 @@ jobs:
         run: gradle -p android-app :app:assembleDebug --no-daemon
 
       - name: Vérifier le démarrage sur un émulateur Android
+        # Une compilation unique prioritaire ; émulateur réservé aux tests séparés.
+        if: false
         # Le runner Android GitHub peut planter (adb Broken pipe) avant même
         # d'installer l'APK : ne pas cacher cette limite, ni bloquer l'APK
         # quand tests + compilation sont passés. Contrôle visuel distinct.
