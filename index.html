@@ -172,6 +172,8 @@
     #lotisseursTop{background:#e8f5da;color:#214e35;border:1px solid #a9d39d;border-radius:10px;
       min-height:42px;padding:10px 13px;font-weight:850;font-size:13px;white-space:nowrap}
     #developerAccordion{padding:0;overflow:hidden;border:1px solid #d7e7da;border-radius:15px;background:white}
+    #developerAccordion{width:100%;margin-top:8px;flex-shrink:0;box-shadow:none}
+    #lotisseursTop[aria-expanded="true"]{background:#dbedc9;border-color:#8ec58f}
     #developerAccordion>summary{list-style:none;display:flex;align-items:center;gap:8px;cursor:pointer;
       color:#194b30;background:#e3f4d6;padding:14px;min-height:58px;font-size:16px;font-weight:850}
     #developerAccordion>summary::-webkit-details-marker{display:none}
@@ -268,7 +270,7 @@
       <div class="section-top"><h2>Recherche de terrains</h2><span class="note">Sans historique de recherche</span></div>
       <form id="form">
         <div class="form">
-          <div class="field"><label for="city">Communes * <span class="city-small">— plusieurs communes possibles</span></label><div class="inwrap"><input id="city" autocomplete="off" type="text" placeholder="Commune d’Indre-et-Loire (ex. Monnaie)" aria-autocomplete="list" aria-expanded="false" aria-controls="citySuggestions" spellcheck="false"><div id="citySuggestions" class="city-list" role="listbox" hidden></div></div><button type="button" id="addCity" class="city-add">+ Ajouter cette commune</button><div id="selectedCities" class="city-chips" aria-live="polite"></div><button id="lotisseursTop" class="city-lotisseurs" type="button">🏘 Lotisseurs · programmes et terrains</button><button id="citySearchBtn" class="search city-search" type="submit">⌕ &nbsp;Voir les terrains</button><small class="city-help">Ajoute plusieurs communes avant de lancer la recherche. Appuie sur × pour en retirer une.</small></div>
+          <div class="field"><label for="city">Communes * <span class="city-small">— plusieurs communes possibles</span></label><div class="inwrap"><input id="city" autocomplete="off" type="text" placeholder="Commune d’Indre-et-Loire (ex. Monnaie)" aria-autocomplete="list" aria-expanded="false" aria-controls="citySuggestions" spellcheck="false"><div id="citySuggestions" class="city-list" role="listbox" hidden></div></div><button type="button" id="addCity" class="city-add">+ Ajouter cette commune</button><div id="selectedCities" class="city-chips" aria-live="polite"></div><button id="citySearchBtn" class="search city-search" type="submit">⌕ &nbsp;Voir les terrains</button><button id="lotisseursTop" class="city-lotisseurs" type="button" aria-controls="developerAccordion" aria-expanded="false">🏘 Lotisseurs · programmes et terrains</button><details class="box" id="developerAccordion"><summary><span>🏘 Lotisseurs</span><span class="lotisseur-chevron" aria-hidden="true">⌄</span></summary><div class="developer-body"><p class="caption">Programmes repérés dans les sources officielles, avec détails des lots lorsqu'ils sont publiés.</p><div id="developers"></div></div></details><small class="city-help">Ajoute plusieurs communes avant de lancer la recherche. Appuie sur × pour en retirer une.</small></div>
           <div class="field"><label for="surface">Surface mini (m²)</label><input id="surface" type="number" inputmode="numeric" min="0" step="1" placeholder="Ex. 500"></div>
           <div class="field"><label for="budget">Budget maxi (€)</label><input id="budget" type="number" inputmode="numeric" min="0" step="1000" placeholder="Ex. 120000"></div>
         </div>
@@ -300,8 +302,7 @@
         
         <div id="csePanel" class="box cse-holder" hidden><h3>Autres terrains repérés</h3><div id="cseHint" class="cse-hint">Résultats Google non exhaustifs. Vérifie chaque annonce sur son site d’origine.</div><p id="resultSummary" class="result-summary" aria-live="polite"></p><div id="google-results"></div><nav id="pageNavigator" class="pagination-box" aria-label="Pages de résultats" hidden><strong id="pagePosition"></strong><div id="pageButtons" class="pagination-controls"></div><p>Le nombre de pistes correspond uniquement à cette page.</p></nav></div>
       </section>
-      <aside class="rail" id="professionalSources" aria-label="Lotisseurs et aménageurs">
-        <details class="box" id="developerAccordion"><summary><span>🏘 Lotisseurs</span><span class="lotisseur-chevron" aria-hidden="true">⌄</span></summary><div class="developer-body"><p class="caption">Programmes repérés dans les sources officielles, avec détails des lots lorsqu'ils sont publiés.</p><div id="developers"></div></div></details>
+      <aside class="rail" id="professionalSources" aria-label="Recherches complémentaires">
         <div class="box"><h3>Recherches par site</h3><p class="caption">Les recherches ouvrent les sites immobiliers. Les sites externes peuvent afficher des communes voisines ou des offres de constructeurs, que TerrainScope ne contrôle pas.</p><div id="sites"><p class="notice">Lancez une recherche pour activer les liens.</p></div><a href="#" id="allSites" class="general" hidden target="_blank" rel="noopener noreferrer">↗ Google · Recherche Web</a></div>
         <div class="box"><h3>Comment ça marche ?</h3><p class="caption">L’affichage groupé nécessite un identifiant Google Programmable Search Engine (CSE). Les surfaces et les prix sont détectés dans les extraits visibles, lorsqu'ils y figurent.</p><button id="settingsBtn2" type="button" class="setup-link">Configurer la recherche groupée →</button><p class="notice">Attention : la surface et le budget signalent les annonces hors critères quand le prix ou la surface figurent dans l’extrait Google. Ce ne sont pas des filtres garantis sur les sites tiers.</p></div>
       </aside>
@@ -310,7 +311,7 @@
     <button id="terrainUp" type="button" title="Retour en haut" aria-label="Retour aux critères de recherche">↑</button>
     <button id="terrainDown" type="button" title="Descendre" aria-label="Descendre dans les résultats">↓</button>
   </nav>
-  <footer class="foot">TerrainScope V46 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+  <footer class="foot">TerrainScope V47 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -1141,10 +1142,15 @@
       settingsStore.setItem('terrainScopeCx',cx);location.reload();
     };
     el('removeCx').onclick=()=>{settingsStore.removeItem('terrainScopeCx');location.reload()};
+    // Le catalogue des lotisseurs se déplie sur place, sous son bouton,
+    // sans renvoyer en bas de page ni créer une deuxième liste.
     el('lotisseursTop').addEventListener('click',()=>{
       const panel=el('developerAccordion');
-      panel.open=true;
-      panel.scrollIntoView({behavior:'instant',block:'start'});
+      panel.open=!panel.open;
+      el('lotisseursTop').setAttribute('aria-expanded',String(panel.open));
+    });
+    el('developerAccordion').addEventListener('toggle',event=>{
+      el('lotisseursTop').setAttribute('aria-expanded',String(event.currentTarget.open));
     });
     el('form').addEventListener('submit',handleSearch);
     el('terrainUp').addEventListener('click',()=>{
