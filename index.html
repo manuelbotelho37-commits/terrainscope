@@ -268,6 +268,81 @@
     .unique-disclaimer{font-size:11px;line-height:1.5;color:#667e70;margin:13px 0 0}
     .quick-sources{margin-top:8px}
     @media(max-width:520px){.unique-panel{padding:12px}.unique-card{padding:13px}}
+
+    /* V59 : maquette homogène, cinq portails et dix-huit lotisseurs. */
+    .top{padding-top:14px;padding-bottom:62px}
+    .top:before,.top:after{opacity:.45}
+    .intro{padding-top:14px}
+    .intro h1{margin:4px 0 6px;font-size:clamp(26px,4vw,35px)}
+    .intro p{font-size:13px}
+    .panel{border-radius:18px;border-color:#dce6de}
+    .search.city-search{background:#dfedb4;border:1px solid #c6d78e;color:#23452e}
+    .search.city-search:focus-visible,.city-lotisseurs:focus-visible{outline:3px solid #c28d34;outline-offset:2px}
+    .field input:focus{border-color:#bd9a51;box-shadow:0 0 0 3px #e5cb8740}
+    .quick-sources{background:#fff;border:1px solid #dce7df;border-radius:18px;padding:18px}
+    .quick-sources h3{margin-bottom:5px;color:#203f32}
+    .quick-sources p{margin-bottom:14px}
+    .quick-source-links{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;overflow:visible}
+    .portal-tile{position:relative;min-width:0;aspect-ratio:1;margin:0;display:flex;flex-direction:column;
+      border:1px solid #d9e6da;background:#fdfefd;border-radius:15px;color:#234737;
+      text-decoration:none;box-shadow:0 3px 12px #102f2210}
+    a.portal-tile:hover,details.portal-tile:hover{border-color:#a1c49e;background:#f6fbf4}
+    .portal-tile .portal-face{width:100%;min-height:0;flex:1;display:flex;flex-direction:column;justify-content:center;
+      align-items:center;text-align:center;gap:7px;padding:12px 6px;cursor:pointer;
+      border:0;background:transparent;color:inherit;text-decoration:none;list-style:none}
+    .portal-tile summary::-webkit-details-marker{display:none}
+    .portal-tile .portal-logo{display:grid;place-items:center;width:52px;height:52px;
+      background:#fff;border:1px solid #ecf0ed;border-radius:12px;flex:none;overflow:hidden}
+    .portal-tile .portal-logo img{width:40px;height:40px;object-fit:contain}
+    .portal-tile .portal-fallback{font-size:14px;font-weight:900;color:#235641}
+    .portal-tile .portal-title{font-size:12px;font-weight:850;line-height:1.2;overflow-wrap:anywhere}
+    .portal-tile .portal-subtitle{font-size:10px;font-weight:650;color:#718578;line-height:1.3}
+    .portal-tile.portal-inactive{background:#f5f7f5;border-style:dashed;color:#62786a}
+    .portal-tile[open]{z-index:40;border-color:#9cc49d;background:#f6fbf5}
+    .portal-list{position:absolute;top:calc(100% + 5px);left:0;right:auto;width:max(100%,220px);
+      max-width:min(88vw,310px);padding:8px;max-height:280px;overflow-y:auto;
+      background:#fff;border:1px solid #c9decf;border-radius:12px;z-index:41;
+      box-shadow:0 12px 24px #13332732;display:flex;flex-direction:column;gap:5px}
+    .portal-list a,.portal-list span{display:block;padding:10px;border-radius:9px;
+      font-size:12px;font-weight:750;line-height:1.35;text-decoration:none;color:#2c5e44}
+    .portal-list a{background:#f0f7ed}
+    .portal-list a:focus-visible{outline:2px solid #487a5b}
+    .portal-list span{color:#86938b}
+    .portal-options{border-top:1px solid #e9f0e9;margin-top:11px;padding-top:9px;font-size:11px}
+    .portal-options>summary{cursor:pointer;color:#486e54;font-weight:750}
+    .portal-options .portal-option-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+    .portal-options a,.portal-options button{display:inline-block;border:1px solid #d9e5d9;
+      border-radius:8px;padding:9px;background:#f7faf6;color:#285a42;font-size:11px;font-weight:700;text-decoration:none}
+    #developers{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));
+      gap:10px;align-items:start;padding:5px 0 0}
+    #developers .dev-group{min-width:0;margin:0;border:1px solid #d8e6dc;border-radius:13px;
+      background:#fff;overflow:visible;box-shadow:0 3px 9px #1439240d}
+    #developers .dev-group:not([open]){aspect-ratio:1}
+    #developers .dev-group>summary{height:100%;min-height:0;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;gap:7px;padding:9px 6px;border-radius:12px;
+      background:#f7fbf6;text-align:center;cursor:pointer}
+    #developers .dev-group[data-match="true"]>summary{background:#e7f4dd}
+    #developers .dev-group .dev-logo{display:grid;place-items:center;width:43px;height:43px;
+      border:1px solid #e9efea;border-radius:11px;background:#fff;flex:none;overflow:hidden}
+    #developers .dev-group .dev-logo img{width:35px;height:35px;object-fit:contain}
+    #developers .dev-group .dev-logo-fallback{font-size:13px;font-weight:900;color:#295b41}
+    #developers .dev-group .dev-name{font-size:11px;line-height:1.25;overflow-wrap:anywhere;
+      font-weight:850;color:#244c35;max-width:100%}
+    #developers .dev-group>summary .dev-subcount{display:none}
+    #developers .dev-group[open]{grid-column:1/-1;border-color:#a9cca8;aspect-ratio:auto}
+    #developers .dev-group[open]>summary{height:auto;min-height:64px;flex-direction:row;
+      text-align:left;justify-content:flex-start;gap:10px;padding:10px 12px}
+    #developers .dev-group[open]>summary .dev-name{font-size:13px}
+    #developers .dev-group[open]>summary .dev-subcount{display:block;font-size:10px;margin-left:auto}
+    #developers .dev-group .dev-group-content{min-width:0}
+    @media(max-width:800px){.quick-source-links{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media(max-width:520px){
+      .intro{padding-top:11px}.top{padding-bottom:64px}
+      .quick-sources{padding:13px}
+      .quick-source-links{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+      .portal-tile .portal-face{padding:9px 4px}
+      #developers{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+    }
     </style>
 </head>
 <body>
@@ -305,7 +380,7 @@
       <span class="price-order" title="Les analyses locales ne consomment aucun crédit d’hébergement.">Recherche gratuite · analyse sur ce téléphone</span>
     </div>
     <details id="developerMatchNotice" hidden><summary id="developerMatchSummary">Programmes des lotisseurs</summary><div id="developerMatchDetails"></div></details><p id="criteriaText" class="criteria-text" hidden></p><div class="content-grid">
-      <section class="results" id="mainResults" aria-live="polite"><section id="quickSources" class="quick-sources" hidden><h3>Rechercher des terrains</h3><p>SeLoger et Bien’ici : les pistes de TerrainScope proviennent de Google et peuvent manquer des terrains visibles sur les sites. Les catalogues complets montrent davantage d’annonces, y compris celles des constructeurs. Le Bon Coin propose toujours son filtre facultatif des 18 marques.</p><div id="quickSourceLinks" class="quick-source-links"></div></section>
+      <section class="results" id="mainResults" aria-live="polite"><section id="quickSources" class="quick-sources" hidden><h3>Accès aux annonces de terrains</h3><p>Choisis une commune, puis ouvre le site de ton choix. Les annonces restent sur les sites d’origine.</p><div id="quickSourceLinks" class="quick-source-links"></div></section>
         <details id="googleLeads" class="google-leads" hidden><summary>Terrains repérés dans TerrainScope · constructeurs connus écartés</summary>
           <section id="uniquePanel" class="unique-panel" hidden><h3>Terrains repérés par Google · tri des 18 marques</h3><p class="unique-intro">TerrainScope trie localement les titres et extraits indexés par Google, et écarte les constructeurs identifiés. Maisons CPR est conservé. Une annonce visible sur Bien’ici peut manquer ici si Google ne l’indexe pas. Les programmes de terrains libres de constructeur restent pertinents. Disponibilité à vérifier.</p><div id="googleSourceFilters" class="source-filter-bar" aria-label="Filtrer les pistes par site"><button type="button" data-filter-source="" class="active" aria-pressed="true">Tous les sites</button><button type="button" data-filter-source="SeLoger" aria-pressed="false">SeLoger</button><button type="button" data-filter-source="Bien’ici" aria-pressed="false">Bien’ici</button></div><div id="uniqueSummary" class="unique-summary" role="status"></div><div id="uniqueResults" class="unique-results"></div><nav id="uniquePages" class="unique-pages" hidden aria-label="Pages des terrains distincts"></nav><p class="unique-disclaimer">Annonces repérées dans Google, pas l’intégralité des sites. Prix, surface, commune et vendeur à confirmer sur la fiche originale. Deux terrains distincts ne sont pas fusionnés sans indices suffisants.</p></section>
         </details>
@@ -320,7 +395,7 @@
     <button id="terrainUp" type="button" title="Retour en haut" aria-label="Retour aux critères de recherche">↑</button>
     <button id="terrainDown" type="button" title="Descendre" aria-label="Descendre dans les résultats">↓</button>
   </nav>
-  <footer class="foot">TerrainScope V58 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
+  <footer class="foot">TerrainScope V59 · Recherches ponctuelles sans historique.<br>Les portails immobiliers restent propriétaires de leurs contenus. Disponibilité et prix à confirmer sur les annonces.</footer>
   </main>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
     <div class="dialog-head"><h2 id="dialogTitle">Sources du moteur de recherche</h2><button class="close" id="closeBtn" aria-label="Fermer">×</button></div>
@@ -678,9 +753,7 @@
         }
       }
       const meta=document.createElement('p');meta.className='dev-catalog-top';
-      meta.textContent=DEVELOPERS.length+' lotisseurs et aménageurs référencés, avec accès à leurs terrains ou à leur site officiel. '+
-        checkedDevelopers.length+' catalogue(s) contrôlé(s) automatiquement : ce contrôle ne concerne pas tous les sites. '+
-        'Les fiches datées sont indicatives ; les disponibilités sont à confirmer auprès du lotisseur.';
+      meta.textContent=DEVELOPERS.length+' lotisseurs et aménageurs. Appuie sur un logo pour consulter les programmes et accéder au site officiel. Prix et disponibilités à confirmer chez le lotisseur.';
       root.append(meta);
       function external(url,title){
         const a=document.createElement('a');a.href=url;a.target='_blank';
@@ -692,16 +765,27 @@
           (Number(matches(b))===Number(matches(a))?a.city.localeCompare(b.city,'fr'):0));
         const selected=items.filter(matches);
         const group=document.createElement('details');group.className='dev-group';
-        group.open=names.length>0&&selected.length>0;
+        group.name='terrainscope-lotisseurs';
+        group.open=false;
+        group.dataset.match=String(names.length>0&&selected.length>0);
         const caption=document.createElement('summary');
-        const label=document.createElement('span');label.textContent=dev.name;
+        const logo=document.createElement('span');logo.className='dev-logo';
+        const img=document.createElement('img');
+        img.src='https://www.google.com/s2/favicons?domain='+encodeURIComponent(dev.domain)+'&sz=128';
+        img.alt='';img.loading='lazy';img.referrerPolicy='no-referrer';
+        const fallback=document.createElement('span');fallback.className='dev-logo-fallback';
+        fallback.textContent=dev.name.replace(/[^a-zA-ZÀ-ÿ0-9 ]/g,'').trim().slice(0,2).toUpperCase();
+        fallback.hidden=true;
+        img.addEventListener('error',()=>{img.remove();fallback.hidden=false});
+        logo.append(img,fallback);
+        const label=document.createElement('span');label.className='dev-name';label.textContent=dev.name;
         const count=document.createElement('span');count.className='dev-subcount';
         count.textContent=checked
           ?checked.expected+' programmes · catalogue contrôlé'
           :scan?.status==='observed'
             ?rows.length+' fiche(s) suivie(s) · inventaire incomplet'
             :'Inventaire non certifié';
-        caption.append(label,count);group.append(caption);
+        caption.append(logo,label,count);group.append(caption);
         const body=document.createElement('div');body.className='dev-group-content';
         const diagnosis=document.createElement('p');diagnosis.className='dev-empty';
         diagnosis.textContent=checked
@@ -1069,79 +1153,79 @@
     }
     function updateQuickSources(cities){
       const root=el('quickSourceLinks');root.replaceChildren();
-      const makeAppSource=(label,source,help)=>{
-        const button=document.createElement('button');button.type='button';button.className='app-source';
-        button.disabled=!googleConfigured;
-        button.append(document.createTextNode(label));
-        const small=document.createElement('small');small.textContent=googleConfigured?help:'Moteur de recherche Google non activé dans TerrainScope.';button.append(small);
-        button.addEventListener('click',()=>{
-          const leads=el('googleLeads');leads.hidden=false;leads.open=true;
-          if(window.TerrainAggregator?.setSourceFilter){
-            window.TerrainAggregator.setSourceFilter(source);
-          }else{
-            el('uniqueSummary').textContent='Le moteur de tri des terrains n’est pas disponible sur cet appareil.';
+      const sources=[
+        {name:'Le Bon Coin',domain:'leboncoin.fr',get:city=>leboncoinUrl(city)},
+        {name:'SeLoger',domain:'seloger.com',get:city=>selogerTerrainUrl(city).url},
+        {name:'Bien’ici',domain:'bienici.com',get:city=>bieniciTerrainUrl(city)},
+        {name:'iad',domain:'iadfrance.fr',get:city=>iadTerrainUrl(city)},
+        {name:'immobilier.notaires.fr',domain:'immobilier.notaires.fr',get:city=>immobilierNotairesTerrainUrl(city)}
+      ];
+      const logo=(domain,name)=>{
+        const box=document.createElement('span');box.className='portal-logo';
+        const img=document.createElement('img');
+        img.src='https://www.google.com/s2/favicons?domain='+encodeURIComponent(domain)+'&sz=128';
+        img.alt='';img.loading='lazy';img.referrerPolicy='no-referrer';
+        const fallback=document.createElement('span');fallback.className='portal-fallback';
+        fallback.textContent=name==='immobilier.notaires.fr'?'N':name.slice(0,2).toUpperCase();
+        fallback.hidden=true;
+        img.addEventListener('error',()=>{img.remove();fallback.hidden=false});
+        box.append(img,fallback);
+        return box;
+      };
+      for(const source of sources){
+        const entries=cities.map(city=>({city,url:source.get(city)}));
+        const direct=entries.length===1&&entries[0].url;
+        const tile=document.createElement(direct?'a':entries.length>1?'details':'div');
+        tile.className='portal-tile'+(!entries.length||entries.every(e=>!e.url)?' portal-inactive':'');
+        const face=document.createElement(entries.length>1?'summary':'span');
+        face.className='portal-face';
+        face.append(logo(source.domain,source.name));
+        const name=document.createElement('strong');name.className='portal-title';name.textContent=source.name;
+        const subtitle=document.createElement('small');subtitle.className='portal-subtitle';
+        subtitle.textContent=!entries.length?'Choisis une commune':
+          entries.length===1?(entries[0].url?'Voir les terrains ↗':'Lien terrain indisponible'):
+          entries.length+' communes · choisir ▼';
+        face.append(name,subtitle);
+        tile.append(face);
+        if(direct){tile.href=entries[0].url;tile.target='_blank';tile.rel='noopener noreferrer'}
+        if(entries.length>1){
+          const list=document.createElement('div');list.className='portal-list';
+          for(const entry of entries){
+            const child=document.createElement(entry.url?'a':'span');
+            child.textContent=entry.city+(entry.url?' ↗':' · indisponible');
+            if(entry.url){child.href=entry.url;child.target='_blank';child.rel='noopener noreferrer'}
+            list.append(child);
           }
-          leads.scrollIntoView({behavior:'instant',block:'start'});
-        });
-        root.append(button);
-      };
-      const makeLink=(label,url,main,help,internal=false)=>{
-        const a=document.createElement(url?'a':'div');
-        if(url)a.href=url;
-        if(!internal&&url){a.target='_blank';a.rel='noopener noreferrer'}
-        else if(url==='#developerAccordion')a.addEventListener('click',event=>{
-          event.preventDefault();
-          el('developerAccordion').open=true;
-          el('developerAccordion').scrollIntoView({behavior:'instant',block:'start'});
-        });
-        if(main)a.className='main-source';
-        if(!url)a.className='unavailable-source';
-        a.append(document.createTextNode(label+(url?' ↗':' · lien indisponible')));
-        const small=document.createElement('small');small.textContent=help;a.append(small);root.append(a);
-      };
-      // Deux choix : terrain / ville exacts (fiable), et exclusion NOT
-      // facultative des marques citées, sans filtrer les agences professionnelles.
-      for(const city of cities){
-        const postal=terrainPostal(city);
-        makeLink('1 · Le Bon Coin · '+city,leboncoinUrl(city),true,postal
-          ?'Terrains uniquement, commune exacte. Agences, IAD, particuliers et lotisseurs conservés.'
-          :'Recherche Terrain, commune à confirmer sur le site (code postal non trouvé).');
-        const reduced=leboncoinReducedUrl(city);
-        if(reduced){
-          const a=document.createElement('a');a.href=reduced;a.target='_blank';
-          a.rel='noopener noreferrer';a.className='source-optional';
-          a.textContent='Essayer de masquer '+BUILDER_EXCLUSION_COUNT+' marques de constructeurs sur Le Bon Coin ↗';
-          const explanation=document.createElement('small');
-          explanation.textContent='Filtre NOT facultatif du site. Peut masquer aussi des annonces utiles : le lien principal reste sans exclusions.';
-          a.append(explanation);root.append(a);
+          tile.append(list);
         }
+        root.append(tile);
       }
-      for(const city of cities){
-        makeAppSource('2 · Voir les terrains SeLoger triés · '+city,'SeLoger',
-          'Dans TerrainScope : fiches indexées par Google, constructeurs connus écartés. Les annonces non indexées sont absentes.');
-        const result=selogerTerrainUrl(city);
-        makeLink('SeLoger · catalogue complet NON filtré · '+city,result.url,false,result.exact
-          ?'Ouvre SeLoger sans filtre de vendeur : tu verras aussi les annonces des constructeurs.'
-          :'Lien exact vers SeLoger indisponible pour cette commune.');
-      }
-      for(const city of cities){
-        makeAppSource('3 · Voir les terrains Bien’ici triés · '+city,'Bien’ici',
-          'Dans TerrainScope : fiches indexées par Google, constructeurs connus écartés. Les annonces non indexées sont absentes.');
-        const direct=bieniciTerrainUrl(city);
-        makeLink('Bien’ici · catalogue complet NON filtré · '+city,direct,false,direct
-          ?'Ouvre Bien’ici sans filtre de vendeur : tu verras aussi les annonces des constructeurs.'
-          :'Lien exact vers Bien’ici indisponible : code postal manquant.');
-      }
-      for(const city of cities){
-        const direct=iadTerrainUrl(city);
-        makeLink('4 · IAD · terrains · '+city,direct,false,direct
-          ?'Page IAD filtrée « Terrain » sur '+city+' ; zéro résultat possible si aucune offre publiée.'
-          :'Lien IAD non créé : code postal manquant, pour éviter d’afficher une autre commune.');
-      }
-      for(const city of cities){
-        const direct=immobilierNotairesTerrainUrl(city);
-        makeLink('5 · Immobilier.notaires.fr · terrains · '+city,direct,false,
-          'Accès direct aux terrains à vendre à '+city+' (37). Si la page est vide, aucun terrain notarial n’est nécessairement proposé actuellement.');
+      root.parentElement.querySelector('.portal-options')?.remove();
+      if(cities.length){
+        const extra=document.createElement('details');extra.className='portal-options';
+        const title=document.createElement('summary');title.textContent='Recherches complémentaires et filtres facultatifs';
+        const links=document.createElement('div');links.className='portal-option-links';
+        const external=(label,url)=>{
+          if(!url)return;
+          const a=document.createElement('a');a.textContent=label+' ↗';a.href=url;
+          a.target='_blank';a.rel='noopener noreferrer';links.append(a);
+        };
+        const internal=(label,source)=>{
+          if(!googleConfigured)return;
+          const btn=document.createElement('button');btn.type='button';btn.textContent=label;
+          btn.addEventListener('click',()=>{
+            const leads=el('googleLeads');leads.hidden=false;leads.open=true;
+            window.TerrainAggregator?.setSourceFilter?.(source);
+            leads.scrollIntoView({behavior:'instant',block:'start'});
+          });
+          links.append(btn);
+        };
+        for(const city of cities){
+          external('Le Bon Coin · exclusions facultatives · '+city,leboncoinReducedUrl(city));
+          internal('SeLoger · pistes triées · '+city,'SeLoger');
+          internal('Bien’ici · pistes triées · '+city,'Bien’ici');
+        }
+        if(links.children.length){extra.append(title,links);root.after(extra)}
       }
       el('quickSources').hidden=false;
     }
@@ -1334,10 +1418,29 @@
     renderCities();
     loadCompleteCityIndex();
     displayDevelopers();
+    updateQuickSources([]);
     updateOfficialCatalogChecks();
     // L'ancien système de validation manuelle a été supprimé : ne plus l'appeler.
     if(googleConfigured)loadGoogleEngine();
-    if('serviceWorker' in navigator && location.protocol==='https:')navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+    // La PWA cherche et applique les nouvelles versions sans désinstallation.
+    if('serviceWorker' in navigator && location.protocol==='https:'){
+      const previousController=Boolean(navigator.serviceWorker.controller);
+      let reloadingForUpdate=false;
+      navigator.serviceWorker.addEventListener('controllerchange',()=>{
+        if(previousController&&!reloadingForUpdate){
+          reloadingForUpdate=true;
+          location.reload();
+        }
+      });
+      navigator.serviceWorker.register('./service-worker.js',{updateViaCache:'none'}).then(registration=>{
+        const checkUpdate=()=>registration.update().catch(()=>{});
+        checkUpdate();
+        document.addEventListener('visibilitychange',()=>{
+          if(document.visibilityState==='visible')checkUpdate();
+        });
+        window.addEventListener('pageshow',checkUpdate);
+      }).catch(()=>{});
+    }
   </script>
   <script src="./aggregator.js"></script>
 </body>
