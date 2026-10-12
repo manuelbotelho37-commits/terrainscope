@@ -420,9 +420,28 @@ public final class MainActivity extends Activity {
                     item.optString("lot", ""), item.optLong("priceEuros", 0),
                     item.optDouble("areaM2", 0), item.optBoolean("cityConfirmed", false));
                 String key = url.replaceFirst("#.*$", "").replaceFirst("/$", "");
-                if (!listing.title.isEmpty() && !imported.containsKey(key)) {
+                if (listing.title.isEmpty()) continue;
+                ListingEngine.Listing previous = imported.get(key);
+                if (previous == null) {
                     imported.put(key, listing);
                     added++;
+                } else {
+                    // Relecture après défilement : la fiche DOM peut maintenant
+                    // préciser l'annonceur, la surface ou le prix. Ne pas perdre
+                    // ces détails sous prétexte que l'URL est déjà enregistrée.
+                    imported.put(key, new ListingEngine.Listing(
+                        previous.source, previous.url,
+                        listing.title.length() > previous.title.length() ? listing.title : previous.title,
+                        previous.city,
+                        previous.seller.isEmpty() ? listing.seller : previous.seller,
+                        listing.description.length() > previous.description.length()
+                            ? listing.description : previous.description,
+                        previous.address.isEmpty() ? listing.address : previous.address,
+                        previous.lot.isEmpty() ? listing.lot : previous.lot,
+                        previous.priceEuros > 0 ? previous.priceEuros : listing.priceEuros,
+                        previous.areaM2 > 0 ? previous.areaM2 : listing.areaM2,
+                        listing.cityConfirmed
+                    ));
                 }
             }
             String checkedSource = result.optString("source", sourceHost);
@@ -436,9 +455,18 @@ public final class MainActivity extends Activity {
             String warning = displayedCount > extractedCount
                 ? " · Import PARTIEL : ne pas confondre avec le total des terrains disponibles."
                 : " · Vérifie le tri dans les onglets.";
-            status.setText(extractedCount + " fiche(s) lue(s)" + total +
+            String report = extractedCount + " fiche(s) lue(s)" + total +
                 ", " + added + " nouvelle(s), " + imported.size() +
-                " cumulée(s). " + sourcesVisited.size() + " source(s) consultée(s)." + warning);
+                " cumulée(s). " + sourcesVisited.size() + " source(s) consultée(s)." + warning;
+            if (!imported.isEmpty()) {
+                List<ListingEngine.Result> classified =
+                    ListingEngine.classify(new ArrayList<>(imported.values()));
+                boolean hasSelected = !ListingEngine.filtered(classified).isEmpty();
+                chooseTab(hasSelected ? filteredTab : allTab);
+                displayListings(hasSelected);
+                if (!hasSelected) report += " · Aucune fiche validée : contrôle dans Toutes les annonces.";
+            }
+            status.setText(report);
         } catch (Exception error) {
             status.setText("Cette page n’a pas pu être lue. Ce n’est PAS « zéro terrain disponible ». " +
                 "Cause : " + error.getMessage());
@@ -466,6 +494,10 @@ public final class MainActivity extends Activity {
             " · Les portails non consultés ne valent pas « zéro annonce ».", 12, false);
         coverage.setTextColor(MUTED);
         cards.addView(coverage);
+        Button backToSite = action("← Retour au site · charger d'autres annonces", false);
+        backToSite.setTextSize(12);
+        backToSite.setOnClickListener(v -> showBrowser());
+        place(cards, backToSite, 10, 5);
         if (current.isEmpty()) {
             TextView empty = text(imported.isEmpty()
                 ? "Aucune annonce importée. Ouvre un site, laisse les résultats charger puis " +
