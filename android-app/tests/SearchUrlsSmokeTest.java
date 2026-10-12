@@ -2,6 +2,9 @@ package fr.terrainscope.app;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 
 public final class SearchUrlsSmokeTest {
     private static int count = 0;
@@ -45,6 +48,27 @@ public final class SearchUrlsSmokeTest {
         verify(search.urlFor("Le Bon Coin", "Commune inventée") == null,
             "Commune absente : ne pas ouvrir une recherche nationale");
         verify(search.urlFor("Le Bon Coin", "") == null, "Commune vide non acceptée");
+        // Un second fichier d'essai généré par Node couvre les 272 communes
+        // réelles du référentiel 37, pas seulement les quelques exemples.
+        if (args.length > 0) {
+            for (String row : Files.readAllLines(Path.of(args[0]), StandardCharsets.UTF_8)) {
+                String[] data = row.split("\\t", -1);
+                if (data.length != 2) throw new AssertionError("Ligne de commune incorrecte");
+                String city = data[0], postal = data[1];
+                Map<String, String> local = new HashMap<>();
+                local.put(ListingEngine.normalize(city), postal);
+                SearchUrls source = new SearchUrls(local, new HashMap<>());
+                String expectedPath = "cp_" + ListingEngine.normalize(city).replace(' ', '-') +
+                    "_" + postal + "/real_estate_type%3A3";
+                String actual = source.urlFor("Le Bon Coin", city);
+                verify(actual != null && actual.endsWith(expectedPath),
+                    "Terrain + code postal exact " + city + " " + postal);
+                verify(source.urlFor("Bien’ici", city).endsWith("/terrain"),
+                    "Bien’ici type Terrain " + city);
+                verify(source.urlFor("Notaires", city) == null,
+                    "Jamais de page générale notaires " + city);
+            }
+        }
         System.out.println("TerrainScope: " + count + " vérifications des recherches strictes réussies.");
     }
 }
