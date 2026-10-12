@@ -1,0 +1,45 @@
+package fr.terrainscope.app;
+
+import java.util.Map;
+
+/**
+ * URLs de recherche. Génère UNIQUEMENT des liens réellement ciblés
+ * lorsque la commune et ses paramètres sont connus. Pas de secours générique.
+ */
+public final class SearchUrls {
+    private final Map<String, String> postals;
+    private final Map<String, String> seLogerPaths;
+
+    public SearchUrls(Map<String, String> postals, Map<String, String> seLogerPaths) {
+        this.postals = postals;
+        this.seLogerPaths = seLogerPaths;
+    }
+
+    public String urlFor(String source, String city) {
+        String key = ListingEngine.normalize(city);
+        String code = postals.get(key);
+        if (key.isEmpty() || code == null || !code.matches("\\d{5}")) return null;
+        String slug = key.replace(' ', '-');
+        switch (source) {
+            case "Le Bon Coin":
+                // Filtre géographique natif + type immobilier Terrain (3).
+                // /recherche?text=terrain ouvre au contraire les maisons, les
+                // appartements et parfois toute la France. Ne jamais l'utiliser.
+                return "https://www.leboncoin.fr/cl/ventes_immobilieres/cp_"
+                    + slug + "_" + code + "/real_estate_type:3";
+            case "SeLoger":
+                String path = seLogerPaths.get(key);
+                return path == null ? null :
+                    "https://www.seloger.com/recherche/achat/terrain/centre-val-de-loire/" + path;
+            case "Bien’ici":
+                return "https://www.bienici.com/recherche/achat/" + slug + "-" + code + "/terrain";
+            case "IAD":
+                return "https://www.iadfrance.fr/annonces/" + slug + "-" + code + "/vente/terrain";
+            case "Notaires":
+                // N'inventer aucun lien filtré pour ce portail.
+                return null;
+            default:
+                return null;
+        }
+    }
+}
