@@ -12,6 +12,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -70,6 +72,7 @@ public final class MainActivity extends Activity {
     private boolean showingBrowser = true;
     private boolean showLotisseursOnLoad = false;
     private boolean pageLoading = false;
+    private boolean webError = false;
     private String activeCity = "";
     private String batchSignature = "";
     private final ArrayList<String> activeCities = new ArrayList<>();
@@ -294,8 +297,25 @@ public final class MainActivity extends Activity {
                 catch (Exception ignored) {}
                 return true;
             }
+            @Override public void onReceivedError(WebView view,
+                    WebResourceRequest request, WebResourceError error) {
+                if (!request.isForMainFrame()) return;
+                pageLoading = false;
+                webError = true;
+                status.setText("Ce site n'a pas pu charger la page. Vérifie la connexion, " +
+                    "ou essaie le site suivant. Aucun résultat ne peut être déduit.");
+            }
+            @Override public void onReceivedHttpError(WebView view,
+                    WebResourceRequest request, WebResourceResponse response) {
+                if (!request.isForMainFrame() || response.getStatusCode() < 400) return;
+                webError = true;
+                pageLoading = false;
+                status.setText("Accès au site refusé ou indisponible (HTTP " +
+                    response.getStatusCode() + "). Cela ne signifie PAS zéro terrain.");
+            }
             @Override public void onPageFinished(WebView view, String url) {
                 pageLoading = false;
+                if (webError) return;
                 if (showLotisseursOnLoad && url.startsWith(TERRAIN_SCOPE)) {
                     showLotisseursOnLoad = false;
                     view.evaluateJavascript(
@@ -390,6 +410,7 @@ public final class MainActivity extends Activity {
         sourcesOpened.add(site + " · " + city);
         showLotisseursOnLoad = false;
         pageLoading = true;
+        webError = false;
         showBrowser();
         browser.loadUrl(url);
         status.setText("Recherche TERRAIN pour " + city + " (" +
@@ -439,6 +460,10 @@ public final class MainActivity extends Activity {
         }
         if (pageLoading || browser.getProgress() < 100) {
             status.setText("Attends que la page se charge complètement avant d'importer.");
+            return;
+        }
+        if (webError) {
+            status.setText("La page est inaccessible. Impossible d'importer : ce n'est pas zéro terrain.");
             return;
         }
         Uri current = Uri.parse(browser.getUrl() == null ? "" : browser.getUrl());
