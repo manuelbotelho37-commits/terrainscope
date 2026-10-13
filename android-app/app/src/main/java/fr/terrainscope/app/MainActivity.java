@@ -84,6 +84,7 @@ public final class MainActivity extends Activity {
     private static final int COUNT_GREEN = Color.rgb(16, 151, 90);
 
     private MultiAutoCompleteTextView cityInput;
+    private TextView searchTotal;
     private final ArrayList<String> communeNames = new ArrayList<>();
     private Spinner siteSpinner;
     private WebView browser;
@@ -246,6 +247,22 @@ public final class MainActivity extends Activity {
         badge.setTextColor(Color.WHITE);
         badge.setContentDescription(count + " terrain(s) identifié(s) parmi les fiches récupérées");
         badge.setVisibility(View.VISIBLE);
+    }
+
+    /** Décompte partiel des terrains admis : sans constructeurs ni doublons. */
+    private void refreshSearchTotal() {
+        if (searchTotal == null) return;
+        int count = ListingEngine.filtered(ListingEngine.classify(
+            new ArrayList<>(imported.values()))).size();
+        if (count <= 0) {
+            searchTotal.setText("");
+            searchTotal.setVisibility(View.GONE);
+            return;
+        }
+        searchTotal.setText(count + (count == 1 ? " terrain trouvé" : " terrains trouvés"));
+        searchTotal.setContentDescription(count +
+            " terrains retenus parmi les annonces réellement récupérées. Décompte non exhaustif.");
+        searchTotal.setVisibility(View.VISIBLE);
     }
 
     private void refreshDeveloperBadges() {
@@ -513,6 +530,7 @@ public final class MainActivity extends Activity {
         search.setPadding(dp(5), dp(3), dp(5), dp(6));
         LinearLayout fields = row();
         fields.setGravity(Gravity.CENTER_VERTICAL);
+        boolean narrowToolbar = screenDp < 560;
         cityInput = new MultiAutoCompleteTextView(this);
         cityInput.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
         cityInput.setThreshold(2);
@@ -543,7 +561,10 @@ public final class MainActivity extends Activity {
         siteSpinner.setBackground(rounded(SOFT, 10, BORDER));
         siteSpinner.setVisibility(View.GONE);
         fields.addView(siteSpinner, new LinearLayout.LayoutParams(0, dp(1), 0f));
-        place(search, fields, 4, 7);
+        place(search, fields, 4, 6);
+        LinearLayout compactActions = row();
+        compactActions.setGravity(Gravity.CENTER_VERTICAL);
+        if (narrowToolbar) place(search, compactActions, 0, 7);
         LinearLayout filterRow = row();
         TextView filterLabel = heading("Sources d'annonces", 11, MUTED, false);
         filterRow.addView(filterLabel, new LinearLayout.LayoutParams(0, -2, 1f));
@@ -614,7 +635,26 @@ public final class MainActivity extends Activity {
         golden.setCornerRadius(dp(17));
         golden.setStroke(dp(1), GOLD);
         searchAll.setOnClickListener(v -> startAutomatedSearch());
-        place(search, searchAll, 0, 4);
+        searchTotal = heading("", 11, GOLD, true);
+        searchTotal.setGravity(Gravity.CENTER);
+        searchTotal.setPadding(dp(5), 0, dp(5), 0);
+        searchTotal.setBackground(rounded(PANEL, 13, GOLD_SOFT));
+        searchTotal.setVisibility(View.GONE);
+        if (narrowToolbar) {
+            LinearLayout.LayoutParams badgeWidth =
+                new LinearLayout.LayoutParams(dp(151), dp(46));
+            badgeWidth.setMargins(0, 0, dp(7), 0);
+            compactActions.addView(searchTotal, badgeWidth);
+            compactActions.addView(searchAll,
+                new LinearLayout.LayoutParams(0, dp(46), 1f));
+        } else {
+            LinearLayout.LayoutParams badgeWidth =
+                new LinearLayout.LayoutParams(dp(148), dp(53));
+            badgeWidth.setMargins(0, 0, dp(7), 0);
+            fields.addView(searchTotal, badgeWidth);
+            fields.addView(searchAll,
+                new LinearLayout.LayoutParams(dp(143), dp(53)));
+        }
         addDeveloperPills(search);
         LinearLayout helper = row();
         TextView sources = heading("Prix croissants · pastilles : fiches récupérées (décomptes partiels)",
@@ -1170,6 +1210,7 @@ public final class MainActivity extends Activity {
         refreshResultSourceTabs();
         cards.removeAllViews();
         Map<ListingEngine.State, Integer> counts = ListingEngine.counts(classified);
+        refreshSearchTotal();
 
         LinearLayout headingRow = row();
         headingRow.setGravity(Gravity.CENTER_VERTICAL);
