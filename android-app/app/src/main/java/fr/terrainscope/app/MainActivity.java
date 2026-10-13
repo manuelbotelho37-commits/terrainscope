@@ -93,6 +93,7 @@ public final class MainActivity extends Activity {
     private LinearLayout results;
     private ScrollView screenScroller;
     private TextView status;
+    private LinearLayout sourceFallback;
     private boolean showingBrowser = true;
     private boolean pageLoading = false;
     private boolean webError = false;
@@ -263,6 +264,45 @@ public final class MainActivity extends Activity {
         searchTotal.setContentDescription(count +
             " terrains retenus parmi les annonces réellement récupérées. Décompte non exhaustif.");
         searchTotal.setVisibility(View.VISIBLE);
+    }
+
+    /** Quand un site refuse l'extraction, laisser au client l'accès direct
+     * au moteur TERRAIN filtré sur la commune. Aucun chiffre n'est inventé. */
+    private void refreshSourceFallback() {
+        if (sourceFallback == null) return;
+        sourceFallback.removeAllViews();
+        boolean scannedLeBonCoin = false;
+        boolean anyLeBonCoin = false;
+        for (String opened : sourcesOpened)
+            if (opened.startsWith("Le Bon Coin · ")) scannedLeBonCoin = true;
+        for (ListingEngine.Listing item : imported.values())
+            if ("Le Bon Coin".equals(item.source)) anyLeBonCoin = true;
+        if (scanning || !scannedLeBonCoin || anyLeBonCoin || activeCities.isEmpty()) {
+            sourceFallback.setVisibility(View.GONE);
+            return;
+        }
+
+        TextView explanation = heading(
+            "Le Bon Coin : lecture automatique indisponible. " +
+            "Cela ne signifie pas qu'il n'y a aucun terrain. " +
+            "Ouvre directement les annonces Terrain de la commune :", 11, TEXT, false);
+        place(sourceFallback, explanation, 0, 4);
+        SearchUrls searchUrls = new SearchUrls(postalCodes, selogerPaths);
+        for (String city : activeCities) {
+            final String directUrl = searchUrls.urlFor("Le Bon Coin", city);
+            if (directUrl == null) continue;
+            Button open = action("Voir les terrains Le Bon Coin · " + city + "  ↗", false);
+            open.setTextSize(11);
+            open.setOnClickListener(v -> {
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(directUrl)));
+                } catch (Exception e) {
+                    status.setText("Impossible d'ouvrir Le Bon Coin pour " + city);
+                }
+            });
+            place(sourceFallback, open, 2, 2);
+        }
+        sourceFallback.setVisibility(View.VISIBLE);
     }
 
     private void refreshDeveloperBadges() {
@@ -703,6 +743,10 @@ public final class MainActivity extends Activity {
         status.setBackground(rounded(PANEL, 12, BORDER));
         place(main, status, 0, 8);
 
+        sourceFallback = section(PANEL, 11, GOLD_SOFT);
+        sourceFallback.setVisibility(View.GONE);
+        place(main, sourceFallback, 0, 4);
+
         browser = new WebView(this);
         browser.setBackgroundColor(Color.WHITE);
         WebSettings settings = browser.getSettings();
@@ -896,10 +940,13 @@ public final class MainActivity extends Activity {
             boolean inspectingSite = !sourceFilter.isEmpty();
             chooseTab(inspectingSite ? allTab : found ? filteredTab : allTab);
             displayListings(!inspectingSite && found);
+            refreshSourceFallback();
             status.setText("Recherche terminée : " + imported.size() + " annonces récupérées sur " +
                 scanTasks.size() + " recherches ciblées ; " + scanBlocked +
                 " source(s) en échec, " + scanLimited +
-                " parcours limité(s). Les sites peuvent afficher d'autres annonces.");
+                " parcours limité(s). Les sites peuvent afficher d'autres annonces." +
+                (sourceFallback.getVisibility() == View.VISIBLE ?
+                " Le Bon Coin n'a pas pu être lu : utilise le bouton d'accès direct." : ""));
             return;
         }
         String[] task = scanTasks.get(scanTaskIndex);
@@ -1178,8 +1225,8 @@ public final class MainActivity extends Activity {
                 result.optInt("declaredCount", -1);
             // Certains portails (notamment Le Bon Coin) changent leur DOM ou
             // imposent un contrôle humain. Zéro extraction != zéro terrain.
-            if (result.optInt("retrieved", 0) == 0 &&
-                (displayedCount > 0 || result.optInt("scannedCards", 0) == 0)) {
+            if (result.optInt("retrieved", 0) == 0) {
+                // Zéro extraction n'est jamais la preuve de zéro annonce.
                 failedSourceNames.add(result.optString("source", sourceHost));
                 refreshSourcePills();
             }
@@ -1220,6 +1267,7 @@ public final class MainActivity extends Activity {
         cards.removeAllViews();
         Map<ListingEngine.State, Integer> counts = ListingEngine.counts(classified);
         refreshSearchTotal();
+        refreshSourceFallback();
 
         LinearLayout headingRow = row();
         headingRow.setGravity(Gravity.CENTER_VERTICAL);
