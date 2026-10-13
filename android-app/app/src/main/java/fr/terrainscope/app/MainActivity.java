@@ -73,6 +73,7 @@ public final class MainActivity extends Activity {
     private LinearLayout resultSourceBar;
     private final LinkedHashMap<String, LinearLayout> resultSourceTiles = new LinkedHashMap<>();
     private final LinkedHashMap<String, TextView> resultSourceCaptions = new LinkedHashMap<>();
+    private final LinkedHashMap<String, TextView> resultSourceCountBadges = new LinkedHashMap<>();
     private final LinkedHashSet<String> enabledSources = new LinkedHashSet<>();
     private final LinkedHashMap<String, LinearLayout> sourcePills = new LinkedHashMap<>();
     private final LinkedHashMap<String, TextView> sourceChecks = new LinkedHashMap<>();
@@ -306,10 +307,11 @@ public final class MainActivity extends Activity {
                 active ? GOLD : BORDER));
             TextView caption = resultSourceCaptions.get(site);
             if (caption != null) {
-                caption.setText((ALL_RESULTS.equals(site) ? "Toutes" :
-                    "IAD".equals(site) ? "iad" : site) + "  " + count);
+                caption.setText(ALL_RESULTS.equals(site) ? "Toutes" :
+                    "IAD".equals(site) ? "iad" : site);
                 caption.setTextColor(active ? DARK : TEXT);
             }
+            setCountBubble(resultSourceCountBadges.get(site), count);
             entry.getValue().setContentDescription(
                 "Voir les annonces " + (ALL_RESULTS.equals(site) ? "de tous les sites" : "de " + site) +
                 ", " + count + " fiches importées.");
@@ -338,6 +340,11 @@ public final class MainActivity extends Activity {
         caption.setSingleLine(true);
         caption.setEllipsize(TextUtils.TruncateAt.END);
         tile.addView(caption, new LinearLayout.LayoutParams(0, -2, 1f));
+        TextView countBadge = countBubble();
+        LinearLayout.LayoutParams countSize = new LinearLayout.LayoutParams(dp(24), dp(23));
+        countSize.setMargins(dp(2), 0, 0, 0);
+        tile.addView(countBadge, countSize);
+        resultSourceCountBadges.put(site, countBadge);
         resultSourceTiles.put(site, tile);
         resultSourceCaptions.put(site, caption);
         tile.setOnClickListener(v -> openResultsForSource(site));
