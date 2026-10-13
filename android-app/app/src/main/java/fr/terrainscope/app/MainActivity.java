@@ -402,9 +402,26 @@ public final class MainActivity extends Activity {
                 pill.setContentDescription(name + " : ouvrir le site officiel");
                 chipFrame.setOnClickListener(v -> {
                     try {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link)));
-                        if (!notice.isEmpty())
-                            status.setText(name + " : " + notice);
+                        // Le site générique ne représente pas un filtre communal.
+                        // Si un programme officiel pour la commune a été vérifié,
+                        // ouvrir sa fiche exacte et non le catalogue départemental.
+                        SearchUrls searchUrls = new SearchUrls(postalCodes, selogerPaths);
+                        String exact = null;
+                        for (String city : cityInput.getText().toString().split("[,;]")) {
+                            exact = searchUrls.urlForDeveloper(name, city.trim());
+                            if (exact != null) break;
+                        }
+                        if (exact != null) {
+                            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(exact)));
+                            status.setText(name + " : ouverture des terrains du programme recherché.");
+                        } else {
+                            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link)));
+                            status.setText(name + " : catalogue officiel ouvert. Filtre par commune " +
+                                "non vérifié ; sélectionne la ville sur leur site.");
+                        }
+                        if (!notice.isEmpty() && exact == null)
+                            status.setText(name + " : " + notice +
+                                " · filtre par commune à vérifier sur le site.");
                     } catch (Exception error) {
                         status.setText("Impossible d'ouvrir le site " + name);
                     }
@@ -782,6 +799,14 @@ public final class MainActivity extends Activity {
                 else sourcesVisited.add(site + " · " + city + " (non vérifiable)");
             }
         }
+        // Les catalogues officiels ne sont pas couverts par les cinq portails.
+        // Ajouter UNIQUEMENT les programmes communaux dont l'URL a été vérifiée,
+        // sans recherche fictive ni décompte inventé pour les autres lotisseurs.
+        for (String city : activeCities) {
+            String verified = urls.urlForDeveloper("CM-CIC · AFEDIM", city);
+            if (verified != null)
+                scanTasks.add(new String[]{"CM-CIC · AFEDIM", city, verified});
+        }
         chooseTab(filteredTab);
         displayListings(true);
         if (scanTasks.isEmpty()) {
@@ -880,11 +905,13 @@ public final class MainActivity extends Activity {
             return;
         }
         try {
+            boolean developerProgram =
+                "CM-CIC · AFEDIM".equals(scanTasks.get(scanTaskIndex)[0]);
             String payload = "window.__terrainScopeRequestedCity=" + JSONObject.quote(activeCity) + ";\n" +
                 "window.__terrainScopeRequestedPostal=" +
                 JSONObject.quote(postalCodes.getOrDefault(ListingEngine.normalize(activeCity), "")) + ";\n" +
                 "window.__terrainScopeKnownCities=" + new JSONArray(communeNames).toString() +
-                ";\n" + readAsset("extract-visible.js");
+                ";\n" + readAsset(developerProgram ? "extract-afedim.js" : "extract-visible.js");
             browser.evaluateJavascript(payload, reply -> {
                 if (!scanning || run != scanGeneration || taskIndex != scanTaskIndex) return;
                 String nextUrl = "";
@@ -1054,6 +1081,10 @@ public final class MainActivity extends Activity {
                     item.optDouble("areaM2", 0), item.optBoolean("cityConfirmed", false),
                     item.optString("imageUrl", ""));
                 String key = url.replaceFirst("#.*$", "").replaceFirst("/$", "");
+                // Plusieurs lots officiellement publiés sur la même fiche programme
+                // ne sont PAS une seule parcelle ; les conserver séparément.
+                if ("CM-CIC · AFEDIM".equals(listing.source) && !listing.lot.isEmpty())
+                    key += "|lot:" + ListingEngine.normalize(listing.lot);
                 if (listing.title.isEmpty()) continue;
                 ListingEngine.Listing previous = imported.get(key);
                 if (previous == null) {
@@ -1085,6 +1116,13 @@ public final class MainActivity extends Activity {
             refreshDeveloperBadges();
             int displayedCount = result.isNull("declaredCount") ? -1 :
                 result.optInt("declaredCount", -1);
+            // Certains portails (notamment Le Bon Coin) changent leur DOM ou
+            // imposent un contrôle humain. Zéro extraction != zéro terrain.
+            if (result.optInt("retrieved", 0) == 0 &&
+                (displayedCount > 0 || result.optInt("scannedCards", 0) == 0)) {
+                failedSourceNames.add(result.optString("source", sourceHost));
+                refreshSourcePills();
+            }
             int extractedCount = result.optInt("retrieved", 0);
             String total = displayedCount > 0
                 ? " sur " + displayedCount + " annonce(s) affichée(s) par le site"
@@ -1305,7 +1343,8 @@ public final class MainActivity extends Activity {
     }
     private boolean approvedHost(String host) {
         for (String name : new String[]{"leboncoin.fr","seloger.com","bienici.com",
-                "iadfrance.fr","immobilier.notaires.fr","immonot.com"}) {
+                "iadfrance.fr","immobilier.notaires.fr","immonot.com",
+                "afedim.fr"}) {
             if (host.equals(name) || host.endsWith("." + name)) return true;
         }
         return false;
