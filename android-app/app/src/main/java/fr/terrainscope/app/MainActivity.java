@@ -1551,6 +1551,97 @@ public final class MainActivity extends Activity {
     private int dp(int value) {
         return Math.round(value * getResources().getDisplayMetrics().density);
     }
+    /**
+     * Samsung Fold : pivoter l'écran ou plier/déplier ne doit PAS recréer
+     * l'activité. Les recherches, résultats, filtres, cases cochées, URLs WebView
+     * et tâches de collecte restent dans leurs objets d'origine.
+     * Seules les dimensions des contrôles sont recalculées.
+     */
+    @Override public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        adaptLayoutToWidth(newConfig.screenWidthDp);
+    }
+
+    private void adaptLayoutToWidth(int screenDp) {
+        if (main == null || searchFields == null || compactSearchActions == null ||
+            mainSearchButton == null || developerSection == null) return;
+        // Largeur centrée de la maquette, recalculée après rotation.
+        ViewGroup.LayoutParams base = main.getLayoutParams();
+        if (base instanceof FrameLayout.LayoutParams) {
+            FrameLayout.LayoutParams content = (FrameLayout.LayoutParams) base;
+            content.width = dp(Math.min(690, Math.max(300, screenDp - 20)));
+            main.setLayoutParams(content);
+        }
+
+        boolean narrow = screenDp < 560;
+        boolean actionsCurrentlyCompact = mainSearchButton.getParent() == compactSearchActions;
+        if (narrow != actionsCurrentlyCompact) {
+            // Déplacer les MÊMES vues, jamais les reconstruire : le champ et
+            // le compteur conservent intégralement la commune et le total.
+            ((ViewGroup) mainSearchButton.getParent()).removeView(mainSearchButton);
+            ((ViewGroup) searchTotal.getParent()).removeView(searchTotal);
+            if (narrow) {
+                LinearLayout.LayoutParams badge =
+                    new LinearLayout.LayoutParams(dp(151), dp(46));
+                badge.setMargins(0, 0, dp(7), 0);
+                compactSearchActions.addView(searchTotal, badge);
+                compactSearchActions.addView(mainSearchButton,
+                    new LinearLayout.LayoutParams(0, dp(46), 1f));
+            } else {
+                LinearLayout.LayoutParams badge =
+                    new LinearLayout.LayoutParams(dp(148), dp(53));
+                badge.setMargins(0, 0, dp(7), 0);
+                searchFields.addView(searchTotal, badge);
+                searchFields.addView(mainSearchButton,
+                    new LinearLayout.LayoutParams(dp(143), dp(53)));
+            }
+        }
+        compactSearchActions.setVisibility(narrow ? View.VISIBLE : View.GONE);
+
+        // Les cinq sources basculent entre logo+nom côte à côte sur grand
+        // écran, et logo au-dessus du nom sur écran étroit.
+        boolean wideSource = screenDp >= 620;
+        for (LinearLayout tile : sourcePills.values()) {
+            View parent = (View) tile.getParent();
+            if (!(parent instanceof FrameLayout)) continue;
+            ViewGroup.LayoutParams frameBase = parent.getLayoutParams();
+            if (frameBase instanceof LinearLayout.LayoutParams) {
+                LinearLayout.LayoutParams frame = (LinearLayout.LayoutParams) frameBase;
+                frame.height = dp(wideSource ? 51 : 63);
+                parent.setLayoutParams(frame);
+            }
+            tile.setOrientation(wideSource ?
+                LinearLayout.HORIZONTAL : LinearLayout.VERTICAL);
+            tile.setGravity(Gravity.CENTER);
+            tile.setPadding(dp(3), dp(3), wideSource ? dp(21) : dp(3), dp(3));
+            if (tile.getChildCount() >= 2 &&
+                tile.getChildAt(0) instanceof FrameLayout &&
+                tile.getChildAt(1) instanceof TextView) {
+                View mark = tile.getChildAt(0);
+                mark.setLayoutParams(new LinearLayout.LayoutParams(
+                    dp(wideSource ? 27 : 32), dp(wideSource ? 27 : 29)));
+                View caption = tile.getChildAt(1);
+                caption.setLayoutParams(wideSource
+                    ? new LinearLayout.LayoutParams(0, -2, 1f)
+                    : new LinearLayout.LayoutParams(-1, dp(20)));
+            }
+        }
+
+        // Conserver les annonces importées et les 18 entreprises ; seule la
+        // grille est réorganisée en 2 ou 4 colonnes suivant le Fold.
+        int columns = screenDp >= 480 ? 4 : 2;
+        if (columns != developerColumns) {
+            developerSection.removeAllViews();
+            developerCountBadges.clear();
+            developerDomains.clear();
+            addDeveloperPills(developerSection);
+        }
+        refreshSourcePills();
+        refreshDeveloperBadges();
+        refreshResultSourceTabs();
+        refreshSearchTotal();
+    }
+
     @Override public void onBackPressed() {
         if (showingBrowser && browser.canGoBack()) browser.goBack();
         else if (!showingBrowser) showBrowser();
