@@ -31,7 +31,7 @@ check('heading("TerraNova", 27, GOLD, true)',"Logo et wordmark luxe");
 check("GradientDrawable.Orientation.TL_BR","Dégradé or");
 check('readAsset("lotisseurs-37.json")',"Catalogue embarqué");
 check("int columns = width >= 480 ? 4 : 2;","Grille compacte 2/4 colonnes Fold");
-check("addDeveloperPills(search);","18 pastilles placées juste sous Rechercher");
+check("addDeveloperPills(developerSection);","18 lotisseurs dans une grille réadaptable au Fold");
 check("developerCountBadges.put(name, devBadge)","Une pastille par aménageur");
 check("sourceCountBadges.put(site, sourceBadge)","Une pastille par portail");
 check("setCountBubble(sourceCountBadges.get(site), count)","Compteur actualisé après collecte");
@@ -72,6 +72,18 @@ assert.ok(!main.includes("displayDevelopers()"),"Anciennes grandes cartes lotiss
 check("resultSourceBar.setVisibility(View.VISIBLE)","Onglets visibles dans les résultats");
 check('heading("Motif : " + record.reason','Motif de classement des annonces visible');
 
+check('android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"',
+  "Android garde la même Activity lors de la rotation et de l'ouverture Fold",
+  read("../app/src/main/AndroidManifest.xml"));
+check("void onConfigurationChanged(Configuration newConfig)","Rotation prise en charge");
+check("adaptLayoutToWidth(newConfig.screenWidthDp)","Dimensions adaptées après rotation");
+check("mainSearchButton.getParent() == compactSearchActions","Même bouton conservé");
+check("searchTotal.getParent()).removeView(searchTotal)","Même compteur conservé");
+check("developerSection.removeAllViews()","Grille lotisseurs reconfigurée, sans toucher aux annonces");
+check("columns != developerColumns","Reconfiguration seulement si nombre de colonnes modifié");
+check("refreshDeveloperBadges()","Comptages existants conservés");
+check("refreshResultSourceTabs()","Résultats par portail conservés");
+check("new LinearLayout.LayoutParams(0, dp(46), 1f)","Barre de recherche pour Fold fermé");
 check("screenScroller = new ScrollView(this)","Défilement global");
 check("setContentView(screenScroller)","Écran défilant racine");
 check("screenScroller.addView(centered","Large écran centré");
