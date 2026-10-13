@@ -195,7 +195,14 @@ public final class ListingEngine {
     }
 
     private static boolean duplicate(Listing a, Listing b) {
-        if (!urlKey(a.url).isEmpty() && urlKey(a.url).equals(urlKey(b.url))) return true;
+        if (!urlKey(a.url).isEmpty() && urlKey(a.url).equals(urlKey(b.url))) {
+            // Les programmes de lotisseurs présentent plusieurs parcelles sur
+            // LA MÊME URL. Lot 18 et lot 20 ne sont pas des doublons.
+            String firstLot = normalize(a.lot), secondLot = normalize(b.lot);
+            if (!firstLot.isEmpty() && !secondLot.isEmpty() &&
+                !firstLot.equals(secondLot)) return false;
+            return true;
+        }
         // Même prix/surface sur un même portail peut correspondre à deux lots distincts.
         if (normalize(a.source).equals(normalize(b.source))) return false;
         if (normalize(a.city).isEmpty() || !normalize(a.city).equals(normalize(b.city))) return false;
@@ -246,6 +253,14 @@ public final class ListingEngine {
             if (requiresBuildabilityCheck(r.listing)) {
                 r.state = State.TO_VERIFY;
                 r.reason = "Terrain non constructible, agricole ou de loisirs : vérifier avant de proposer";
+                continue;
+            }
+            // AFEDIM peut référencer des lots déjà optionnés. Les montrer
+            // dans Toutes sans les présenter comme des terrains disponibles.
+            if (isLotisseur(r.listing) &&
+                normalize(r.listing.description).startsWith("optionne")) {
+                r.state = State.TO_VERIFY;
+                r.reason = "Lot optionné chez le lotisseur : disponibilité à confirmer";
                 continue;
             }
             // Si le portail ne fournit pas l'annonceur, impossible de savoir
