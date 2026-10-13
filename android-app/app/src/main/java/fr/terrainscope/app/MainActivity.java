@@ -339,9 +339,9 @@ public final class MainActivity extends Activity {
         boolean everySite = ALL_RESULTS.equals(site);
         LinearLayout tile = row();
         tile.setGravity(Gravity.CENTER_VERTICAL);
-        tile.setPadding(dp(9), dp(5), dp(9), dp(5));
+        tile.setPadding(dp(8), dp(3), dp(8), dp(3));
         LinearLayout.LayoutParams tileSize = new LinearLayout.LayoutParams(
-            dp(everySite ? 94 : 124), dp(48));
+            dp(everySite ? 88 : 120), dp(40));
         tileSize.setMargins(0, 0, dp(6), 0);
         strip.addView(tile, tileSize);
         if (!everySite) {
@@ -381,7 +381,8 @@ public final class MainActivity extends Activity {
             place(parent, header, 7, 5);
 
             int width = getResources().getConfiguration().screenWidthDp;
-            int columns = width >= 620 ? 6 : width >= 480 ? 4 : 3;
+            int columns = width >= 480 ? 4 : 2;
+            final int chipHeight = 47;
             LinearLayout chipRow = null;
             for (int i = 0; i < developers.length(); i++) {
                 if (i % columns == 0) {
@@ -396,19 +397,20 @@ public final class MainActivity extends Activity {
 
                 FrameLayout chipFrame = new FrameLayout(this);
                 LinearLayout.LayoutParams chipSize =
-                    new LinearLayout.LayoutParams(0, dp(70), 1f);
+                    new LinearLayout.LayoutParams(0, dp(chipHeight), 1f);
                 chipSize.setMargins(dp(2), 0, dp(2), 0);
                 chipRow.addView(chipFrame, chipSize);
                 LinearLayout pill = new LinearLayout(this);
-                pill.setOrientation(LinearLayout.VERTICAL);
-                pill.setGravity(Gravity.CENTER);
-                pill.setPadding(dp(3), dp(4), dp(3), dp(3));
+                pill.setOrientation(LinearLayout.HORIZONTAL);
+                pill.setGravity(Gravity.CENTER_VERTICAL);
+                pill.setPadding(dp(6), dp(3), dp(30), dp(3));
                 pill.setBackground(rounded(LIGHT, 12, GOLD_SOFT));
                 chipFrame.addView(pill, new FrameLayout.LayoutParams(-1, -1));
                 TextView devBadge = countBubble();
                 FrameLayout.LayoutParams devBadgeSize =
-                    new FrameLayout.LayoutParams(dp(25), dp(23), Gravity.TOP | Gravity.RIGHT);
-                devBadgeSize.setMargins(0, dp(3), dp(4), 0);
+                    new FrameLayout.LayoutParams(dp(23), dp(21),
+                        Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+                devBadgeSize.setMargins(0, 0, dp(5), 0);
                 chipFrame.addView(devBadge, devBadgeSize);
                 developerCountBadges.put(name, devBadge);
                 developerDomains.put(name, domain);
@@ -416,16 +418,16 @@ public final class MainActivity extends Activity {
                 ImageView logo = new ImageView(this);
                 logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
                 logo.setContentDescription("Logo officiel " + name);
-                pill.addView(logo, new LinearLayout.LayoutParams(dp(27), dp(27)));
+                pill.addView(logo, new LinearLayout.LayoutParams(dp(23), dp(23)));
                 PhotoLoader.show(logo, officialIcon(domain));
 
                 TextView caption = heading(name, 9, TEXT, false);
-                caption.setGravity(Gravity.CENTER);
+                caption.setGravity(Gravity.CENTER_VERTICAL);
                 caption.setMaxLines(2);
                 caption.setEllipsize(TextUtils.TruncateAt.END);
                 LinearLayout.LayoutParams labelSize =
-                    new LinearLayout.LayoutParams(-1, dp(34));
-                labelSize.setMargins(0, dp(2), 0, 0);
+                    new LinearLayout.LayoutParams(0, -2, 1f);
+                labelSize.setMargins(dp(6), 0, 0, 0);
                 pill.addView(caption, labelSize);
                 pill.setContentDescription(name + " : ouvrir le site officiel");
                 chipFrame.setOnClickListener(v -> {
@@ -460,7 +462,7 @@ public final class MainActivity extends Activity {
             for (int i = 0; i < missing && chipRow != null; i++) {
                 View spacer = new View(this);
                 LinearLayout.LayoutParams slot =
-                    new LinearLayout.LayoutParams(0, dp(70), 1f);
+                    new LinearLayout.LayoutParams(0, dp(chipHeight), 1f);
                 slot.setMargins(dp(2), 0, dp(2), 0);
                 chipRow.addView(spacer, slot);
             }
