@@ -2,6 +2,7 @@ package fr.terrainscope.app;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Handler;
@@ -84,6 +85,11 @@ public final class MainActivity extends Activity {
     private static final int COUNT_GREEN = Color.rgb(16, 151, 90);
 
     private MultiAutoCompleteTextView cityInput;
+    private LinearLayout searchFields;
+    private LinearLayout compactSearchActions;
+    private LinearLayout developerSection;
+    private Button mainSearchButton;
+    private int developerColumns;
     private TextView searchTotal;
     private final ArrayList<String> communeNames = new ArrayList<>();
     private Spinner siteSpinner;
@@ -422,6 +428,7 @@ public final class MainActivity extends Activity {
 
             int width = getResources().getConfiguration().screenWidthDp;
             int columns = width >= 480 ? 4 : 2;
+            developerColumns = columns;
             final int chipHeight = 47;
             LinearLayout chipRow = null;
             for (int i = 0; i < developers.length(); i++) {
@@ -571,6 +578,7 @@ public final class MainActivity extends Activity {
         LinearLayout search = section(DARK, 14, Color.TRANSPARENT);
         search.setPadding(dp(5), dp(3), dp(5), dp(6));
         LinearLayout fields = row();
+        searchFields = fields;
         fields.setGravity(Gravity.CENTER_VERTICAL);
         boolean narrowToolbar = screenDp < 560;
         cityInput = new MultiAutoCompleteTextView(this);
@@ -605,8 +613,10 @@ public final class MainActivity extends Activity {
         fields.addView(siteSpinner, new LinearLayout.LayoutParams(0, dp(1), 0f));
         place(search, fields, 4, 6);
         LinearLayout compactActions = row();
+        compactSearchActions = compactActions;
         compactActions.setGravity(Gravity.CENTER_VERTICAL);
-        if (narrowToolbar) place(search, compactActions, 0, 7);
+        place(search, compactActions, 0, 7);
+        compactActions.setVisibility(narrowToolbar ? View.VISIBLE : View.GONE);
         LinearLayout filterRow = row();
         TextView filterLabel = heading("Sources d'annonces", 11, MUTED, false);
         filterRow.addView(filterLabel, new LinearLayout.LayoutParams(0, -2, 1f));
@@ -676,6 +686,7 @@ public final class MainActivity extends Activity {
         refreshSourcePills();
 
         Button searchAll = action("⌕   Rechercher", true);
+        mainSearchButton = searchAll;
         searchAll.setTextSize(15);
         searchAll.setBackground(new GradientDrawable(
             GradientDrawable.Orientation.TL_BR,
@@ -704,7 +715,10 @@ public final class MainActivity extends Activity {
             fields.addView(searchAll,
                 new LinearLayout.LayoutParams(dp(143), dp(53)));
         }
-        addDeveloperPills(search);
+        developerSection = new LinearLayout(this);
+        developerSection.setOrientation(LinearLayout.VERTICAL);
+        place(search, developerSection, 0, 0);
+        addDeveloperPills(developerSection);
         LinearLayout helper = row();
         TextView sources = heading("Prix croissants · pastilles : fiches récupérées (décomptes partiels)",
             10, MUTED, false);
