@@ -40,7 +40,10 @@ check("DeveloperListings.count(classified, company","Rattachement aux lotisseurs
 check("if (count <= 0)","Compteur vide entièrement masqué");
 check("badge.setVisibility(View.GONE);","Pas de cercles gris ni tirets");
 check("searchTotal.setVisibility(View.GONE);","Total masqué avant décompte positif");
-check("searchTotal.setText(count + (count == 1","Total des terrains réellement retenus");
+check('searchTotal.setText(importedCount + (importedCount == 1', "Total des annonces réellement récupérées");
+check('accepted + (accepted == 1 ? " terrain retenu"', "Terrain retenus clairement séparés des annonces trouvées");
+check("counts.get(ListingEngine.State.TO_VERIFY)", "Annonces incertaines conservées dans Toutes");
+check("counts.get(ListingEngine.State.DUPLICATE)", "Doublons comptabilisés à part");
 check("refreshSearchTotal();","Total mis à jour après collecte");
 check("LinearLayout compactActions = row()","Compteur à côté de Rechercher sur Fold fermé");
 check("fields.addView(searchTotal, badgeWidth)","Commune, compteur, Rechercher sur Fold ouvert");
