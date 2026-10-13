@@ -53,6 +53,9 @@ jobs:
       - name: Tester l'extraction HTML et JSON-LD
         run: node android-app/tests/ExtractorSmokeTest.cjs
 
+      - name: Tester les lots AFEDIM sur les quatre communes officielles
+        run: node android-app/tests/AFEDIMSmokeTest.cjs
+
       - name: Vérifier les 18 lotisseurs intégrés
         run: node android-app/tests/LotisseursSmokeTest.cjs
 
