@@ -217,6 +217,19 @@ jobs:
             # uiautomator dump lance un second processus Android : l'émulateur
             # du runner s'est fait tuer (code 137 / mémoire). Test plus léger.
             adb shell pidof fr.terranova.app | grep -Eq '[0-9]'
+            # Vérifier que la rotation conserve LE MÊME processus Android :
+            # sinon la recherche et les annonces pourraient être perdues.
+            BEFORE_PID="$(adb shell pidof fr.terranova.app | tr -d '\r')"
+            adb shell settings put system accelerometer_rotation 0
+            adb shell settings put system user_rotation 1
+            sleep 3
+            AFTER_PID="$(adb shell pidof fr.terranova.app | tr -d '\r')"
+            test -n "$AFTER_PID" && test "$BEFORE_PID" = "$AFTER_PID"
+            adb shell settings put system user_rotation 0
+            sleep 2
+            FINAL_PID="$(adb shell pidof fr.terranova.app | tr -d '\r')"
+            test "$BEFORE_PID" = "$FINAL_PID"
+            echo "Rotation aller-retour validée : processus TerraNova conservé."
             mkdir -p android-app/build/visual-test
             timeout 35 adb exec-out screencap -p > android-app/build/visual-test/accueil.png || true
             test -s android-app/build/visual-test/accueil.png
