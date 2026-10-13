@@ -222,25 +222,29 @@ public final class MainActivity extends Activity {
         }
     }
 
-    /** Pastille verte : annonces réellement récupérées.
-     * Tiret gris = aucun terrain identifié, PAS « aucun terrain en vente ». */
+    /** Pastille verte seulement si au moins une fiche a été récupérée.
+     * Aucun cercle, tiret ou zéro affiché tant que le compteur est vide. */
     private TextView countBubble() {
-        TextView badge = heading("–", 10, Color.WHITE, true);
+        TextView badge = heading("", 10, Color.WHITE, true);
         badge.setGravity(Gravity.CENTER);
         badge.setPadding(0, 0, 0, 0);
-        badge.setBackground(rounded(SOFT, 13, Color.TRANSPARENT));
+        badge.setVisibility(View.GONE);
         return badge;
     }
 
     private void setCountBubble(TextView badge, int count) {
         if (badge == null) return;
-        badge.setText(count > 0 ? String.valueOf(count) : "–");
-        badge.setBackground(rounded(count > 0 ? COUNT_GREEN : SOFT, 13,
-            Color.TRANSPARENT));
+        if (count <= 0) {
+            badge.setText("");
+            badge.setVisibility(View.GONE);
+            badge.setContentDescription("");
+            return;
+        }
+        badge.setText(String.valueOf(count));
+        badge.setBackground(rounded(COUNT_GREEN, 13, Color.TRANSPARENT));
         badge.setTextColor(Color.WHITE);
-        badge.setContentDescription(count > 0
-            ? count + " terrain(s) identifié(s) parmi les fiches récupérées"
-            : "Aucune fiche attribuée actuellement ; catalogue complet non vérifié");
+        badge.setContentDescription(count + " terrain(s) identifié(s) parmi les fiches récupérées");
+        badge.setVisibility(View.VISIBLE);
     }
 
     private void refreshDeveloperBadges() {
