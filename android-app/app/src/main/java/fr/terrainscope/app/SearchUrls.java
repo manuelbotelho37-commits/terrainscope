@@ -15,6 +15,18 @@ public final class SearchUrls {
         this.seLogerPaths = seLogerPaths;
     }
 
+    /** Liens de PROGRAMMES officiels vérifiés pour une commune précise.
+     * Ne jamais faire croire qu'une page nationale est filtrée par ville. */
+    public String urlForDeveloper(String developer, String city) {
+        String company = ListingEngine.normalize(developer);
+        String cityKey = ListingEngine.normalize(city);
+        if (company.equals("cm cic afedim") && cityKey.equals("azay sur cher")) {
+            return "https://www.afedim.fr/fr/achat-immobilier/programme/terrain/" +
+                "azay-sur-cher-37/015753/Fiche";
+        }
+        return null; // Aucun lien direct pour cette paire lotisseur/commune vérifié.
+    }
+
     public String urlFor(String source, String city) {
         String key = ListingEngine.normalize(city);
         String code = postals.get(key);
