@@ -16,6 +16,17 @@ check("collectScanPage(run, taskIndex)","Import auto des pages");
 check('readAsset("extract-visible.js")',"Lecture du véritable DOM");
 check("startNextScanTask(run)","Passage site suivant");
 check("scanPageNumber < 4","Pagination contrôlée");
+check("private void refreshSourceFallback()","Récupération quand Le Bon Coin est bloqué");
+check("Voir les terrains Le Bon Coin · ","Bouton direct sur annonces filtrées par commune");
+check('searchUrls.urlFor("Le Bon Coin", city)',"Adresse commune + catégorie Terrain exacte");
+check("scannedLeBonCoin","Fallback activé uniquement quand Le Bon Coin fut interrogé");
+check("sourceFallback.setVisibility(View.VISIBLE)","Lien affiché quand les annonces ne sont pas lisibles");
+check("Le Bon Coin n'a pas pu être lu","Échec signalé explicitement et pas présenté comme zéro terrain");
+check('readAsset(developerProgram ? "extract-afedim.js" : "extract-visible.js")',
+    "Extracteur officiel de lots AFEDIM");
+check('scanTasks.add(new String[]{"CM-CIC · AFEDIM", city, verified})',
+    "Programmes AFEDIM par commune ajoutés aux recherches");
+
 check('heading("TerraNova", 27, GOLD, true)',"Logo et wordmark luxe");
 check("GradientDrawable.Orientation.TL_BR","Dégradé or");
 check('readAsset("lotisseurs-37.json")',"Catalogue embarqué");
