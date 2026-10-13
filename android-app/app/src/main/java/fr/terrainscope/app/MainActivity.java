@@ -256,19 +256,28 @@ public final class MainActivity extends Activity {
         badge.setVisibility(View.VISIBLE);
     }
 
-    /** Décompte partiel des terrains admis : sans constructeurs ni doublons. */
+    /** Afficher distinctement les annonces récoltées et les terrains retenus.
+     * 24 annonces lues NE signifient PAS 24 terrains confirmés :
+     * une annonce peut être hors commune, sans vendeur, un doublon ou un CCMI. */
     private void refreshSearchTotal() {
         if (searchTotal == null) return;
-        int count = ListingEngine.filtered(ListingEngine.classify(
-            new ArrayList<>(imported.values()))).size();
-        if (count <= 0) {
+        int importedCount = imported.size();
+        if (importedCount <= 0) {
             searchTotal.setText("");
             searchTotal.setVisibility(View.GONE);
             return;
         }
-        searchTotal.setText(count + (count == 1 ? " terrain trouvé" : " terrains trouvés"));
-        searchTotal.setContentDescription(count +
-            " terrains retenus parmi les annonces réellement récupérées. Décompte non exhaustif.");
+        List<ListingEngine.Result> classified = ListingEngine.classify(
+            new ArrayList<>(imported.values()));
+        Map<ListingEngine.State, Integer> counts = ListingEngine.counts(classified);
+        int accepted = counts.get(ListingEngine.State.ACCEPTED);
+        searchTotal.setText(importedCount + (importedCount == 1 ? " annonce" : " annonces") +
+            "\n" + accepted + (accepted == 1 ? " terrain retenu" : " terrains retenus"));
+        searchTotal.setContentDescription(importedCount + " annonces réellement récupérées ; " +
+            accepted + " terrains retenus ; " +
+            counts.get(ListingEngine.State.TO_VERIFY) + " annonces à vérifier ; " +
+            counts.get(ListingEngine.State.DUPLICATE) + " doublons ; " +
+            counts.get(ListingEngine.State.BUILDER) + " constructeurs exclus.");
         searchTotal.setVisibility(View.VISIBLE);
     }
 
@@ -1290,13 +1299,15 @@ public final class MainActivity extends Activity {
             17, TEXT, true);
         title.setTypeface(Typeface.create("serif", Typeface.BOLD));
         headingRow.addView(title, new LinearLayout.LayoutParams(0, -2, 1f));
-        TextView count = heading(current.size() + " terrain(s)", 11, GOLD, true);
+        TextView count = heading(current.size() +
+            (filtered ? " terrain(s) retenu(s)" : " annonce(s)"), 11, GOLD, true);
         headingRow.addView(count);
         place(cards, headingRow, 5, 2);
 
         String stats = filtered
-            ? counts.get(ListingEngine.State.BUILDER) + " constructeur(s) écarté(s)  ·  " +
-              counts.get(ListingEngine.State.TO_VERIFY) + " à vérifier"
+            ? counts.get(ListingEngine.State.TO_VERIFY) + " annonce(s) à vérifier  ·  " +
+              counts.get(ListingEngine.State.DUPLICATE) + " doublon(s)  ·  " +
+              counts.get(ListingEngine.State.BUILDER) + " constructeur(s) écarté(s)"
             : (sourceFilter.isEmpty() ? imported.size() : current.size()) +
               " annonces importées" + (sourceFilter.isEmpty() ? "" : " depuis " + sourceFilter) +
               "  ·  " +
