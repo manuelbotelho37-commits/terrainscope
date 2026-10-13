@@ -58,6 +58,22 @@ public final class SearchUrlsSmokeTest {
         verify(search.urlFor("Notaires", "Montlouis-sur-Loire")
             .endsWith("/vente/terrain/montlouis-sur-loire-37"),
             "Montlouis : type terrain et localité correcte");
+        verify(search.urlForDeveloper("CM-CIC · AFEDIM", "Azay-sur-Cher")
+            .endsWith("/azay-sur-cher-37/015753/Fiche"),
+            "Programme AFEDIM Azay-sur-Cher exact");
+        verify(search.urlForDeveloper("CM-CIC · AFEDIM", "Artannes-sur-Indre")
+            .endsWith("/artannes-sur-indre-37/020086/Fiche"),
+            "Programme AFEDIM Artannes-sur-Indre exact");
+        verify(search.urlForDeveloper("CM-CIC · AFEDIM", "Chanceaux-sur-Choisille")
+            .endsWith("/chanceaux-sur-choisille-37/017180/Fiche"),
+            "Programme AFEDIM Chanceaux-sur-Choisille exact");
+        verify(search.urlForDeveloper("CM-CIC · AFEDIM", "La Croix-en-Touraine")
+            .endsWith("/la-croix-en-touraine-37/018133/Fiche"),
+            "Programme AFEDIM La Croix-en-Touraine exact");
+        verify(search.urlForDeveloper("CM-CIC · AFEDIM", "Azay-le-Rideau") == null,
+            "Ne pas confondre Azay-le-Rideau avec Artannes ou Azay-sur-Cher");
+        verify(search.urlForDeveloper("Villadim", "Azay-sur-Cher") == null,
+            "Pas de programme sans lien exact vérifié");
         verify(search.urlFor("Le Bon Coin", "Commune inventée") == null,
             "Commune absente : ne pas ouvrir une recherche nationale");
         verify(search.urlFor("Le Bon Coin", "") == null, "Commune vide non acceptée");
