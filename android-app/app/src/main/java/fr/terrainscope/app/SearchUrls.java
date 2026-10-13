@@ -20,11 +20,27 @@ public final class SearchUrls {
     public String urlForDeveloper(String developer, String city) {
         String company = ListingEngine.normalize(developer);
         String cityKey = ListingEngine.normalize(city);
-        if (company.equals("cm cic afedim") && cityKey.equals("azay sur cher")) {
-            return "https://www.afedim.fr/fr/achat-immobilier/programme/terrain/" +
-                "azay-sur-cher-37/015753/Fiche";
+        if (company.equals("cm cic afedim")) {
+            // Les programmes figurent dans le catalogue officiel AFEDIM.
+            // La commune doit correspondre EXACTEMENT : Artannes-sur-Indre
+            // n'est pas Azay-le-Rideau.
+            switch (cityKey) {
+                case "azay sur cher":
+                    return "https://www.afedim.fr/fr/achat-immobilier/programme/terrain/" +
+                        "azay-sur-cher-37/015753/Fiche";
+                case "artannes sur indre":
+                    return "https://www.afedim.fr/fr/achat-immobilier/programme/terrain/" +
+                        "artannes-sur-indre-37/020086/Fiche";
+                case "chanceaux sur choisille":
+                    return "https://www.afedim.fr/fr/achat-immobilier/annonces/programme/terrain/" +
+                        "chanceaux-sur-choisille-37/017180/Fiche";
+                case "la croix en touraine":
+                    return "https://www.afedim.fr/fr/achat-immobilier/annonces/programme/terrain/" +
+                        "la-croix-en-touraine-37/018133/Fiche";
+                default: return null;
+            }
         }
-        return null; // Aucun lien direct pour cette paire lotisseur/commune vérifié.
+        return null; // Programme non vérifié pour cette paire lotisseur/commune.
     }
 
     public String urlFor(String source, String city) {
