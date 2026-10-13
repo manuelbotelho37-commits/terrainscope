@@ -577,27 +577,32 @@ public final class MainActivity extends Activity {
         for (String site : SITES) {
             final String caption = "IAD".equals(site) ? "iad" : site;
             FrameLayout sourceFrame = new FrameLayout(this);
-            LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(0, dp(80), 1f);
+            LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(0,
+                dp(screenDp >= 620 ? 51 : 63), 1f);
             size.setMargins(dp(2), 0, dp(2), 0);
             sourcesRow.addView(sourceFrame, size);
+            boolean wideSourceTile = screenDp >= 620;
             LinearLayout tile = new LinearLayout(this);
-            tile.setOrientation(LinearLayout.VERTICAL);
+            tile.setOrientation(wideSourceTile ?
+                LinearLayout.HORIZONTAL : LinearLayout.VERTICAL);
             tile.setGravity(Gravity.CENTER);
-            tile.setPadding(dp(2), dp(5), dp(2), dp(4));
+            tile.setPadding(dp(3), dp(3), wideSourceTile ? dp(21) : dp(3), dp(3));
             sourceFrame.addView(tile, new FrameLayout.LayoutParams(-1, -1));
             TextView sourceBadge = countBubble();
             FrameLayout.LayoutParams badgeSize =
-                new FrameLayout.LayoutParams(dp(25), dp(23), Gravity.TOP | Gravity.RIGHT);
-            badgeSize.setMargins(0, dp(3), dp(3), 0);
+                new FrameLayout.LayoutParams(dp(22), dp(20), Gravity.TOP | Gravity.RIGHT);
+            badgeSize.setMargins(0, dp(2), dp(2), 0);
             sourceFrame.addView(sourceBadge, badgeSize);
             sourceCountBadges.put(site, sourceBadge);
 
             FrameLayout mark = new FrameLayout(this);
-            LinearLayout.LayoutParams markSize = new LinearLayout.LayoutParams(dp(37), dp(35));
+            LinearLayout.LayoutParams markSize = new LinearLayout.LayoutParams(
+                dp(wideSourceTile ? 27 : 32), dp(wideSourceTile ? 27 : 29));
             tile.addView(mark, markSize);
             ImageView icon = new ImageView(this);
             icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            FrameLayout.LayoutParams iconSize = new FrameLayout.LayoutParams(dp(28), dp(28), Gravity.CENTER);
+            FrameLayout.LayoutParams iconSize = new FrameLayout.LayoutParams(
+                dp(24), dp(24), Gravity.CENTER);
             mark.addView(icon, iconSize);
             showSourceIcon(icon, site);
             TextView check = heading("✓", 11, GOLD, true);
@@ -609,7 +614,9 @@ public final class MainActivity extends Activity {
             label.setMaxLines(1);
             label.setEllipsize(TextUtils.TruncateAt.END);
             label.setGravity(Gravity.CENTER);
-            tile.addView(label, new LinearLayout.LayoutParams(-1, dp(22)));
+            tile.addView(label, wideSourceTile
+                ? new LinearLayout.LayoutParams(0, -2, 1f)
+                : new LinearLayout.LayoutParams(-1, dp(20)));
             sourceLabels.put(site, label);
             sourcePills.put(site, tile);
             tile.setContentDescription("Inclure ou exclure " + caption + " de la recherche");
