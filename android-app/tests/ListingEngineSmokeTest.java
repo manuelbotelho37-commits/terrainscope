@@ -280,6 +280,32 @@ public final class ListingEngineSmokeTest {
               ListingEngine.State.TO_VERIFY,
             "Annonceur absent : à vérifier et visible dans Toutes les annonces");
 
+        // Les fiches officielles AFEDIM regroupent plusieurs LOTS sur une seule URL.
+        // Elles ne doivent pas disparaître au dédoublonnage.
+        String sameProgramUrl = "https://www.afedim.fr/fr/achat-immobilier/programme/terrain/azay-sur-cher-37/015753/Fiche";
+        ListingEngine.Listing programLot18 = listing("CM-CIC · AFEDIM",
+            "Terrain lot 18", "CREDIT MUTUEL AMENAGEMENT FONCIER",
+            "Azay-sur-Cher", 84000, 522, "18", sameProgramUrl);
+        ListingEngine.Listing programLot20 = listing("CM-CIC · AFEDIM",
+            "Terrain lot 20", "CREDIT MUTUEL AMENAGEMENT FONCIER",
+            "Azay-sur-Cher", 91000, 550, "20", sameProgramUrl);
+        List<ListingEngine.Result> separateLots = ListingEngine.classify(
+            Arrays.asList(programLot20, programLot18));
+        check(ListingEngine.filtered(separateLots).size() == 2,
+            "Deux lots AFEDIM sur la même page restent deux terrains distincts");
+        check(ListingEngine.filtered(separateLots).get(0).listing == programLot18,
+            "Lots AFEDIM conservés dans le tri prix croissant");
+        ListingEngine.Listing optionedLot = new ListingEngine.Listing(
+            "CM-CIC · AFEDIM", sameProgramUrl, "Terrain lot 13", "Azay-sur-Cher",
+            "CREDIT MUTUEL AMENAGEMENT FONCIER",
+            "Optionné : disponibilité à confirmer.", "", "13", 88000, 522, true);
+        check(ListingEngine.classify(Arrays.asList(optionedLot)).get(0).state ==
+            ListingEngine.State.TO_VERIFY,
+            "Lot optionné reste dans Toutes mais pas dans terrains retenus");
+        check(ListingEngine.filtered(ListingEngine.classify(
+            Arrays.asList(optionedLot))).isEmpty(),
+            "Lot optionné n'augmente pas le nombre de terrains disponibles");
+
         System.out.println("TerrainScope : " + assertions + " vérifications du moteur réussies.");
     }
 }
