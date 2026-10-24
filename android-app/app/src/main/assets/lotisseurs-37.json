@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "source": "TerrainScope V58 · catalogue des 18 lotisseurs",
+  "developers": [
+    {
+      "name": "Villadim",
+      "domain": "villadim.fr",
+      "url": "https://www.villadim.fr/terrains",
+      "catalogue": true,
+      "notice": ""
+    },
+    {
+      "name": "Groupe SET",
+      "domain": "set.fr",
+      "url": "https://set.fr/nos-offres/pour-les-particuliers/terrains-a-vendre/",
+      "catalogue": true,
+      "notice": ""
+    },
+    {
+      "name": "CM-CIC · AFEDIM",
+      "domain": "afedim.fr",
+      "url": "https://www.afedim.fr/fr/achat-immobilier/annonces/Terrain/Indre-et-Loire-France/surface-0-800-m2/budget-0-2000000-euros/rayon-0-km/Resultats",
+      "catalogue": true,
+      "notice": ""
+    },
+    {
+      "name": "Val Touraine Habitat",
+      "domain": "valtourainehabitat-vente.fr",
+      "url": "https://www.valtourainehabitat-vente.fr/lotissement/",
+      "catalogue": true,
+      "notice": ""
+    },
+    {
+      "name": "Lelièvre Immobilier",
+      "domain": "lelievre-immobilier.com",
+      "url": "https://www.lelievre-immobilier.com/terrains-a-vendre-indre-et-loire",
+      "catalogue": true,
+      "notice": ""
+    },
+    {
+      "name": "Viabilis",
+      "domain": "viabilis.fr",
+      "url": "https://www.viabilis.fr/terrains/?_sf_s=37&_sfm_vendu=Non",
+      "catalogue": true,
+      "notice": ""
+    },
+    {
+      "name": "Acanthe",
+      "domain": "acanthe-terrain.fr",
+      "url": "https://www.acanthe-terrain.fr/terrains-a-batir/terrain-a-vendre-indre-et-loire/",
+      "catalogue": true,
+      "notice": ""
+    },
+    {
+      "name": "Arpent",
+      "domain": "arpent-de-terre.fr",
+      "url": "https://arpent-de-terre.fr/fr/page/nos-terrains-disponibles",
+      "catalogue": true,
+      "notice": ""
+    },
+    {
+      "name": "Foncier Aménagement",
+      "domain": "foncier-amenagement.fr",
+      "url": "https://www.foncier-amenagement.fr/recherche-terrains-lotissement/?departement-select=37",
+      "catalogue": true,
+      "notice": ""
+    },
+    {
+      "name": "Francelot / Khor",
+      "domain": "khorimmobilier.com",
+      "url": "https://www.khorimmobilier.com/resultats/",
+      "catalogue": true,
+      "notice": "Le catalogue présente aussi des maisons : sélectionner le filtre « Terrain à bâtir »."
+    },
+    {
+      "name": "Nexity",
+      "domain": "nexity.fr",
+      "url": "https://www.nexity.fr/annonces-immobilieres/achat-vente/terrain/tout/indre-et-loire",
+      "catalogue": true,
+      "notice": ""
+    },
+    {
+      "name": "Exeo Promotion",
+      "domain": "exeo-promotion.fr",
+      "url": "https://exeo-promotion.fr/",
+      "catalogue": false,
+      "notice": "Le site officiel est en travaux. Aucun catalogue public de terrains à consulter actuellement."
+    },
+    {
+      "name": "Entre Terrains",
+      "domain": "entre-terrains.com",
+      "url": "https://www.entre-terrains.com/nos-programmes/",
+      "catalogue": true,
+      "notice": ""
+    },
+    {
+      "name": "Terravia",
+      "domain": "terravia.fr",
+      "url": "https://www.terravia.fr/nos-terrains-a-batir/",
+      "catalogue": true,
+      "notice": ""
+    },
+    {
+      "name": "Lodgim",
+      "domain": "lodgim.fr",
+      "url": "https://www.lodgim.fr/terrains-a-batir",
+      "catalogue": true,
+      "notice": ""
+    },
+    {
+      "name": "Touraine Logement",
+      "domain": "touraine-logement.fr",
+      "url": "https://www.touraine-logement.fr/index.php/devenez-proprietaire.html",
+      "catalogue": false,
+      "notice": "Le site présente principalement des logements en accession ; pas de catalogue dédié aux terrains identifié."
+    },
+    {
+      "name": "Immo Nature et Construction",
+      "domain": "immo-nature-constructions.fr",
+      "url": "https://immo-nature-constructions.fr/terrains/",
+      "catalogue": true,
+      "notice": ""
+    },
+    {
+      "name": "Quatro Promotion",
+      "domain": "quatro-promotion.fr",
+      "url": "https://www.quatro-promotion.fr/terrains-a-batir/",
+      "catalogue": true,
+      "notice": ""
+    }
+  ]
+}
