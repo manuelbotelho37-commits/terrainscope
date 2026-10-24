@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-10-24T20:46:49+00:00",
+  "generatedAt": "2026-10-24T23:11:45+00:00",
   "notice": "Contrôle des catalogues, PAS des stocks de lots. Aucun lot libre, vendu ou optionné n'est certifié par ce fichier.",
   "developers": {
     "Villadim": {
@@ -67,39 +67,18 @@
       "method": "Catalogue Villadim 37 : ne valider que si les liens des fiches sont tous identifiés",
       "message": "Inventaire des programmes cohérent avec le compteur officiel.",
       "lotsVerified": false,
-      "checkedAt": "2026-10-24T20:46:49+00:00",
+      "checkedAt": "2026-10-24T23:11:45+00:00",
       "source": "https://www.villadim.fr/programmes/indre-et-loire"
     },
     "CM-CIC · AFEDIM": {
-      "status": "verified",
-      "expected": 4,
-      "found": 4,
-      "programs": [
-        {
-          "url": "https://afedim.fr/fr/achat-immobilier/annonces/programme/terrain/artannes-sur-indre-37/020086/Fiche",
-          "city": "Artannes Sur Indre",
-          "label": "Artannes Sur Indre"
-        },
-        {
-          "url": "https://afedim.fr/fr/achat-immobilier/annonces/programme/terrain/la-croix-en-touraine-37/018133/Fiche",
-          "city": "La Croix En Touraine",
-          "label": "La Croix En Touraine"
-        },
-        {
-          "url": "https://afedim.fr/fr/achat-immobilier/annonces/programme/terrain/azay-sur-cher-37/015753/Fiche",
-          "city": "Azay Sur Cher",
-          "label": "Azay Sur Cher"
-        },
-        {
-          "url": "https://afedim.fr/fr/achat-immobilier/annonces/programme/terrain/chanceaux-sur-choisille-37/017180/Fiche",
-          "city": "Chanceaux Sur Choisille",
-          "label": "Chanceaux Sur Choisille"
-        }
-      ],
+      "status": "incomplete",
+      "expected": null,
+      "found": 0,
+      "programs": [],
       "method": "Index AFEDIM terrains Indre-et-Loire (total des programmes, pas des lots libres)",
-      "message": "Inventaire des programmes cohérent avec le compteur officiel.",
+      "message": "Inventaire non vérifié : nombre officiel absent ou lien(s) manquant(s).",
       "lotsVerified": false,
-      "checkedAt": "2026-10-24T20:46:49+00:00",
+      "checkedAt": "2026-10-24T23:11:45+00:00",
       "source": "https://www.afedim.fr/fr/achat-immobilier/annonces/Terrain/Indre-et-Loire-France/surface-0-800-m2/budget-0-2000000-euros/rayon-0-km/Resultats"
     },
     "Groupe SET": {
@@ -131,7 +110,7 @@
       "lotsVerified": false,
       "method": "Programmes repérés sur la page officielle SET ; pas de compteur total certifiable.",
       "message": "Fiches repérées, exhaustivité du catalogue non attestée.",
-      "checkedAt": "2026-10-24T20:46:49+00:00",
+      "checkedAt": "2026-10-24T23:11:45+00:00",
       "source": "https://set.fr/nos-offres/pour-les-particuliers/terrains-a-vendre/"
     },
     "Val Touraine Habitat": {
@@ -227,7 +206,7 @@
           "rowCount": null
         }
       ],
-      "checkedAt": "2026-10-24T20:46:49+00:00",
+      "checkedAt": "2026-10-24T23:11:45+00:00",
       "source": "https://www.valtourainehabitat-vente.fr/lotissement/"
     },
     "Lelièvre Immobilier": {
@@ -249,7 +228,7 @@
       "lotsVerified": false,
       "method": "Offres de terrain repérées dans la page Lelièvre (pagination non garantie).",
       "message": "Fiches repérées, exhaustivité du catalogue non attestée.",
-      "checkedAt": "2026-10-24T20:46:49+00:00",
+      "checkedAt": "2026-10-24T23:11:45+00:00",
       "source": "https://www.lelievre-immobilier.com/terrains-a-vendre-indre-et-loire"
     }
   }
