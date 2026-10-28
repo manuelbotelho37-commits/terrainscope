@@ -1,0 +1,358 @@
+/* Tests reproductibles de l'extracteur de pages, sans réseau et sans Android. */
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const vm = require("node:vm");
+const path = require("node:path");
+
+const code = fs.readFileSync(path.resolve(__dirname, "../app/src/main/assets/extract-visible.js"), "utf8");
+let checks = 0;
+
+function extract(host, city, jsonDocuments = [], cards = [], pageText = "23 annonces pour la commune recherchée", nextLink = null) {
+  const document = {
+    title: "Terrains à vendre",
+    body: { innerText: pageText },
+    querySelector() { return null; },
+    querySelectorAll(selector) {
+      if (selector === 'script[type="application/ld+json"]') {
+        return jsonDocuments.map(data => ({ textContent: JSON.stringify(data) }));
+      }
+      if (selector.includes('a[rel="next"]')) return nextLink ? [nextLink] : [];
+      if (selector === "article") return cards;
+      return [];
+    }
+  };
+  const context = {
+    document, window: { __terrainScopeRequestedCity: city,
+      __terrainScopeRequestedPostal: city === "Monnaie" ? "37380" : city === "Tours" ? "37000" : "",
+      __terrainScopeKnownCities: ["Monnaie", "Crotelles", "Tours", "Joué-lès-Tours", "Chambray-lès-Tours", "Veigné", "Chanceaux-sur-Choisille"] },
+    location: { hostname: host, host, pathname: "/recherche/achat/",
+      href: "https://" + host + "/recherche/achat/" },
+    URL
+  };
+  return JSON.parse(vm.runInNewContext(code, context));
+}
+function check(condition, message) {
+  assert.ok(condition, message);
+  checks++;
+}
+const fixture = {
+  "@type": "ItemList",
+  itemListElement: [{ item: {
+    name: "Terrain constructible de 500 m² à Monnaie",
+    description: "Terrain situé à Monnaie, 500 m²",
+    url: "https://www.bienici.com/annonce/vente/terrain-123",
+    offers: { price: "85000", seller: { name: "Guy Hoquet" } }
+  }}]
+};
+const fromJson = extract("www.bienici.com", "Monnaie", [fixture]);
+check(fromJson.retrieved === 1, "JSON-LD terrain lu");
+check(fromJson.listings[0].priceEuros === 85000, "prix JSON-LD");
+check(fromJson.listings[0].areaM2 === 500, "surface m² JSON-LD");
+check(fromJson.listings[0].seller === "Guy Hoquet", "annonceur agence");
+check(fromJson.listings[0].cityConfirmed, "commune confirmée sur la fiche");
+const htmlCard = {
+  innerText: "Terrain à Monnaie 602 m² • 128 000 € • agence",
+  getClientRects: () => [1],
+  querySelector(selector) {
+    if (selector.includes("h2")) return { textContent: "Terrain constructible à Monnaie" };
+    if (selector.includes("price")) return { textContent: "128 000 €" };
+    if (selector.includes("surface")) return { textContent: "602 m²" };
+    return null;
+  },
+  querySelectorAll(selector) {
+    return selector === "a[href]" ?
+      [{ href: "https://www.seloger.com/annonce/456", textContent: "Voir",
+         getAttribute: name => name === "href" ? "/annonce/456" : "" }] : [];
+  }
+};
+const fromHtml = extract("www.seloger.com", "Monnaie", [], [htmlCard]);
+check(fromHtml.retrieved === 1, "carte HTML terrain lue");
+check(fromHtml.listings[0].source === "SeLoger", "source correcte");
+check(fromHtml.listings[0].priceEuros === 128000, "prix carte HTML");
+check(fromHtml.listings[0].areaM2 === 602, "surface carte HTML");
+const unrelated = extract("www.bienici.com", "Monnaie", [{
+  name: "Maison 4 pièces avec jardin", url: "https://www.bienici.com/annonce/vente/maison",
+  offers: { price: "230000" }
+}]);
+check(unrelated.retrieved === 0, "maison sans terrain ignorée");
+const houseWithGarden = extract("www.leboncoin.fr", "Monnaie", [{
+  name: "Maison 6 pièces, 120 m² avec jardin", description: "Terrain : 655 m² à Monnaie",
+  url: "https://www.leboncoin.fr/ad/ventes_immobilieres/44444",
+  offers: { price: "299000" }
+}]);
+check(houseWithGarden.retrieved === 0,
+  "Maison avec surface de terrain dans la description non importée comme terrain");
+const standaloneLand = extract("www.leboncoin.fr", "Monnaie", [{
+  name: "Terrain constructible 655 m²",
+  description: "À Monnaie (37380), terrain à bâtir",
+  url: "https://www.leboncoin.fr/ad/ventes_immobilieres/55555",
+  offers: { price: "89900" }
+}]);
+check(standaloneLand.retrieved === 1, "Vraie annonce de terrain conservée");
+const lbcCard = {
+  innerText: "Immobilier Neuf • Terrain · 406m² • 78 300 € • Monnaie 37380 • Villadim",
+  textContent: "Immobilier Neuf • Terrain · 406m² • 78 300 € • Monnaie 37380 • Villadim",
+  getClientRects: () => [1],
+  matches: sel => sel === "a[href]",
+  href: "https://www.leboncoin.fr/ad/ventes_immobilieres/55555",
+  getAttribute: key => key === "href" ? "/ad/ventes_immobilieres/55555" : "",
+  querySelector: () => null,
+  querySelectorAll: () => []
+};
+const lbc = extract("www.leboncoin.fr", "Monnaie", [], [lbcCard]);
+check(lbc.retrieved === 1, "Carte Le Bon Coin avec lien racine détectée");
+check(lbc.listings[0].areaM2 === 406, "Surface Le Bon Coin");
+check(lbc.listings[0].priceEuros === 78300, "Prix Le Bon Coin");
+check(lbc.declaredCount === 23, "Nombre d'annonces visible détecté");
+
+
+// Données inspirées de fiches visibles lors du contrôle des deux portails
+// à Monnaie : vendeur d'agence, lotisseur, constructeur et commune voisine.
+const agency = extract("www.seloger.com", "Monnaie", [{
+  itemListElement: [{item: {
+    name: "Terrain constructible 838 m² à Monnaie", description: "Terrain plat divisible",
+    url: "https://www.seloger.com/annonce/838-bsk",
+    address: {addressLocality:"Monnaie", postalCode:"37380"},
+    offers:{price:"145000",seller:{name:"SOPHIE VIALE BSK IMMOBILIER"}}
+  }}]
+}]);
+check(agency.retrieved===1 && agency.listings[0].seller.includes("BSK IMMOBILIER") &&
+    agency.listings[0].cityConfirmed, "Annonce d'agence BSK Monnaie conservée");
+
+const nearby = extract("www.seloger.com", "Monnaie", [{
+  itemListElement: [{item: {
+    name: "Terrain constructible à vendre à Monnaie de 1 349 m²",
+    description: "À seulement 5 minutes de Monnaie, opportunité à Crotelles",
+    url: "https://www.seloger.com/annonce/crotelles",
+    address:{addressLocality:"Crotelles",postalCode:"37380"},
+    offers:{price:"70000",seller:{name:"JEAN CHARLES VIDONI BSK IMMOBILIER"}}
+  }}]
+}]);
+check(nearby.retrieved===1 && !nearby.listings[0].cityConfirmed,
+    "Annonce sur Crotelles refusée malgré Monnaie dans le titre");
+
+const sameUrl = "https://www.seloger.com/annonce/terrain-310";
+const htmlSupplement = {
+  innerText:"Terrain viabilisé à Monnaie (37380) - 310 m² - 65 900 € Villadim Aménagement",
+  textContent:"Terrain viabilisé à Monnaie (37380) - 310 m² - 65 900 € Villadim Aménagement",
+  getClientRects:()=>[1],
+  matches:()=>false,
+  querySelector(selector) {
+    if (selector.includes("h2")) return {textContent:"Terrain viabilisé à Monnaie"};
+    if (selector.includes("price")) return {textContent:"65 900 €"};
+    if (selector.includes("surface")) return {textContent:"310 m²"};
+    if (selector.includes("agency")) return {textContent:"Villadim Aménagement"};
+    return null;
+  },
+  querySelectorAll(selector) {
+    return selector==="a[href]"?[{
+      href:sameUrl,textContent:"Voir cette parcelle",
+      getAttribute:key=>key==="href"?"/annonce/terrain-310":""
+    }]:[];
+  }
+};
+const merged = extract("www.seloger.com", "Monnaie",
+  [{itemListElement:[{item:{
+    name:"Terrain viabilisé à Monnaie",url:sameUrl,
+    description:"Terrain disponible sur Monnaie",offers:{}
+  }}]}], [htmlSupplement]);
+check(merged.retrieved===1, "Une seule fiche par URL même si JSON-LD et HTML");
+check(merged.listings[0].seller==="Villadim Aménagement",
+  "Le vendeur présent dans la carte HTML enrichit le JSON-LD");
+check(merged.listings[0].priceEuros===65900 && merged.listings[0].areaM2===310,
+  "Prix et surface complétés depuis la carte");
+
+const conflicted = extract("www.seloger.com", "Monnaie",
+  [{itemListElement:[{item:{
+    name:"Terrain à Monnaie",url:sameUrl,
+    address:{addressLocality:"Crotelles",postalCode:"37380"},
+    offers:{price:"65900"}
+  }}]}], [htmlSupplement]);
+check(!conflicted.listings[0].cityConfirmed,
+  "Un HTML trompeur ne doit pas écraser la commune structurée Crotelles");
+
+const wrongIndexCity = extract("www.seloger.com", "Monnaie", [{
+  itemListElement: [{item: {
+    name:"Terrain constructible à Monnaie 37380",
+    description:"A SEULEMENT 5 MINUTES DE MONNAIE !! Opportunité à Crotelles (37380)",
+    address:{addressLocality:"Monnaie",postalCode:"37380"},
+    url:"https://www.seloger.com/annonce/terrain-crotelles-indexe-monnaie",
+    offers:{price:"70000",seller:{name:"Agence BSK IMMOBILIER"}}
+  }}]
+}]);
+check(wrongIndexCity.retrieved===1 && !wrongIndexCity.listings[0].cityConfirmed,
+  "Texte réel Crotelles prioritaire même quand l'annonce est indexée Monnaie 37380");
+
+const onlyMarketing = extract("www.seloger.com", "Monnaie", [{
+  itemListElement:[{item:{
+    name:"Terrain constructible 1 349 m²",
+    description:"À seulement cinq minutes de Monnaie, idéal pour bâtir à Crotelles",
+    url:"https://www.seloger.com/annonce/lointain",
+    offers:{price:"70000"}
+  }}]
+}]);
+check(!onlyMarketing.listings[0].cityConfirmed,
+  "Une commune citée uniquement dans une publicité n'est pas confirmée");
+
+// iad : le prix et la surface sont dans le parent du lien de l'annonce.
+const iadUrl = "https://www.iadfrance.fr/annonce/terrain-vente-monnaie-1328m2/r1976940";
+const iadLink = {
+  href:iadUrl, innerText:"Terrain à bâtir à Monnaie (37380)",
+  textContent:"Terrain à bâtir à Monnaie (37380)",
+  getClientRects:()=>[1],
+  matches: s=>s==="a[href]",
+  getAttribute: key=>key==="href"?"/annonce/terrain-vente-monnaie-1328m2/r1976940":"",
+  querySelectorAll:()=>[]
+};
+const iadCard = {
+  innerText:"138 500 € Terrain à bâtir à Monnaie (37380) 1 328 m² de terrain Alice Ravinet",
+  textContent:"138 500 € Terrain à bâtir à Monnaie (37380) 1 328 m² de terrain Alice Ravinet",
+  querySelector:s=>s.includes("h2")?{textContent:"Terrain à bâtir à Monnaie (37380)"}:null,
+  querySelectorAll:s=>s==="a[href]"?[iadLink]:[]
+};
+iadLink.parentElement=iadCard;
+const iad = extract("www.iadfrance.fr","Monnaie",[],[iadLink]);
+check(iad.retrieved===1,"Annonce iad isolée détectée via son lien");
+check(iad.listings[0].priceEuros===138500,"Prix iad retrouvé dans le parent");
+check(iad.listings[0].areaM2===1328,"Surface iad retrouvée dans le parent");
+check(iad.listings[0].cityConfirmed,"Commune iad confirmée");
+
+const blockedByCaptcha = extract("www.leboncoin.fr","Monnaie",[],[],
+  "Vérifiez que vous êtes humain : CAPTCHA nécessaire pour accéder à la liste.");
+check(blockedByCaptcha.retrieved===0 && blockedByCaptcha.accessBlocked,
+  "Page avec CAPTCHA : blocage reconnu, pas zéro terrain");
+const deniedByServer = extract("www.seloger.com","Monnaie",[],[],
+  "Access denied — Too many requests.");
+check(deniedByServer.accessBlocked,"Refus d'accès serveur identifié");
+// Sur les portails le prix total et le prix au m² peuvent cohabiter.
+const pricePerM2 = {
+  innerText:"Terrain viabilisé à Monnaie (37380) 310 m² 65 900 € 213 €/m²",
+  getClientRects:()=>[1],matches:()=>false,
+  querySelector(selector) {
+    if (selector.includes("h2")) return {textContent:"Terrain constructible à Monnaie"};
+    if (selector.includes("price")) return {textContent:"65 900 € 213 €/m²"};
+    if (selector.includes("area")) return {textContent:"310 m²"};
+    return null;
+  },
+  querySelectorAll(selector) {
+    return selector==="a[href]"?[{
+      href:"https://www.seloger.com/annonce/vente/terrain/monnaie-310",
+      textContent:"Terrain à bâtir",
+      getAttribute:key=>key==="href"?"/annonce/vente/terrain/monnaie-310":""
+    }]:[];
+  }
+};
+const correctPrice = extract("www.seloger.com","Monnaie",[],[pricePerM2]);
+check(correctPrice.listings.length===1 && correctPrice.listings[0].priceEuros===65900,
+  "Prix total 65 900 € distinct du prix 213 €/m²");
+check(correctPrice.listings[0].areaM2===310,"Surface 310 m² correctement calculée");
+
+const categoryLink = extract("www.bienici.com","Monnaie",[{
+  name:"Terrain constructible à Monnaie, voir toutes nos annonces",
+  description:"Terrains à bâtir disponibles à Monnaie",
+  url:"https://www.bienici.com/recherche/achat/monnaie-37380/terrain",
+  offers:{price:"90000"}
+}]);
+check(categoryLink.retrieved===0,"Ne jamais prendre un lien de recherche pour une annonce");
+
+const searchPageAsJSON = extract("www.seloger.com","Monnaie",[{
+  name:"Terrain constructible Monnaie",
+  description:"Résultats",
+  url:"https://www.seloger.com/recherche/achat/terrain/centre-val-de-loire/monnaie-37380/ad08fr14679",
+  offers:{price:"90000"}
+}]);
+check(searchPageAsJSON.retrieved===0,"Le titre d'une page de recherche ne constitue pas une fiche terrain");
+
+const wrongTours = extract("www.bienici.com","Tours",[{
+  itemListElement:[{item:{
+    name:"Terrain constructible à Joué-lès-Tours",
+    description:"Terrain viabilisé à Joué-lès-Tours, proche Tours centre",
+    url:"https://www.bienici.com/annonce/vente/terrain-joue-les-tours",
+    address:{addressLocality:"Joué-lès-Tours",postalCode:"37300"},
+    offers:{price:"98000"}
+  }}]
+}]);
+check(wrongTours.retrieved===1 && !wrongTours.listings[0].cityConfirmed,
+  "Joué-lès-Tours ne doit pas apparaître dans les terrains confirmés de Tours");
+const wrongToursWithoutLocation = extract("www.bienici.com","Tours",[{
+  itemListElement:[{item:{
+    name:"Terrain à Joué-lès-Tours, Tours (37) proche",
+    url:"https://www.bienici.com/annonce/vente/terrain-non-localise-joue",
+    offers:{price:"98000"}
+  }}]
+}]);
+check(!wrongToursWithoutLocation.listings[0].cityConfirmed,
+  "Une commune qui contient Tours dans son nom reste distincte sans adresse");
+const toursConfirmed = extract("www.bienici.com","Tours",[{
+  itemListElement:[{item:{
+    name:"Terrain constructible à Tours",
+    url:"https://www.bienici.com/annonce/vente/terrain-tours-confirmed",
+    address:{addressLocality:"Tours",postalCode:"37000"},
+    offers:{price:"198000"}
+  }}]
+}]);
+check(toursConfirmed.listings[0].cityConfirmed,
+  "Le vrai terrain de Tours reste confirmé");
+
+const nextLink = {
+  href:"https://www.seloger.com/recherche/achat/?page=2",
+  textContent:"Page suivante",
+  getAttribute:name => name==="href" ? "/recherche/achat/?page=2" :
+    name==="rel" ? "next" : ""
+};
+const pageTwo = extract("www.seloger.com","Monnaie",[],[],
+  "22 annonces terrains",nextLink);
+check(pageTwo.nextPageUrl === "https://www.seloger.com/recherche/achat/?page=2",
+  "La pagination doit permettre de continuer automatiquement à la page 2");
+const externalNext = {
+  href:"https://example.com/recherche/achat/?page=2",
+  textContent:"Page suivante",
+  getAttribute:name => name==="href" ? "https://example.com/recherche/achat/?page=2" :
+    name==="rel" ? "next" : ""
+};
+const refusedNext = extract("www.seloger.com","Monnaie",[],[],
+  "22 annonces terrains",externalNext);
+check(refusedNext.nextPageUrl==="",
+  "Ne pas suivre un autre domaine pendant la pagination automatique");
+
+const photoJson = extract("www.bienici.com","Monnaie",[{
+  "@type":"RealEstateListing",
+  name:"Achat terrain 374 m² à Monnaie",
+  url:"https://www.bienici.com/annonce/vente/terrain-photo-374",
+  image:["https://images.bienici.com/photo-terrain-374.jpg"],
+  offers:{price:71000,seller:{name:"CONSTRUCTIONS IDEALE DEMEURE"}},
+  address:{addressLocality:"Monnaie",postalCode:"37380"}
+}]);
+check(photoJson.listings[0].imageUrl==="https://images.bienici.com/photo-terrain-374.jpg",
+  "Photo originale JSON-LD conservée sur la fiche Bien'ici");
+check(photoJson.listings[0].seller==="CONSTRUCTIONS IDEALE DEMEURE",
+  "Identité CID récupérée avec la photo sur l'annonce Monnaie 374 m²");
+const logoImg = {
+  src:"https://www.bienici.com/logo-agence.png",naturalWidth:80,
+  getAttribute:name => name==="alt"?"Logo de l'agence":
+    name==="src"?"https://www.bienici.com/logo-agence.png":""
+};
+const fieldImg = {
+  src:"https://cdn.bienici.com/terrain-photo.jpg",naturalWidth:820,
+  getAttribute:name => name==="alt"?"Photo du terrain":
+    name==="src"?"https://cdn.bienici.com/terrain-photo.jpg":""
+};
+const actualPhotoCard = {
+  innerText:"Achat terrain 374 m² à Monnaie 37380 71 000 € CONSTRUCTIONS IDEALE DEMEURE",
+  getClientRects:()=>[1], matches:()=>false,
+  querySelector: selector=>selector.includes("h2")?{textContent:"Achat terrain 374 m² à Monnaie"}:null,
+  querySelectorAll: selector=>selector==="img"?[logoImg,fieldImg]:
+    selector==="a[href]"?[{
+      href:"https://www.bienici.com/annonce/vente/terrain-photo-cid",
+      textContent:"Voir le terrain",
+      getAttribute:key=>key==="href"?"/annonce/vente/terrain-photo-cid":""
+    }]:[]
+};
+const cardWithPhoto = extract("www.bienici.com","Monnaie",[],[actualPhotoCard]);
+check(cardWithPhoto.listings.length===1 &&
+  cardWithPhoto.listings[0].imageUrl==="https://cdn.bienici.com/terrain-photo.jpg",
+  "Le véritable terrain prime sur le logo de l'agence");
+
+const empty = extract("www.leboncoin.fr", "Monnaie");
+check(empty.retrieved === 0, "page vide lisible, distincte du stock réel");
+console.log("TerrainScope: " + checks + " vérifications de lecture des fiches réussies.");

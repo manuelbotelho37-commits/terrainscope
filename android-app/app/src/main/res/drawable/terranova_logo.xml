@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- TerraNova: version vectorielle de l'emblème, sans données distantes -->
+    <path android:fillColor="#0B1620"
+        android:pathData="M22,4 C12,4 4,12 4,22 L4,86 C4,98 12,104 22,104 L86,104 C98,104 104,98 104,86 L104,22 C104,12 98,4 86,4 Z"/>
+    <path android:strokeColor="#D4AF37" android:strokeWidth="1.7" android:fillColor="#00000000"
+        android:pathData="M22,4 C12,4 4,12 4,22 L4,86 C4,98 12,104 22,104 L86,104 C98,104 104,98 104,86 L104,22 C104,12 98,4 86,4 Z"/>
+    <path android:strokeColor="#D4AF37" android:strokeWidth="2.5" android:fillColor="#00000000"
+        android:pathData="M19,54 C21,31 37,17 54,17 C72,17 89,32 90,54"/>
+    <!-- Lotissements verts et tracés d'or -->
+    <path android:fillColor="#1E7F53" android:pathData="M15,66 L38,52 L55,62 L38,85 Z"/>
+    <path android:fillColor="#1E7F53" android:pathData="M57,62 L75,50 L94,64 L67,86 Z"/>
+    <path android:fillColor="#376B3E" android:pathData="M39,85 L56,65 L67,87 L54,94 Z"/>
+    <path android:strokeColor="#D4AF37" android:strokeWidth="2.7" android:fillColor="#00000000"
+        android:pathData="M15,66 L38,52 L55,62 L75,50 L94,64 L67,86 L54,94 L39,85 Z M38,85 L55,62 L67,86"/>
+    <!-- Pin de localisation -->
+    <path android:fillColor="#D4AF37"
+        android:pathData="M54,22 C42,22 33,31 33,43 C33,57 54,75 54,75 C54,75 75,57 75,43 C75,31 66,22 54,22 Z"/>
+    <path android:fillColor="#0B1620"
+        android:pathData="M54,34 A9,9 0,1 1,54,52 A9,9 0,1 1,54,34 Z"/>
+</vector>
