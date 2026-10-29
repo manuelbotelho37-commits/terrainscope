@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-10-29T02:27:31+00:00",
+  "generatedAt": "2026-10-29T09:55:49+00:00",
   "notice": "Contrôle des catalogues, PAS des stocks de lots. Aucun lot libre, vendu ou optionné n'est certifié par ce fichier.",
   "developers": {
     "Villadim": {
@@ -72,7 +72,7 @@
       "method": "Catalogue Villadim 37 : ne valider que si les liens des fiches sont tous identifiés",
       "message": "Inventaire des programmes cohérent avec le compteur officiel.",
       "lotsVerified": false,
-      "checkedAt": "2026-10-29T02:27:31+00:00",
+      "checkedAt": "2026-10-29T09:55:49+00:00",
       "source": "https://www.villadim.fr/programmes/indre-et-loire"
     },
     "CM-CIC · AFEDIM": {
@@ -109,7 +109,7 @@
       "method": "Index AFEDIM terrains Indre-et-Loire (total des programmes, pas des lots libres)",
       "message": "Inventaire des programmes cohérent avec le compteur officiel.",
       "lotsVerified": false,
-      "checkedAt": "2026-10-29T02:27:31+00:00",
+      "checkedAt": "2026-10-29T09:55:49+00:00",
       "source": "https://www.afedim.fr/fr/achat-immobilier/annonces/Terrain/Indre-et-Loire-France/surface-0-800-m2/budget-0-2000000-euros/rayon-0-km/Resultats"
     },
     "Groupe SET": {
@@ -141,7 +141,7 @@
       "lotsVerified": false,
       "method": "Programmes repérés sur la page officielle SET ; pas de compteur total certifiable.",
       "message": "Fiches repérées, exhaustivité du catalogue non attestée.",
-      "checkedAt": "2026-10-29T02:27:31+00:00",
+      "checkedAt": "2026-10-29T09:55:49+00:00",
       "source": "https://set.fr/nos-offres/pour-les-particuliers/terrains-a-vendre/"
     },
     "Val Touraine Habitat": {
@@ -237,7 +237,7 @@
           "rowCount": null
         }
       ],
-      "checkedAt": "2026-10-29T02:27:31+00:00",
+      "checkedAt": "2026-10-29T09:55:49+00:00",
       "source": "https://www.valtourainehabitat-vente.fr/lotissement/"
     },
     "Lelièvre Immobilier": {
@@ -259,7 +259,7 @@
       "lotsVerified": false,
       "method": "Offres de terrain repérées dans la page Lelièvre (pagination non garantie).",
       "message": "Fiches repérées, exhaustivité du catalogue non attestée.",
-      "checkedAt": "2026-10-29T02:27:31+00:00",
+      "checkedAt": "2026-10-29T09:55:49+00:00",
       "source": "https://www.lelievre-immobilier.com/terrains-a-vendre-indre-et-loire"
     }
   }
