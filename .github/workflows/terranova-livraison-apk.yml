@@ -1,0 +1,37 @@
+name: TerraNova · livrer APK déjà signé
+# Livraison 0.5.7 : total des annonces vs terrains conservés.
+# Livraison directe 0.5.6 : rotation et pliage sans perte de résultats.
+
+on:
+  push:
+    branches: [android-capture-prototype]
+    paths:
+      - '.github/workflows/terranova-livraison-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  recuperer-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Télécharger la dernière version signée publiée
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/terranova-direct"
+          gh release download terranova-android-latest \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern 'TerraNova.apk' \
+            --dir "$RUNNER_TEMP/terranova-direct"
+          test -s "$RUNNER_TEMP/terranova-direct/TerraNova.apk"
+          sha256sum "$RUNNER_TEMP/terranova-direct/TerraNova.apk"
+      - name: Remettre le fichier APK sans attendre le test émulateur
+        uses: actions/upload-artifact@v4
+        with:
+          name: TerraNova-Android-APK-Direct
+          path: ${{ runner.temp }}/terranova-direct/TerraNova.apk
+          retention-days: 7
+          if-no-files-found: error
